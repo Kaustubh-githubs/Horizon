@@ -1,8 +1,27 @@
-# Omakase Ruby styling for Rails
+# Omakase Ruby styling for Rails (formatting and layout).
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
-# Overwrite or add rules to create your own house style
-#
-# # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
-# Layout/SpaceInsideArrayLiteralBrackets:
-#   Enabled: false
+# Spec quality: naming, structure, focused examples, no leftover `fit`/`fdescribe`.
+# rspec_rails adds Rails-specific spec rules (readable HTTP statuses, time travel).
+# factory_bot keeps factories tidy and warns when a spec creates too many records.
+plugins:
+  - rubocop-rspec
+  - rubocop-rspec_rails
+  - rubocop-factory_bot
+
+AllCops:
+  # Turn on newly added cops instead of leaving them pending.
+  NewCops: enable
+
+# House rules. Each change from the defaults says why.
+
+# A request spec often needs a few lines of setup data. Count a multi-line hash,
+# array or method call as one line so the limit measures steps, not formatting.
+RSpec/ExampleLength:
+  Max: 10
+  CountAsOne: ["array", "hash", "heredoc", "method_call"]
+
+# We write `type: :request` etc. explicitly instead of letting RSpec infer it from
+# the folder (rspec-rails calls inference legacy), so this cop would flag every spec.
+RSpecRails/InferredSpecType:
+  Enabled: false

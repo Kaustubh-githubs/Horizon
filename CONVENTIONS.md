@@ -19,7 +19,7 @@ Horizon is a salary management app for ACME's HR Manager: about 10,000 employees
 ```
 backend/    Rails 8.1 API-only app (Ruby 3.4, PostgreSQL)
 frontend/   React + TypeScript (Vite, shadcn/ui, Tailwind)
-docs/       requirements, ADRs, performance notes
+docs/       requirements, ADRs, database schema, performance notes
 ```
 Setup and test commands will be added here once the project skeleton exists.
 
@@ -30,6 +30,7 @@ Setup and test commands will be added here once the project skeleton exists.
 - **Employees are terminated, never deleted** (ADR 0008). No `default_scope`. Use explicit scopes like `Employee.active`.
 - **Reference data** (countries, departments, job titles) lives in lookup tables with foreign keys (ADR 0003).
 - **Constraints at both levels:** model validations plus database constraints (NOT NULL, foreign keys, unique indexes, check constraints).
+- **Schema doc:** any migration that changes the schema also updates [docs/schema.md](docs/schema.md), in the same commit.
 - **Insights are computed in SQL** (grouping, `percentile_cont`). Don't load rows into Ruby to aggregate them.
 - **Avoid N+1 queries.** Preload associations in lists.
 - **API:** routes under `/api/v1`, JSON only, errors shaped as `{ "errors": { "field": ["message"] } }`.

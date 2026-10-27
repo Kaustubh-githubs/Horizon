@@ -20,6 +20,13 @@ RSpec.describe Seeds::Runner do
     expect(JobTitle.count).to eq(Seeds::ReferenceData::JOB_TITLES.size)
   end
 
+  it "creates an HR Manager who can log in with the demo password" do
+    described_class.new(count: 0, today:, out: StringIO.new, demo_password: "a-demo-password").call
+
+    user = User.authenticate_by(email_address: Seeds::Runner::DEMO_USER_EMAIL, password: "a-demo-password")
+    expect(user.persona.key).to eq(Persona::HR_MANAGER)
+  end
+
   it "seeds employees with their full salary history", :aggregate_failures do
     expected = Seeds::EmployeeGenerator.new(count: 50, seed: 42, today:).call
 
@@ -50,6 +57,6 @@ RSpec.describe Seeds::Runner do
   it "does not duplicate anything when run again" do
     run
 
-    expect { run }.not_to(change { [ Country.count, JobTitle.count, Employee.count, SalaryRevision.count ] })
+    expect { run }.not_to(change { [ Country.count, JobTitle.count, Persona.count, User.count, Employee.count, SalaryRevision.count ] })
   end
 end

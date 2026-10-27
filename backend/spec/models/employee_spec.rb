@@ -18,27 +18,16 @@ RSpec.describe Employee, type: :model do
   end
 
   describe "employee code" do
-    it "is assigned by the database in the EMP-000123 format" do
-      expect(create(:employee).employee_code).to match(/\AEMP-\d{6,}\z/)
-    end
+    it "is built by the database from the id, padded to six digits" do
+      saved = create(:employee)
 
-    # Sequences ignore transaction rollbacks, so we compare codes instead of expecting EMP-000001.
-    it "increases for each new employee" do
-      first, second = create_list(:employee, 2).map { |e| e.employee_code.delete_prefix("EMP-").to_i }
-
-      expect(second).to be > first
+      expect(saved.employee_code).to eq(format("EMP-%06d", saved.id))
     end
 
     it "cannot be changed once assigned" do
       saved = create(:employee)
 
       expect { saved.employee_code = "EMP-999999" }.to raise_error(ActiveRecord::ReadonlyAttributeError)
-    end
-
-    it "rejects a code in the wrong format" do
-      employee.employee_code = "E-12"
-
-      expect(employee).not_to be_valid
     end
   end
 
@@ -145,6 +134,12 @@ RSpec.describe Employee, type: :model do
       insert_employee
 
       expect(described_class.last.employee_code).to match(/\AEMP-\d{6,}\z/)
+    end
+
+    it "keeps every digit of the code for ids above 999999" do
+      insert_employee(id: 1_234_567)
+
+      expect(described_class.find(1_234_567).employee_code).to eq("EMP-1234567")
     end
 
     it "rejects a duplicate email" do

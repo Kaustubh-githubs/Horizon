@@ -1,6 +1,6 @@
 # 0013. Employee codes come from a database sequence
 
-Status: Accepted · 2026-10-28
+Status: Superseded by [0014](0014-employee-codes-generated-from-id.md) · 2026-10-28
 
 ## Context
 Every employee needs a short, unique code that HR uses day to day, for example `EMP-000123`. ACME already has codes in its spreadsheets. New employees added in Horizon need a code too, and HR shouldn't have to invent one.

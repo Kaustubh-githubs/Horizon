@@ -2,6 +2,8 @@
 
 The planned and current shape of Horizon's PostgreSQL database. Keep it in sync: **update this file in the same commit as any migration that changes the schema.**
 
+This file is the readable overview. The exact definition lives in [backend/db/schema.rb](../backend/db/schema.rb), which Rails regenerates on every migration.
+
 Status key: ✅ built · 🛠 this phase (domain model) · ⏳ later phase
 
 ## Diagram
@@ -36,7 +38,7 @@ erDiagram
     }
     employees {
         bigint id PK
-        string employee_code UK "EMP-000123, from a sequence"
+        string employee_code UK "EMP-000123, generated from id"
         string full_name "whitespace squished"
         string email UK "stored lowercased"
         date hire_date
@@ -124,7 +126,7 @@ erDiagram
 | `exchange_rates` | ✅ | Fixed, dated rates for the org-wide USD view | ADR 0007 |
 | `departments` | ✅ | Lookup list of departments | ADR 0003 |
 | `job_titles` | ✅ | Lookup list of titles, including seniority | ADR 0003 |
-| `employees` | 🛠 | One row per person, with a copy of their current salary | ADR 0003, 0004, 0008, 0013 |
+| `employees` | ✅ | One row per person, with a copy of their current salary | ADR 0003, 0004, 0008, 0014 |
 | `salary_revisions` | 🛠 | Every salary change, with its reason | ADR 0004, 0005, 0006 |
 | `personas` | ⏳ auth phase | The kind of user, e.g. HR Manager | ADR 0010 |
 | `users` | ⏳ auth phase | People who log in, each with a persona | ADR 0009, 0010 |

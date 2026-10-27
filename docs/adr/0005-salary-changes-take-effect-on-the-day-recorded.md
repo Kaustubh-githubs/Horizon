@@ -12,7 +12,7 @@ In practice, when a raise is approved late, companies apply the new salary going
 ## Decision
 A salary change takes effect on the day HR records it. The effective date is set to today automatically, not typed in.
 
-If a raise was approved late, the back pay is handled as arrears in payroll, outside Horizon. The reason field can note it, for example "Annual raise. Arrears from 1 April paid via payroll."
+If a raise was approved late, the back pay is handled as arrears in payroll, outside Horizon. In Horizon it's recorded on the day it's entered, under its normal reason (for example `annual_raise`).
 
 Seeded history (past raises) has past dates. The rule applies to changes recorded through the app.
 

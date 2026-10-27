@@ -1,0 +1,169 @@
+# Database schema
+
+The planned and current shape of Horizon's PostgreSQL database. Keep it in sync: **update this file in the same commit as any migration that changes the schema.**
+
+Status key: ✅ built · 🛠 this phase (domain model) · ⏳ later phase
+
+## Diagram
+
+```mermaid
+erDiagram
+    countries ||--o{ employees : "employs in"
+    departments ||--o{ employees : "groups"
+    job_titles ||--o{ employees : "titles"
+    employees ||--o{ salary_revisions : "has history of"
+    countries }o..|| exchange_rates : "currency converts via"
+
+    countries {
+        bigint id PK
+        string code UK "ISO-3166 alpha-2, uppercase, e.g. IN"
+        string name UK "case-insensitive"
+        string currency_code "ISO-4217, uppercase, e.g. INR"
+    }
+    exchange_rates {
+        bigint id PK
+        string currency_code UK "ISO-4217, uppercase"
+        decimal rate_to_usd "decimal(20,10), 1 unit in USD, greater than 0"
+        date as_of
+    }
+    departments {
+        bigint id PK
+        string name UK "case-insensitive"
+    }
+    job_titles {
+        bigint id PK
+        string name UK "case-insensitive, includes seniority"
+    }
+    employees {
+        bigint id PK
+        string employee_code UK "EMP-000123, from a sequence"
+        string full_name "whitespace squished"
+        string email UK "stored lowercased"
+        date hire_date
+        string status "active | terminated"
+        date terminated_on "set if and only if terminated"
+        bigint country_id FK
+        bigint department_id FK
+        bigint job_title_id FK
+        decimal current_salary "copy of the latest revision"
+        string current_currency
+        integer lock_version "optimistic locking"
+    }
+    salary_revisions {
+        bigint id PK
+        bigint employee_id FK
+        decimal amount "greater than 0"
+        string currency
+        date effective_from "today, set by the service"
+        string reason "hire | annual_raise | promotion | market_adjustment | correction"
+    }
+```
+
+All tables also have `created_at` and `updated_at`.
+
+### Planned for later phases ⏳
+
+Login (auth phase) and the audit trail (add-on). They link to the domain only through `audits`, which records which user changed which employee or salary revision.
+
+```mermaid
+erDiagram
+    personas ||--o{ users : "describes"
+    users ||--o{ sessions : "logs in with"
+    users ||--o{ audits : "made"
+    employees ||--o{ audits : "changes recorded in"
+    employees ||--o{ salary_revisions : "has history of"
+    salary_revisions ||--o{ audits : "changes recorded in"
+
+    personas {
+        bigint id PK
+        string key UK "e.g. hr_manager"
+        string name "e.g. HR Manager"
+        string description
+    }
+    users {
+        bigint id PK
+        string name
+        string email_address UK
+        string password_digest "bcrypt hash"
+        bigint persona_id FK
+    }
+    sessions {
+        bigint id PK
+        bigint user_id FK
+        string ip_address
+        string user_agent
+    }
+    audits {
+        bigint id PK
+        string auditable_type "polymorphic: Employee or SalaryRevision"
+        bigint auditable_id
+        string associated_type "Employee, for salary revisions"
+        bigint associated_id
+        bigint user_id FK
+        string action "create | update | destroy"
+        jsonb audited_changes "old and new values"
+        integer version
+        string remote_address
+        string request_uuid
+    }
+    employees {
+        bigint id PK
+    }
+    salary_revisions {
+        bigint id PK
+    }
+```
+
+`audits` comes from the `audited` gem's generator (ADR 0012). It has no `updated_at`, because audit rows are never changed. The link from `audits` to employees and salary revisions is polymorphic (a type column plus an ID column), so it can't be a real foreign key.
+
+## Tables
+
+| Table | Status | Purpose | Decided in |
+|---|---|---|---|
+| `countries` | ✅ | Lookup list of countries and their currency | ADR 0003 |
+| `exchange_rates` | ✅ | Fixed, dated rates for the org-wide USD view | ADR 0007 |
+| `departments` | 🛠 | Lookup list of departments | ADR 0003 |
+| `job_titles` | 🛠 | Lookup list of titles, including seniority | ADR 0003 |
+| `employees` | 🛠 | One row per person, with a copy of their current salary | ADR 0003, 0004, 0008, 0013 |
+| `salary_revisions` | 🛠 | Every salary change, with its reason | ADR 0004, 0005, 0006 |
+| `personas` | ⏳ auth phase | The kind of user, e.g. HR Manager | ADR 0010 |
+| `users` | ⏳ auth phase | People who log in, each with a persona | ADR 0009, 0010 |
+| `sessions` | ⏳ auth phase | One row per login | ADR 0009 |
+| `audits` | ⏳ audit add-on | Who changed what, and when (`audited` gem) | ADR 0012 |
+
+## Rules the database enforces
+
+Model validations give friendly error messages. The database rules below are the safety net for anything that skips the model, such as bulk inserts in the seed script.
+
+- **Money:** `decimal(15,2)`, never float (ADR 0006). `salary_revisions.amount > 0`.
+- **Exchange rates:** `decimal(20,10)`, so very small rates stay exact (e.g. IDR to USD is about 0.0000612). `rate_to_usd > 0`.
+- **Foreign keys** on every `*_id` column. No cascading deletes: employees are terminated, never deleted (ADR 0008).
+- **Unique:** `countries.code`, `exchange_rates.currency_code`, `employees.employee_code`, `employees.email`.
+- **Unique, ignoring case:** `countries.name`, `departments.name` and `job_titles.name` use a unique index on `LOWER(name)`. "Engineering" and "engineering" can't both exist, but the display keeps HR's capitalisation. A plain unique index would let the spreadsheet's spelling problem back in through the lookup tables.
+- **Formats:** `countries.code` is two uppercase letters, and currency codes are three (check constraints, e.g. `code ~ '^[A-Z]{2}$'`).
+- **Status:** `status IN ('active', 'terminated')`. `terminated_on` is set if and only if the status is `terminated`, and is never before `hire_date`.
+- **Reason:** `reason IN ('hire', 'annual_raise', 'promotion', 'market_adjustment', 'correction')`.
+- **NOT NULL** on every column except `employees.terminated_on`.
+
+## Cleaning values before saving (models)
+
+The models tidy input before it's validated, so the rules above see clean values. This uses Rails `normalizes`.
+
+| Column | Normalised to |
+|---|---|
+| `countries.name`, `departments.name`, `job_titles.name`, `employees.full_name` | Whitespace squished: trimmed, inner runs collapsed to one space |
+| `countries.code`, `countries.currency_code`, `exchange_rates.currency_code`, `*.currency` | Trimmed and uppercased: `" in "` becomes `"IN"` |
+| `employees.email` | Trimmed and lowercased |
+
+Models also validate uniqueness with `case_sensitive: false`, so HR gets a friendly "has already been taken" message instead of a database error.
+
+## Indexes beyond the unique ones
+
+| Index | Serves |
+|---|---|
+| `employees (country_id, job_title_id)` | Insights: pay per country, and per title within a country |
+| `employees (department_id)` | Directory filter and payroll per department |
+| `employees (status)` | Active-only lists and insights |
+| `salary_revisions (employee_id, effective_from)` | An employee's salary history, newest first |
+
+Deliberately left out: a trigram index for name search. At 10,000 rows a plain scan takes milliseconds. We'll add one only if query plans in the performance phase show it's needed.

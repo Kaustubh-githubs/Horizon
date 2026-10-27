@@ -18,6 +18,9 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
 
+# Realistic names for the seed. In the default group so the deployed demo can be seeded (ADR 0015).
+gem "faker", "~> 3.8", require: false
+
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 

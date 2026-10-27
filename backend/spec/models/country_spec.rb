@@ -65,12 +65,23 @@ RSpec.describe Country, type: :model do
       expect { insert_country(code: "IX", name: "INDIA") }.to raise_error(ActiveRecord::RecordNotUnique)
     end
 
+    # insert_all still applies `normalizes` (it works at the attribute-type level and would
+    # uppercase "in"), so only hand-written SQL reaches the database with a bad value.
+    def insert_raw(code:, currency_code:)
+      sql = described_class.sanitize_sql_array([ <<~SQL, code, currency_code ])
+        INSERT INTO countries (code, name, currency_code, created_at, updated_at)
+        VALUES (?, 'India', ?, NOW(), NOW())
+      SQL
+      described_class.with_connection { |connection| connection.execute(sql) }
+    end
+
     it "rejects a lowercase country code" do
-      expect { insert_country(code: "in") }.to raise_error(ActiveRecord::StatementInvalid, /countries_code_format/)
+      expect { insert_raw(code: "in", currency_code: "INR") }
+        .to raise_error(ActiveRecord::StatementInvalid, /countries_code_format/)
     end
 
     it "rejects a lowercase currency code" do
-      expect { insert_country(currency_code: "inr") }
+      expect { insert_raw(code: "IN", currency_code: "inr") }
         .to raise_error(ActiveRecord::StatementInvalid, /countries_currency_code_format/)
     end
   end

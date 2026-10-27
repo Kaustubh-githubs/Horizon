@@ -120,7 +120,7 @@ erDiagram
 
 | Table | Status | Purpose | Decided in |
 |---|---|---|---|
-| `countries` | 🛠 | Lookup list of countries and their currency | ADR 0003 |
+| `countries` | ✅ | Lookup list of countries and their currency | ADR 0003 |
 | `exchange_rates` | 🛠 | Fixed, dated rates for the org-wide USD view | ADR 0007 |
 | `departments` | 🛠 | Lookup list of departments | ADR 0003 |
 | `job_titles` | 🛠 | Lookup list of titles, including seniority | ADR 0003 |

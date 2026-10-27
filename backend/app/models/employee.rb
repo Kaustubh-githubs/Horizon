@@ -2,6 +2,8 @@ class Employee < ApplicationRecord
   belongs_to :country
   belongs_to :department
   belongs_to :job_title
+  # Employees are terminated, never deleted (ADR 0008), so history always has an owner.
+  has_many :salary_revisions, dependent: :restrict_with_exception
 
   enum :status, { active: "active", terminated: "terminated" }, default: :active, validate: true
 

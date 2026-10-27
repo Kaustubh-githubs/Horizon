@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_222539) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_224310) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -78,7 +78,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_222539) do
     t.index "lower((name)::text)", name: "index_job_titles_on_lower_name", unique: true
   end
 
+  create_table "salary_revisions", force: :cascade do |t|
+    t.bigint "employee_id", null: false
+    t.decimal "amount", precision: 15, scale: 2, null: false
+    t.string "currency", null: false
+    t.date "effective_from", null: false
+    t.string "reason", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id", "effective_from"], name: "index_salary_revisions_on_employee_id_and_effective_from"
+    t.check_constraint "amount > 0::numeric", name: "salary_revisions_amount_positive"
+    t.check_constraint "currency::text ~ '^[A-Z]{3}$'::text", name: "salary_revisions_currency_format"
+    t.check_constraint "reason::text = ANY (ARRAY['hire'::character varying, 'annual_raise'::character varying, 'promotion'::character varying, 'market_adjustment'::character varying, 'correction'::character varying]::text[])", name: "salary_revisions_reason_valid"
+  end
+
   add_foreign_key "employees", "countries"
   add_foreign_key "employees", "departments"
   add_foreign_key "employees", "job_titles"
+  add_foreign_key "salary_revisions", "employees"
 end

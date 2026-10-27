@@ -11,6 +11,7 @@ RSpec.describe Employee, type: :model do
     it { is_expected.to belong_to(:country) }
     it { is_expected.to belong_to(:department) }
     it { is_expected.to belong_to(:job_title) }
+    it { is_expected.to have_many(:salary_revisions).dependent(:restrict_with_exception) }
     it { is_expected.to validate_presence_of(:full_name) }
     it { is_expected.to validate_presence_of(:email) }
     it { is_expected.to validate_presence_of(:hire_date) }

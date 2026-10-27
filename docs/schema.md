@@ -23,7 +23,7 @@ erDiagram
     exchange_rates {
         bigint id PK
         string currency_code UK "ISO-4217, uppercase"
-        decimal rate_to_usd "1 unit of currency in USD"
+        decimal rate_to_usd "decimal(20,10), 1 unit in USD, greater than 0"
         date as_of
     }
     departments {
@@ -121,7 +121,7 @@ erDiagram
 | Table | Status | Purpose | Decided in |
 |---|---|---|---|
 | `countries` | ✅ | Lookup list of countries and their currency | ADR 0003 |
-| `exchange_rates` | 🛠 | Fixed, dated rates for the org-wide USD view | ADR 0007 |
+| `exchange_rates` | ✅ | Fixed, dated rates for the org-wide USD view | ADR 0007 |
 | `departments` | 🛠 | Lookup list of departments | ADR 0003 |
 | `job_titles` | 🛠 | Lookup list of titles, including seniority | ADR 0003 |
 | `employees` | 🛠 | One row per person, with a copy of their current salary | ADR 0003, 0004, 0008, 0013 |
@@ -136,6 +136,7 @@ erDiagram
 Model validations give friendly error messages. The database rules below are the safety net for anything that skips the model, such as bulk inserts in the seed script.
 
 - **Money:** `decimal(15,2)`, never float (ADR 0006). `salary_revisions.amount > 0`.
+- **Exchange rates:** `decimal(20,10)`, so very small rates stay exact (e.g. IDR to USD is about 0.0000612). `rate_to_usd > 0`.
 - **Foreign keys** on every `*_id` column. No cascading deletes: employees are terminated, never deleted (ADR 0008).
 - **Unique:** `countries.code`, `exchange_rates.currency_code`, `employees.employee_code`, `employees.email`.
 - **Unique, ignoring case:** `countries.name`, `departments.name` and `job_titles.name` use a unique index on `LOWER(name)`. "Engineering" and "engineering" can't both exist, but the display keeps HR's capitalisation. A plain unique index would let the spreadsheet's spelling problem back in through the lookup tables.

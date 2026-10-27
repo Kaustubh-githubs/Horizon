@@ -46,7 +46,7 @@ Setup and test commands will be added here once the project skeleton exists.
 - **Style:** ESLint and `tsc --noEmit` must pass.
 
 ## Tests
-- **Backend:** RSpec + FactoryBot. Frontend: Vitest + React Testing Library, with MSW for API calls.
+- **Backend:** RSpec + FactoryBot. Frontend: no automated tests for now (deferred). Strict TypeScript and type-aware ESLint are the safety net until we add Vitest + React Testing Library.
 - **Fast and deterministic:** no real network, fixed random seeds, and frozen time (`travel_to`) wherever dates matter.
 - **Insights tests use small hand-built datasets,** so the expected numbers can be checked by hand.
 - **Test behaviour, not implementation.** One reason to fail per test, with a name that reads like a sentence.

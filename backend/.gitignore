@@ -21,6 +21,9 @@
 !/tmp/pids/
 !/tmp/pids/.keep
 
+# RSpec's local record of which examples failed (for --only-failures).
+/spec/examples.txt
+
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 

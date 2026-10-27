@@ -63,9 +63,9 @@ erDiagram
 
 All tables also have `created_at` and `updated_at`.
 
-### Planned for later phases ⏳
+### Login ✅ and audit trail ⏳
 
-Login (auth phase) and the audit trail (add-on). They link to the domain only through `audits`, which records which user changed which employee or salary revision.
+Login tables (personas, users, sessions) are built. The audit trail (add-on) is still planned. They link to the domain only through `audits`, which records which user changed which employee or salary revision.
 
 ```mermaid
 erDiagram
@@ -128,9 +128,9 @@ erDiagram
 | `job_titles` | ✅ | Lookup list of titles, including seniority | ADR 0003 |
 | `employees` | ✅ | One row per person, with a copy of their current salary | ADR 0003, 0004, 0008, 0014 |
 | `salary_revisions` | ✅ | Every salary change, with its reason (append-only) | ADR 0004, 0005, 0006 |
-| `personas` | ⏳ auth phase | The kind of user, e.g. HR Manager | ADR 0010 |
-| `users` | ⏳ auth phase | People who log in, each with a persona | ADR 0009, 0010 |
-| `sessions` | ⏳ auth phase | One row per login | ADR 0009 |
+| `personas` | ✅ | The kind of user, e.g. HR Manager | ADR 0010 |
+| `users` | ✅ | People who log in, each with a persona | ADR 0009, 0010 |
+| `sessions` | ✅ | One row per login | ADR 0009 |
 | `audits` | ⏳ audit add-on | Who changed what, and when (`audited` gem) | ADR 0012 |
 
 ## Rules the database enforces

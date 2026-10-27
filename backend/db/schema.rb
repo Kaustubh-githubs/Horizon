@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_224310) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_232633) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -78,6 +78,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_224310) do
     t.index "lower((name)::text)", name: "index_job_titles_on_lower_name", unique: true
   end
 
+  create_table "personas", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "name", null: false
+    t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_personas_on_key", unique: true
+    t.check_constraint "key::text ~ '^[a-z][a-z_]*$'::text", name: "personas_key_format"
+  end
+
   create_table "salary_revisions", force: :cascade do |t|
     t.bigint "employee_id", null: false
     t.decimal "amount", precision: 15, scale: 2, null: false
@@ -92,8 +102,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_224310) do
     t.check_constraint "reason::text = ANY (ARRAY['hire'::character varying, 'annual_raise'::character varying, 'promotion'::character varying, 'market_adjustment'::character varying, 'correction'::character varying]::text[])", name: "salary_revisions_reason_valid"
   end
 
+  create_table "sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "ip_address"
+    t.string "user_agent"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "email_address", null: false
+    t.string "password_digest", null: false
+    t.bigint "persona_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["persona_id"], name: "index_users_on_persona_id"
+  end
+
   add_foreign_key "employees", "countries"
   add_foreign_key "employees", "departments"
   add_foreign_key "employees", "job_titles"
   add_foreign_key "salary_revisions", "employees"
+  add_foreign_key "sessions", "users"
+  add_foreign_key "users", "personas"
 end

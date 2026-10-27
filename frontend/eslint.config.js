@@ -25,4 +25,10 @@ export default defineConfig([
       },
     },
   },
+  {
+    // shadcn components export their style variants (e.g. `buttonVariants`) next to
+    // the component. We keep them as generated, so this rule is off for that folder only.
+    files: ['src/components/ui/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 ])

@@ -2,6 +2,8 @@
 
 The planned and current shape of Horizon's PostgreSQL database. Keep it in sync: **update this file in the same commit as any migration that changes the schema.**
 
+This file is the readable overview. The exact definition lives in [backend/db/schema.rb](../backend/db/schema.rb), which Rails regenerates on every migration.
+
 Status key: ✅ built · 🛠 this phase (domain model) · ⏳ later phase
 
 ## Diagram
@@ -36,7 +38,7 @@ erDiagram
     }
     employees {
         bigint id PK
-        string employee_code UK "EMP-000123, from a sequence"
+        string employee_code UK "EMP-000123, generated from id"
         string full_name "whitespace squished"
         string email UK "stored lowercased"
         date hire_date
@@ -54,7 +56,7 @@ erDiagram
         bigint employee_id FK
         decimal amount "greater than 0"
         string currency
-        date effective_from "today, set by the service"
+        date effective_from "not in the future, not before hire"
         string reason "hire | annual_raise | promotion | market_adjustment | correction"
     }
 ```
@@ -122,10 +124,10 @@ erDiagram
 |---|---|---|---|
 | `countries` | ✅ | Lookup list of countries and their currency | ADR 0003 |
 | `exchange_rates` | ✅ | Fixed, dated rates for the org-wide USD view | ADR 0007 |
-| `departments` | 🛠 | Lookup list of departments | ADR 0003 |
-| `job_titles` | 🛠 | Lookup list of titles, including seniority | ADR 0003 |
-| `employees` | 🛠 | One row per person, with a copy of their current salary | ADR 0003, 0004, 0008, 0013 |
-| `salary_revisions` | 🛠 | Every salary change, with its reason | ADR 0004, 0005, 0006 |
+| `departments` | ✅ | Lookup list of departments | ADR 0003 |
+| `job_titles` | ✅ | Lookup list of titles, including seniority | ADR 0003 |
+| `employees` | ✅ | One row per person, with a copy of their current salary | ADR 0003, 0004, 0008, 0014 |
+| `salary_revisions` | ✅ | Every salary change, with its reason (append-only) | ADR 0004, 0005, 0006 |
 | `personas` | ⏳ auth phase | The kind of user, e.g. HR Manager | ADR 0010 |
 | `users` | ⏳ auth phase | People who log in, each with a persona | ADR 0009, 0010 |
 | `sessions` | ⏳ auth phase | One row per login | ADR 0009 |
@@ -138,6 +140,11 @@ Model validations give friendly error messages. The database rules below are the
 - **Money:** `decimal(15,2)`, never float (ADR 0006). `salary_revisions.amount > 0`.
 - **Exchange rates:** `decimal(20,10)`, so very small rates stay exact (e.g. IDR to USD is about 0.0000612). `rate_to_usd > 0`.
 - **Foreign keys** on every `*_id` column. No cascading deletes: employees are terminated, never deleted (ADR 0008).
+
+Some rules can't be check constraints, so the models enforce them:
+- **Rules that depend on today's date:** a salary revision's `effective_from` can't be in the future. Postgres expects check constraints to give the same answer forever, and `CURRENT_DATE` doesn't.
+- **Rules that compare against another table:** `effective_from` can't be before the employee's `hire_date`, and a currency must match the country's. A check constraint only sees its own row.
+- **Append-only history:** a saved salary revision can't be edited or deleted. Mistakes are fixed with a new `correction` row. An employee with salary history can't be deleted either.
 - **Unique:** `countries.code`, `exchange_rates.currency_code`, `employees.employee_code`, `employees.email`.
 - **Unique, ignoring case:** `countries.name`, `departments.name` and `job_titles.name` use a unique index on `LOWER(name)`. "Engineering" and "engineering" can't both exist, but the display keeps HR's capitalisation. A plain unique index would let the spreadsheet's spelling problem back in through the lookup tables.
 - **Formats:** `countries.code` is two uppercase letters, and currency codes are three (check constraints, e.g. `code ~ '^[A-Z]{2}$'`).

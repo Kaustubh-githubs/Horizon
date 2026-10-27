@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_221134) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_224310) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -26,6 +26,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_221134) do
     t.check_constraint "currency_code::text ~ '^[A-Z]{3}$'::text", name: "countries_currency_code_format"
   end
 
+  create_table "departments", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "lower((name)::text)", name: "index_departments_on_lower_name", unique: true
+  end
+
+  create_table "employees", force: :cascade do |t|
+    t.virtual "employee_code", type: :string, as: "('EMP-'::text || lpad((id)::text, GREATEST(6, length((id)::text)), '0'::text))", stored: true
+    t.string "full_name", null: false
+    t.string "email", null: false
+    t.date "hire_date", null: false
+    t.string "status", default: "active", null: false
+    t.date "terminated_on"
+    t.bigint "country_id", null: false
+    t.bigint "department_id", null: false
+    t.bigint "job_title_id", null: false
+    t.decimal "current_salary", precision: 15, scale: 2, null: false
+    t.string "current_currency", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["country_id", "job_title_id"], name: "index_employees_on_country_id_and_job_title_id"
+    t.index ["department_id"], name: "index_employees_on_department_id"
+    t.index ["email"], name: "index_employees_on_email", unique: true
+    t.index ["employee_code"], name: "index_employees_on_employee_code", unique: true
+    t.index ["status"], name: "index_employees_on_status"
+    t.check_constraint "(status::text = 'terminated'::text) = (terminated_on IS NOT NULL)", name: "employees_termination_consistent"
+    t.check_constraint "current_currency::text ~ '^[A-Z]{3}$'::text", name: "employees_current_currency_format"
+    t.check_constraint "current_salary > 0::numeric", name: "employees_current_salary_positive"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'terminated'::character varying]::text[])", name: "employees_status_valid"
+    t.check_constraint "terminated_on IS NULL OR terminated_on >= hire_date", name: "employees_terminated_after_hire"
+  end
+
   create_table "exchange_rates", force: :cascade do |t|
     t.string "currency_code", null: false
     t.decimal "rate_to_usd", precision: 20, scale: 10, null: false
@@ -36,4 +70,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_221134) do
     t.check_constraint "currency_code::text ~ '^[A-Z]{3}$'::text", name: "exchange_rates_currency_code_format"
     t.check_constraint "rate_to_usd > 0::numeric", name: "exchange_rates_rate_positive"
   end
+
+  create_table "job_titles", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "lower((name)::text)", name: "index_job_titles_on_lower_name", unique: true
+  end
+
+  create_table "salary_revisions", force: :cascade do |t|
+    t.bigint "employee_id", null: false
+    t.decimal "amount", precision: 15, scale: 2, null: false
+    t.string "currency", null: false
+    t.date "effective_from", null: false
+    t.string "reason", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id", "effective_from"], name: "index_salary_revisions_on_employee_id_and_effective_from"
+    t.check_constraint "amount > 0::numeric", name: "salary_revisions_amount_positive"
+    t.check_constraint "currency::text ~ '^[A-Z]{3}$'::text", name: "salary_revisions_currency_format"
+    t.check_constraint "reason::text = ANY (ARRAY['hire'::character varying, 'annual_raise'::character varying, 'promotion'::character varying, 'market_adjustment'::character varying, 'correction'::character varying]::text[])", name: "salary_revisions_reason_valid"
+  end
+
+  add_foreign_key "employees", "countries"
+  add_foreign_key "employees", "departments"
+  add_foreign_key "employees", "job_titles"
+  add_foreign_key "salary_revisions", "employees"
 end

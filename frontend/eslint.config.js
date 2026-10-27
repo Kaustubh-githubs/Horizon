@@ -1,14 +1,14 @@
-import js from '@eslint/js'
-import { defineConfig, globalIgnores } from 'eslint/config'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import globals from 'globals'
-import tseslint from 'typescript-eslint'
+import js from "@eslint/js"
+import { defineConfig, globalIgnores } from "eslint/config"
+import reactHooks from "eslint-plugin-react-hooks"
+import reactRefresh from "eslint-plugin-react-refresh"
+import globals from "globals"
+import tseslint from "typescript-eslint"
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(["dist"]),
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["**/*.{ts,tsx}"],
     extends: [
       js.configs.recommended,
       // Type-aware rules (e.g. un-awaited promises) are the main reason we chose ESLint.
@@ -28,7 +28,7 @@ export default defineConfig([
   {
     // shadcn components export their style variants (e.g. `buttonVariants`) next to
     // the component. We keep them as generated, so this rule is off for that folder only.
-    files: ['src/components/ui/**/*.tsx'],
-    rules: { 'react-refresh/only-export-components': 'off' },
+    files: ["src/components/ui/**/*.tsx"],
+    rules: { "react-refresh/only-export-components": "off" },
   },
 ])

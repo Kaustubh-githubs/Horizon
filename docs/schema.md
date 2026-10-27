@@ -122,8 +122,8 @@ erDiagram
 |---|---|---|---|
 | `countries` | ✅ | Lookup list of countries and their currency | ADR 0003 |
 | `exchange_rates` | ✅ | Fixed, dated rates for the org-wide USD view | ADR 0007 |
-| `departments` | 🛠 | Lookup list of departments | ADR 0003 |
-| `job_titles` | 🛠 | Lookup list of titles, including seniority | ADR 0003 |
+| `departments` | ✅ | Lookup list of departments | ADR 0003 |
+| `job_titles` | ✅ | Lookup list of titles, including seniority | ADR 0003 |
 | `employees` | 🛠 | One row per person, with a copy of their current salary | ADR 0003, 0004, 0008, 0013 |
 | `salary_revisions` | 🛠 | Every salary change, with its reason | ADR 0004, 0005, 0006 |
 | `personas` | ⏳ auth phase | The kind of user, e.g. HR Manager | ADR 0010 |

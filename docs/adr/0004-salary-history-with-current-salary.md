@@ -7,6 +7,7 @@ In Excel a raise overwrites the old number, so pay history is lost. We want to k
 
 ## Decision
 - Every salary change is a row in `salary_revisions` (amount, currency, effective date, reason).
+- The reason is a fixed category, defined as an enum on the model: `hire`, `annual_raise`, `promotion`, `market_adjustment` or `correction`. There's no free-text note for now. Categories can be grouped in reports (for example, "what did promotions cost this year?"), and free text can't. A note field can be added later if HR needs one.
 - The employee row also keeps a copy: `current_salary` and `current_currency`.
 - All salary writes go through one service, `SalaryRevisions::Create`. In a single transaction it saves the revision and updates the copy on the employee. Changes take effect on the day they're recorded (0005), so a new revision is always the latest one.
 - Creating an employee creates their first revision in the same way.

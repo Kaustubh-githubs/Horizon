@@ -42,6 +42,8 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 - **Multiple roles or regional access.** The brief has one persona, and the persona setup makes roles easy to add later.
 - **Excel import.** A one-time migration problem to handle separately. The seed script covers the demo.
 - **Future-dated and back-dated raises.** Scheduled raises would need a background job. Late approvals are paid as arrears through payroll.
+- **Transfers between countries.** An employee's country is set when they're created and can't be changed. A move would change their currency and split their salary history across two currencies.
+- **Future hire dates.** Employees are added on or after their start date, so their first salary record is never in the future.
 - **Approvals and notifications.** Not needed with one user.
 - **Phone layout, dark mode, other languages.** Nice extras that don't help the core job yet.
 

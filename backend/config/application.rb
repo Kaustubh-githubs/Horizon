@@ -40,5 +40,8 @@ module Horizon
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Login uses a signed session cookie (ADR 0009), and API-only apps leave cookies out.
+    config.middleware.use ActionDispatch::Cookies
   end
 end

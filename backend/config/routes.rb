@@ -10,6 +10,10 @@ Rails.application.routes.draw do
 
       # POST to log in, GET for the current user, DELETE to log out.
       resource :session, only: %i[show create destroy]
+
+      # Countries, departments and job titles for filters and dropdowns.
+      resource :lookups, only: :show
+      resources :employees, only: :index
     end
   end
 end

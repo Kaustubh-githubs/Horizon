@@ -160,6 +160,10 @@ GEM
       racc (~> 1.4)
     nokogiri (1.19.4-x86_64-linux-musl)
       racc (~> 1.4)
+    pagy (43.8.1)
+      json
+      uri
+      yaml
     parallel (2.3.0)
     parser (3.3.13.0)
       ast (~> 2.4.1)
@@ -304,6 +308,7 @@ GEM
       base64
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
+    yaml (0.4.0)
     zeitwerk (2.8.3)
 
 PLATFORMS
@@ -326,6 +331,7 @@ DEPENDENCIES
   debug
   factory_bot_rails (~> 6.5)
   faker (~> 3.8)
+  pagy (~> 43.8)
   pg (~> 1.1)
   puma (>= 5.0)
   rails (~> 8.1.3)

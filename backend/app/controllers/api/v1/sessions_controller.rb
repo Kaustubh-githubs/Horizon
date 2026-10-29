@@ -4,7 +4,7 @@ module Api
     class SessionsController < Api::BaseController
       allow_unauthenticated_access only: :create
       rate_limit to: 10, within: 3.minutes, only: :create,
-                 with: -> { render_error("Too many attempts. Try again in a few minutes.", :too_many_requests) }
+                 with: -> { render_errors({ base: [ "Too many attempts. Try again in a few minutes." ] }, :too_many_requests) }
 
       def show
         render json: { user: user_json(Current.user) }
@@ -15,7 +15,7 @@ module Api
           start_new_session_for(user)
           render json: { user: user_json(user) }, status: :created
         else
-          render_error("Wrong email address or password", :unauthorized)
+          render_errors({ base: [ "Wrong email address or password" ] }, :unauthorized)
         end
       end
 
@@ -33,10 +33,6 @@ module Api
           email_address: user.email_address,
           persona: { key: user.persona.key, name: user.persona.name }
         }
-      end
-
-      def render_error(message, status)
-        render json: { errors: { base: [ message ] } }, status:
       end
     end
   end

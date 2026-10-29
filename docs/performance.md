@@ -22,3 +22,18 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 **How to reproduce:** `bin/rails db:reset` then `bin/rails db:seed` prints the timing. The `create!` comparison ran 500 employees inside a transaction that was rolled back afterwards.
 
 **What the seed produces** (seed 42): 10,000 employees, 30,287 revisions, 285 planted underpaid (2.9%), 806 terminated (8.1%). India has 3,959 employees (40%).
+
+## Employee directory queries (ADR 0016)
+
+`EXPLAIN ANALYZE` on the seeded database (10,000 employees, 9,194 active), one page of 25:
+
+| Query | Time | Plan |
+|---|---|---|
+| Default page: active, sorted by name | 1.0 ms | Sequential scan + top-N heapsort |
+| Total count for paging | 0.4 ms | Index-only scan on `status` |
+| Search `q=nair` (name, email or code contains) | 3.2 ms | Sequential scan |
+| India, highest salary first | 2.5 ms | Bitmap scan via `(country_id, job_title_id)` + top-N heapsort |
+
+**What we decided:** no extra indexes for now. Even the search, a sequential scan over every row with `ILIKE '%term%'`, takes about 3 ms. A trigram index (`pg_trgm`) would only pay off at roughly 10× the data, and every index slows inserts and takes space. We'll revisit at that point.
+
+**N+1 guard:** a request spec checks that a page of 10 employees runs the same number of queries as a page of 2. Without preloading country, department and title, that went from 9 queries to 33. The spec fails, as it should.

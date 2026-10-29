@@ -19,5 +19,6 @@ Short notes on the decisions that shape Horizon: what we chose, what else we con
 | [0013](0013-employee-codes-from-a-database-sequence.md) | Employee codes come from a database sequence | Superseded by 0014 |
 | [0014](0014-employee-codes-generated-from-id.md) | Employee codes are generated from the row's id | Accepted |
 | [0015](0015-seeding-10000-employees.md) | Seeding 10,000 employees | Accepted |
+| [0016](0016-api-conventions.md) | API conventions | Accepted |
 
 Each note has the same parts: **Context** (why we had to decide), **Decision**, **Options considered** and **Consequences** (good and bad).

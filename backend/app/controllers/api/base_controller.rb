@@ -6,5 +6,12 @@ module Api
     include ActionController::Cookies
     # Every endpoint requires a signed-in user unless it opts out with allow_unauthenticated_access.
     include Authentication
+
+    private
+
+    # Every error response has the same shape: { "errors": { "field": ["message"] } } (ADR 0016).
+    def render_errors(errors, status)
+      render json: { errors: }, status:
+    end
   end
 end

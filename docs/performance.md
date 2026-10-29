@@ -32,8 +32,10 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 | Default page: active, sorted by name | 1.0 ms | Sequential scan + top-N heapsort |
 | Total count for paging | 0.4 ms | Index-only scan on `status` |
 | Search `q=nair` (name, email or code contains) | 3.2 ms | Sequential scan |
-| India, highest salary first | 2.5 ms | Bitmap scan via `(country_id, job_title_id)` + top-N heapsort |
+| India, highest salary first | 2.5 ms | Country id from a subquery, then bitmap scan via `(country_id, job_title_id)` + top-N heapsort |
 
 **What we decided:** no extra indexes for now. Even the search, a sequential scan over every row with `ILIKE '%term%'`, takes about 3 ms. A trigram index (`pg_trgm`) would only pay off at roughly 10× the data, and every index slows inserts and takes space. We'll revisit at that point.
+
+**Country filter:** we filter with `country_id IN (SELECT id FROM countries WHERE code = ...)` rather than joining `countries`. A join made Rails switch the preloads to one wide `LEFT JOIN` across four tables and count with `COUNT(DISTINCT)`. The subquery keeps the small separate preload queries and a plain count, at the same speed.
 
 **N+1 guard:** a request spec checks that a page of 10 employees runs the same number of queries as a page of 2. Without preloading country, department and title, that went from 9 queries to 33. The spec fails, as it should.

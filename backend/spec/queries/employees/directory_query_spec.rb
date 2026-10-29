@@ -26,6 +26,10 @@ RSpec.describe Employees::DirectoryQuery do
     it "lists everyone with status=all" do
       expect(names(status: "all")).to eq([ "Asha Rao", "Ravi Kumar" ])
     end
+
+    it "accepts the status in any case" do
+      expect(names(status: "Terminated")).to eq([ "Ravi Kumar" ])
+    end
   end
 
   describe "filters" do
@@ -95,6 +99,13 @@ RSpec.describe Employees::DirectoryQuery do
 
     it "uses the default ascending order for a disallowed column, even with a minus sign" do
       expect(names(sort: "-password_digest")).to eq(%w[Asha Bina Chen])
+    end
+
+    it "sorts employee codes by number, not as text, once they pass six digits" do
+      create(:employee, id: 1_000_000, full_name: "Million")
+      create(:employee, id: 100_001, full_name: "Hundred thousand")
+
+      expect(names(sort: "-employee_code").first(2)).to eq([ "Million", "Hundred thousand" ])
     end
   end
 end

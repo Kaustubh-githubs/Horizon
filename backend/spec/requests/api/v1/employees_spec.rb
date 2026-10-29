@@ -39,11 +39,11 @@ RSpec.describe "GET /api/v1/employees", type: :request do
       expect(response.parsed_body.dig("meta", "per_page")).to eq(100)
     end
 
-    it "falls back to 25 per page for a zero, negative or non-numeric per_page" do
-      %w[0 -1 abc].each do |value|
-        get "/api/v1/employees", params: { per_page: value }
+    it "falls back to 25 per page for a zero, negative, non-numeric or non-scalar per_page" do
+      %w[per_page=0 per_page=-1 per_page=abc per_page[]=1 per_page[a]=1].each do |query|
+        get "/api/v1/employees?#{query}"
 
-        expect(response.parsed_body.dig("meta", "per_page")).to eq(25), "per_page=#{value}"
+        expect(response.parsed_body.dig("meta", "per_page")).to eq(25), query
       end
     end
 
@@ -56,13 +56,27 @@ RSpec.describe "GET /api/v1/employees", type: :request do
       expect(response.parsed_body["meta"]).to include("page" => 99, "total_count" => 1, "total_pages" => 1)
     end
 
-    it "passes search, filters and sorting through to the query" do
-      create(:employee, full_name: "Asha Rao")
-      create(:employee, full_name: "John Smith")
+    # The query has its own specs. These check the controller passes every parameter through.
+    it "passes search, country and sorting through to the query" do
+      us = create(:country, code: "US")
+      create(:employee, full_name: "Jane Smith", country: us)
+      create(:employee, full_name: "John Smith", country: us)
+      create(:employee, full_name: "Asha Smith")
 
-      get "/api/v1/employees", params: { q: "smith" }
+      get "/api/v1/employees", params: { q: "smith", country: "us", sort: "-full_name" }
 
-      expect(response.parsed_body["data"].pluck("full_name")).to eq([ "John Smith" ])
+      expect(response.parsed_body["data"].pluck("full_name")).to eq([ "John Smith", "Jane Smith" ])
+    end
+
+    it "passes department, job title and status through to the query" do
+      match = create(:employee, :terminated, full_name: "Ravi Kumar")
+      create(:employee, :terminated, department: match.department)
+      create(:employee, department: match.department, job_title: match.job_title)
+
+      get "/api/v1/employees",
+          params: { department_id: match.department_id, job_title_id: match.job_title_id, status: "terminated" }
+
+      expect(response.parsed_body["data"].pluck("full_name")).to eq([ "Ravi Kumar" ])
     end
 
     # Guards against N+1 queries: country, department and title are preloaded.

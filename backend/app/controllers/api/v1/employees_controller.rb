@@ -20,9 +20,10 @@ module Api
       private
 
       # Pagy's own per_page parsing lets a negative value through (and then raises),
-      # so we read it here: missing, zero, negative or junk means the default.
+      # so we read it here: missing, zero, negative or junk means the default. to_s first,
+      # because per_page[]=1 arrives as an Array and per_page[a]=1 as a Hash.
       def per_page
-        requested = params[:per_page].to_i
+        requested = params[:per_page].to_s.to_i
         requested.positive? ? [ requested, MAX_PER_PAGE ].min : PER_PAGE
       end
     end

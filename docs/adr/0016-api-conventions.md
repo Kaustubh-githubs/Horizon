@@ -11,8 +11,8 @@ The React app is the only client, but every endpoint should still look and behav
 - **One error shape** for every failure: `{ "errors": { "field": ["message"] } }`. Errors that aren't about a field use `base`. Forms show each message next to its field.
 - **Lists** return `{ "data": [...], "meta": { "page", "per_page", "total_count", "total_pages" } }`.
   - Paging uses the **Pagy** gem: `page` and `per_page`, 25 by default and at most 100, whatever the client asks for. A missing, zero, negative or non-numeric `per_page` means 25. A page past the end returns no rows, with the real totals in `meta`, so the client can move back to the last page.
-  - Sorting is `sort=column` (ascending) or `sort=-column` (descending), and only from a fixed list of columns, so the parameter can't be used to inject SQL. Anything else gets the default sort (name, ascending). The id breaks ties, so rows never repeat or go missing between pages.
-  - Filters are plain query parameters (`country`, `department_id`, …). Search is `q`.
+  - Sorting is `sort=column` (ascending) or `sort=-column` (descending), and only from a fixed list of columns, so the parameter can't be used to inject SQL. Anything else gets the default sort (name, ascending). The id breaks ties, so rows never repeat or go missing between pages. Sorting by `employee_code` sorts by id: the code is built from the id (ADR 0014), and text order would go wrong once codes pass six digits.
+  - Filters are plain query parameters (`country`, `department_id`, …). Search is `q`. `country` and `status` ignore case; an unknown status means the default (active).
 - **Shapes come from small serializer classes** (`EmployeeSerializer`) that list every field explicitly, so nothing is exposed by accident. Related records are returned as names alongside ids (`department: { id, name }`), so the UI never needs a second request to show a label.
 - **Money is a string** in JSON (`"2500000.5"`), so JavaScript never turns it into a float (ADR 0006).
 - **Query objects** (`app/queries`) build list queries and preload associations, so a page is a fixed number of database queries whatever its size. A spec checks this.

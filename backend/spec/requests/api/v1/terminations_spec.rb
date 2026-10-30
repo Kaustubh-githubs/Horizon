@@ -43,18 +43,18 @@ RSpec.describe "POST /api/v1/employees/:id/termination", type: :request do
     expect(response).to have_http_status(:not_found)
   end
 
-  # 20:00 UTC on 30 Oct is already 01:30 on 31 Oct in India.
+  # "Today" is the UTC date for every user (ADR 0017). At 20:00 UTC on 30 Oct it's already
+  # 31 Oct in India, but the server's today is still the 30th.
   describe "what counts as today" do
     before { travel_to Time.utc(2026, 10, 30, 20, 0) }
 
-    it "uses the time zone the app sends, so the user's today is allowed" do
-      post "/api/v1/employees/#{employee.id}/termination", params: { terminated_on: "2026-10-31", lock_version: 0 },
-                                                         headers: { "X-Time-Zone" => "Asia/Kolkata" }, as: :json
+    it "accepts the UTC date" do
+      terminate(terminated_on: "2026-10-30", lock_version: 0)
 
       expect(response).to have_http_status(:ok)
     end
 
-    it "falls back to the server's zone (UTC) without one, where that date is still the future" do
+    it "treats the next UTC date as the future, whatever the user's own time zone" do
       terminate(terminated_on: "2026-10-31", lock_version: 0)
 
       expect(response.parsed_body["errors"]).to include("terminated_on" => [ "can't be in the future" ])

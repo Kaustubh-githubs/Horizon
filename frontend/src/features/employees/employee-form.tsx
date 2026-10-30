@@ -2,9 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect, type ReactNode } from "react"
 import { Controller, useForm, useWatch, type Control } from "react-hook-form"
 
+import { FormField as Field } from "@/components/form-field"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -25,34 +25,6 @@ type FieldName = keyof EmployeeFormValues
 const FIELDS = Object.keys(employeeFormSchema.shape) as FieldName[]
 const isField = (key: string): key is FieldName =>
   (FIELDS as string[]).includes(key)
-
-function Field({
-  id,
-  label,
-  error,
-  hint,
-  children,
-}: {
-  id: string
-  label: string
-  error?: string
-  hint?: ReactNode
-  children: ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-      {error ? (
-        <p id={`${id}-error`} className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : (
-        hint && <p className="text-sm text-muted-foreground">{hint}</p>
-      )}
-    </div>
-  )
-}
 
 function SelectField({
   name,
@@ -211,6 +183,11 @@ export function EmployeeForm({
           placeholder="Pick a job title"
           control={control}
           error={errors.job_title_id?.message}
+          // Editing the title is for fixing a wrong entry. A promotion changes pay too (ADR 0018).
+          hint={
+            fixed &&
+            "To promote someone, use Change salary → Promotion on their profile, so pay and history change too."
+          }
           options={lookups.job_titles.map((t) => ({
             value: String(t.id),
             label: t.name,

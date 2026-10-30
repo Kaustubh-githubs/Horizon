@@ -9,8 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEmployee } from "@/features/employees/api"
 import { EmployeeLoadState } from "@/features/employees/employee-load-state"
 import { EndEmploymentDialog } from "@/features/employees/end-employment-dialog"
+import { SalaryCard } from "@/features/employees/salary-card"
 import { STATUS_LABELS } from "@/features/employees/status"
-import { formatDate, formatMoney } from "@/lib/format"
+import { formatDate } from "@/lib/format"
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -80,17 +81,11 @@ export function EmployeePage() {
             <Detail label="Department">{employee.department.name}</Detail>
             <Detail label="Job title">{employee.job_title.name}</Detail>
             <Detail label="Hire date">{formatDate(employee.hire_date)}</Detail>
-            <Detail label="Current salary">
-              <span className="tabular-nums">
-                {formatMoney(
-                  employee.current_salary,
-                  employee.current_currency,
-                )}
-              </span>
-            </Detail>
           </dl>
         </CardContent>
       </Card>
+
+      <SalaryCard employee={employee} />
     </section>
   )
 }

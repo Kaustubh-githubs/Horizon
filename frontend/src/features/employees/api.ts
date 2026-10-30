@@ -137,6 +137,83 @@ export function useEndEmployment(id: number) {
   })
 }
 
+export type SalaryReason =
+  "hire" | "annual_raise" | "promotion" | "market_adjustment" | "correction"
+
+export type SalaryRevision = {
+  id: number
+  /** Decimal strings, like every amount (ADR 0006). */
+  amount: string
+  currency: string
+  effective_from: string
+  reason: SalaryReason
+  recorded_at: string
+  previous_amount: string | null
+  change_percent: number | null
+}
+
+/** What peers (same country and job title, active) earn (ADR 0018). */
+export type PayComparison = {
+  country: { code: string; name: string }
+  job_title: { id: number; name: string }
+  currency: string
+  peer_count: number
+  average: string | null
+  median: string | null
+}
+
+export type SalaryChange = {
+  amount: string
+  reason: Exclude<SalaryReason, "hire">
+  /** Only for a promotion: the new job title. */
+  job_title_id?: string
+  lock_version: number
+}
+
+export function useSalaryHistory(employeeId: number) {
+  return useQuery({
+    queryKey: [...employeeKey(employeeId), "salary_revisions"],
+    queryFn: () =>
+      apiRequest<{ data: SalaryRevision[] }>(
+        `/employees/${employeeId}/salary_revisions`,
+      ),
+  })
+}
+
+/** Peer pay for the employee's title, or for `jobTitleId` (e.g. the title of a promotion). */
+export function usePayComparison(
+  employeeId: number,
+  jobTitleId: string | undefined,
+  enabled: boolean,
+) {
+  const query = jobTitleId ? `?job_title_id=${jobTitleId}` : ""
+  return useQuery({
+    queryKey: [...employeeKey(employeeId), "pay_comparison", jobTitleId ?? ""],
+    queryFn: () =>
+      apiRequest<PayComparison>(
+        `/employees/${employeeId}/pay_comparison${query}`,
+      ),
+    enabled,
+  })
+}
+
+export function useChangeSalary(employeeId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (change: SalaryChange) =>
+      apiRequest<SalaryRevision>(`/employees/${employeeId}/salary_revisions`, {
+        method: "POST",
+        body: change,
+      }),
+    // The employee (current salary, title, lock_version), their history and peer figures all
+    // changed, and so may directory pages.
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: employeeKey(employeeId) })
+      void queryClient.invalidateQueries({ queryKey: ["employees"] })
+    },
+  })
+}
+
 export function useLookups() {
   return useQuery({
     queryKey: ["lookups"],

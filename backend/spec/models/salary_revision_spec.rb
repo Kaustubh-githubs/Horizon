@@ -32,6 +32,12 @@ RSpec.describe SalaryRevision, type: :model do
       expect(revision).not_to be_valid
     end
 
+    it "rejects an amount too large for the money column" do
+      revision.amount = 10**13
+
+      expect(revision.tap(&:valid?).errors[:amount]).to eq([ "is too large" ])
+    end
+
     it "trims and uppercases the currency" do
       expect(described_class.new(currency: " inr ").currency).to eq("INR")
     end
@@ -42,6 +48,12 @@ RSpec.describe SalaryRevision, type: :model do
 
       expect(revision).not_to be_valid
     end
+  end
+
+  it "can't be added for a former employee" do
+    revision.employee = create(:employee, :terminated)
+
+    expect(revision.tap(&:valid?).errors[:base]).to eq([ "Former employees' salaries can't be changed" ])
   end
 
   describe "effective date" do

@@ -18,7 +18,7 @@ RSpec.describe "GET /api/v1/employees", type: :request do
       expect(response.parsed_body["data"].first).to include(
         "id" => employee.id, "employee_code" => employee.employee_code, "full_name" => "Asha Rao",
         "status" => "active", "current_salary" => "2500000.5", "current_currency" => employee.current_currency,
-        "country" => { "code" => employee.country.code, "name" => employee.country.name },
+        "country" => { "id" => employee.country_id, "code" => employee.country.code, "name" => employee.country.name },
         "department" => { "id" => employee.department_id, "name" => employee.department.name },
         "lock_version" => 0
       )

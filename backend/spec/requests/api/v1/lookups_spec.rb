@@ -22,9 +22,9 @@ RSpec.describe "GET /api/v1/lookups", type: :request do
     it "returns countries, departments and job titles sorted by name", :aggregate_failures do
       get "/api/v1/lookups"
 
-      expect(response.parsed_body["countries"]).to eq([
-        { "code" => "IN", "name" => "India", "currency_code" => "INR" },
-        { "code" => "US", "name" => "United States", "currency_code" => "USD" }
+      expect(response.parsed_body["countries"]).to match([
+        { "id" => Integer, "code" => "IN", "name" => "India", "currency_code" => "INR" },
+        { "id" => Integer, "code" => "US", "name" => "United States", "currency_code" => "USD" }
       ])
       expect(response.parsed_body["departments"].pluck("name")).to eq(%w[Engineering Sales])
       expect(response.parsed_body["job_titles"].pluck("name")).to eq([ "Account Executive", "Software Engineer" ])

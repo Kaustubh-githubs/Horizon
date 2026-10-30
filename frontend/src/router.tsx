@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router"
 import { AppShell } from "@/components/app-shell"
 import { NotFound, RouteError } from "@/components/route-error"
 import { LoginPage } from "@/features/auth/login-page"
+import { BudgetsPage } from "@/features/budgets/budgets-page"
 import { RequireAuth } from "@/features/auth/require-auth"
 import { DirectoryPage } from "@/features/employees/directory-page"
 import { EditEmployeePage } from "@/features/employees/edit-employee-page"
@@ -34,6 +35,7 @@ export const router = createBrowserRouter([
               { path: "/employees/:id", element: <EmployeePage /> },
               { path: "/employees/:id/edit", element: <EditEmployeePage /> },
               { path: "/insights", element: <InsightsPage /> },
+              { path: "/budgets", element: <BudgetsPage /> },
               { path: "*", element: <NotFound /> },
             ],
           },

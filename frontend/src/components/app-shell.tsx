@@ -1,4 +1,4 @@
-import { BarChart3Icon, LogOutIcon, UsersIcon } from "lucide-react"
+import { BarChart3Icon, LogOutIcon, UsersIcon, WalletIcon } from "lucide-react"
 import { NavLink, Outlet, useNavigate } from "react-router"
 import { toast } from "sonner"
 
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { to: "/employees", label: "Employees", icon: UsersIcon },
   { to: "/insights", label: "Insights", icon: BarChart3Icon },
+  { to: "/budgets", label: "Budgets", icon: WalletIcon },
 ]
 
 /** The layout around every logged-in page: sidebar navigation, the current user, and logout. */

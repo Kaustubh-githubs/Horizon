@@ -26,6 +26,11 @@ Rails.application.routes.draw do
         resource :pay_position, only: :show
       end
 
+      # This year's budget per department (ADR 0020), and who set or changed each one (ADR 0012).
+      resources :budgets, only: %i[index create update] do
+        resources :audits, only: :index, controller: "budget_audits"
+      end
+
       # The insights dashboard (ADR 0019).
       get "insights/overview" => "insights#overview"
       get "insights/segments" => "insights#segments"

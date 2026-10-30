@@ -24,6 +24,9 @@ gem "faker", "~> 3.8", require: false
 # Paging for list endpoints (ADR 0016).
 gem "pagy", "~> 43.8"
 
+# Who changed what, and when (ADR 0012).
+gem "audited", "~> 5.8"
+
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 

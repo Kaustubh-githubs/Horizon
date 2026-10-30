@@ -37,9 +37,10 @@ RSpec.describe Insights::SegmentStatsQuery do
       )
     end
 
-    it "adds the median and payroll in INR, so countries can be compared on a chart" do
+    it "adds the spread and payroll in INR, so countries can be compared on a chart" do
       expect(row(stats(by: "country"), "United States")).to include(
-        currency: "USD", median: "100000.0", converted: { currency: "INR", median: "8333333.33", payroll: "8333333.33" }
+        currency: "USD", median: "100000.0",
+        converted: { currency: "INR", p25: "8333333.33", median: "8333333.33", p75: "8333333.33", payroll: "8333333.33" }
       )
     end
   end
@@ -89,5 +90,45 @@ RSpec.describe Insights::SegmentStatsQuery do
 
   it "falls back to countries for an unknown segment" do
     expect(stats(by: "favourite_colour")[:by]).to eq("country")
+  end
+
+  # The middle half of salaries: India's 1M, 2M and 3M give 1.5M and 2.5M.
+  it "gives the 25th and 75th percentiles, to show how spread out pay is" do
+    expect(row(stats(by: "country"), "India")).to include(p25: "1500000.0", p75: "2500000.0")
+  end
+
+  describe "filters" do
+    it "narrows who's counted by any combination of dimensions, keeping the country's currency", :aggregate_failures do
+      result = stats(by: "department", country_code: "in", tenure: "1_3")
+
+      expect(result).to include(currency: "INR", converted: false)
+      expect(result[:rows]).to contain_exactly(include(label: "Engineering", headcount: 1, median: "2000000.0"))
+    end
+
+    it "converts to INR when the filters still span countries" do
+      result = stats(by: "country", department_id: engineering.id)
+
+      expect(result[:rows].to_h { |r| [ r[:label], r[:headcount] ] }).to eq("India" => 2, "United States" => 1)
+    end
+
+    it "names the filters applied, for the page to describe" do
+      expect(stats(by: "job_title", department_id: sales.id, tenure: "5_10")[:filters]).to include(
+        department: { id: sales.id, name: "Sales" }, tenure: { key: "5_10", label: "5–10 years" }, country: nil
+      )
+    end
+
+    # Hired exactly a year ago: grouping puts them in "1–3 years", so the filter must too.
+    it "puts someone on a band's edge in the same band whether grouping or filtering", :aggregate_failures do
+      create(:employee, country: india, department: sales, current_salary: "1500000", hire_date: Date.new(2025, 10, 30))
+
+      expect(row(stats(by: "tenure"), "1–3 years")[:headcount]).to eq(2)
+      expect(stats(by: "tenure", tenure: "1_3")[:rows].sum { |r| r[:headcount] }).to eq(2)
+    end
+
+    it "refuses an unknown department, job title or tenure band", :aggregate_failures do
+      expect { stats(department_id: 0) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { stats(job_title_id: 0) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { stats(tenure: "forever") }.to raise_error(ActiveRecord::RecordNotFound)
+    end
   end
 end

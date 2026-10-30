@@ -89,6 +89,21 @@ RSpec.describe "GET /api/v1/employees", type: :request do
     end
   end
 
+  describe "GET /api/v1/employees/summary" do
+    before { sign_in }
+
+    it "summarises the same people as the list, passing its filters through", :aggregate_failures do
+      india = create(:country, code: "IN", name: "India")
+      create(:employee, full_name: "Ravi Nair", country: india)
+      create(:employee, full_name: "John Smith")
+
+      get "/api/v1/employees/summary", params: { q: "nair", country: "in" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to include("total" => 1, "countries" => [ { "code" => "IN", "name" => "India", "count" => 1 } ])
+    end
+  end
+
   def count_queries(&)
     count = 0
     counter = ->(*, payload) { count += 1 unless payload[:name].in?(%w[SCHEMA TRANSACTION]) }

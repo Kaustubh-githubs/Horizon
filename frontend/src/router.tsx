@@ -1,38 +1,49 @@
 import { createBrowserRouter, Navigate } from "react-router"
 
 import { AppShell } from "@/components/app-shell"
+import { NotFound, RouteError } from "@/components/route-error"
 import { LoginPage } from "@/features/auth/login-page"
 import { RequireAuth } from "@/features/auth/require-auth"
 import { DirectoryPage } from "@/features/employees/directory-page"
+import { EditEmployeePage } from "@/features/employees/edit-employee-page"
+import { EmployeePage } from "@/features/employees/employee-page"
+import { NewEmployeePage } from "@/features/employees/new-employee-page"
 import { PlaceholderPage } from "@/pages/placeholder-page"
 
 export const router = createBrowserRouter([
-  { path: "/login", element: <LoginPage /> },
+  {
+    path: "/login",
+    element: <LoginPage />,
+    errorElement: <RouteError fullPage />,
+  },
   {
     element: <RequireAuth />,
+    errorElement: <RouteError fullPage />,
     children: [
       {
         element: <AppShell />,
         children: [
-          { index: true, element: <Navigate to="/employees" replace /> },
-          { path: "/employees", element: <DirectoryPage /> },
           {
-            path: "/insights",
-            element: (
-              <PlaceholderPage
-                title="Insights"
-                description="Pay insights arrive in a later slice."
-              />
-            ),
-          },
-          {
-            path: "*",
-            element: (
-              <PlaceholderPage
-                title="Page not found"
-                description="Check the address."
-              />
-            ),
+            // A page that crashes is replaced by the error below, inside the shell,
+            // so the sidebar still works for getting somewhere else.
+            errorElement: <RouteError />,
+            children: [
+              { index: true, element: <Navigate to="/employees" replace /> },
+              { path: "/employees", element: <DirectoryPage /> },
+              { path: "/employees/new", element: <NewEmployeePage /> },
+              { path: "/employees/:id", element: <EmployeePage /> },
+              { path: "/employees/:id/edit", element: <EditEmployeePage /> },
+              {
+                path: "/insights",
+                element: (
+                  <PlaceholderPage
+                    title="Insights"
+                    description="Pay insights arrive in a later slice."
+                  />
+                ),
+              },
+              { path: "*", element: <NotFound /> },
+            ],
           },
         ],
       },

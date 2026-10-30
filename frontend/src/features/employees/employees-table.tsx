@@ -1,4 +1,5 @@
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react"
+import { Link } from "react-router"
 
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -11,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Employee } from "@/features/employees/api"
+import { STATUS_LABELS } from "@/features/employees/status"
 import { formatDate, formatMoney } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -137,7 +139,12 @@ export function EmployeesTable({
                     {employee.employee_code}
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{employee.full_name}</div>
+                    <Link
+                      to={`/employees/${employee.id}`}
+                      className="font-medium hover:underline"
+                    >
+                      {employee.full_name}
+                    </Link>
                     <div className="text-xs text-muted-foreground">
                       {employee.email}
                     </div>
@@ -162,7 +169,7 @@ export function EmployeesTable({
                         employee.status === "active" ? "secondary" : "outline"
                       }
                     >
-                      {employee.status === "active" ? "Active" : "Terminated"}
+                      {STATUS_LABELS[employee.status]}
                     </Badge>
                   </TableCell>
                 </TableRow>

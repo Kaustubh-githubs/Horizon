@@ -1,4 +1,6 @@
+import { PlusIcon } from "lucide-react"
 import { useEffect, useEffectEvent, useState } from "react"
+import { Link } from "react-router"
 
 import { Button } from "@/components/ui/button"
 import { DirectoryFiltersBar } from "@/features/employees/directory-filters"
@@ -58,6 +60,12 @@ export function DirectoryPage() {
               : "Loading…"}
           </p>
         </div>
+        <Button asChild>
+          <Link to="/employees/new">
+            <PlusIcon data-icon="inline-start" />
+            Add employee
+          </Link>
+        </Button>
       </div>
 
       <DirectoryFiltersBar

@@ -2,6 +2,8 @@
 // (the Vite proxy in development, the reverse proxy in production), so the session
 // cookie is sent automatically and no CORS setup is needed (ADR 0001, 0009).
 
+import { browserTimeZone } from "@/lib/dates"
+
 /** The API's error shape: `{ "errors": { "field": ["message"] } }`. */
 export type ApiErrors = Record<string, string[]>
 
@@ -31,6 +33,8 @@ export async function apiRequest<T>(
     credentials: "same-origin",
     headers: {
       Accept: "application/json",
+      // Date rules ("today or earlier") use the user's today, not the server's.
+      "X-Time-Zone": browserTimeZone,
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
     },
     body: body === undefined ? undefined : JSON.stringify(body),

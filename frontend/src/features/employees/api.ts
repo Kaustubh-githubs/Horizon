@@ -1,4 +1,9 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 
 import { apiRequest } from "@/lib/api"
 
@@ -12,7 +17,7 @@ export type Employee = {
   hire_date: string
   status: EmployeeStatus
   terminated_on: string | null
-  country: { code: string; name: string }
+  country: { id: number; code: string; name: string }
   department: { id: number; name: string }
   job_title: { id: number; name: string }
   /** A decimal string, never a JS number, so no float rounding (ADR 0006). */
@@ -29,7 +34,7 @@ export type PageMeta = {
 }
 
 export type Lookups = {
-  countries: { code: string; name: string; currency_code: string }[]
+  countries: { id: number; code: string; name: string; currency_code: string }[]
   departments: { id: number; name: string }[]
   job_titles: { id: number; name: string }[]
 }
@@ -58,6 +63,77 @@ export function useEmployees(filters: DirectoryFilters) {
       apiRequest<{ data: Employee[]; meta: PageMeta }>(`/employees?${query}`),
     // Keep showing the current page while the next one loads, instead of flashing empty.
     placeholderData: keepPreviousData,
+  })
+}
+
+export const employeeKey = (id: number | string) => ["employee", String(id)]
+
+export function useEmployee(id: string) {
+  return useQuery({
+    queryKey: employeeKey(id),
+    queryFn: () => apiRequest<Employee>(`/employees/${id}`),
+  })
+}
+
+/** What the add form sends. Ids and the salary are strings, as the form holds them. */
+export type NewEmployee = {
+  full_name: string
+  email: string
+  hire_date: string
+  country_id: string
+  department_id: string
+  job_title_id: string
+  current_salary: string
+}
+
+/** Only these can change after creation (ADR 0017). lock_version catches conflicting edits. */
+export type EmployeeChanges = Pick<
+  NewEmployee,
+  "full_name" | "email" | "department_id" | "job_title_id"
+> & { lock_version: number }
+
+export type Termination = { terminated_on: string; lock_version: number }
+
+// After any change: store the fresh employee, and refetch directory pages so they show it too.
+function useEmployeeSaved() {
+  const queryClient = useQueryClient()
+  return (employee: Employee) => {
+    queryClient.setQueryData(employeeKey(employee.id), employee)
+    void queryClient.invalidateQueries({ queryKey: ["employees"] })
+  }
+}
+
+export function useCreateEmployee() {
+  const onSaved = useEmployeeSaved()
+  return useMutation({
+    mutationFn: (employee: NewEmployee) =>
+      apiRequest<Employee>("/employees", { method: "POST", body: employee }),
+    onSuccess: onSaved,
+  })
+}
+
+export function useUpdateEmployee(id: number) {
+  const onSaved = useEmployeeSaved()
+  return useMutation({
+    mutationFn: (changes: EmployeeChanges) =>
+      apiRequest<Employee>(`/employees/${id}`, {
+        method: "PATCH",
+        body: changes,
+      }),
+    onSuccess: onSaved,
+  })
+}
+
+/** "End employment" in the UI; the API calls it a termination (ADR 0017). */
+export function useEndEmployment(id: number) {
+  const onSaved = useEmployeeSaved()
+  return useMutation({
+    mutationFn: (termination: Termination) =>
+      apiRequest<Employee>(`/employees/${id}/termination`, {
+        method: "POST",
+        body: termination,
+      }),
+    onSuccess: onSaved,
   })
 }
 

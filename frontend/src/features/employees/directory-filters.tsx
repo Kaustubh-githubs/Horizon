@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { DirectoryFilters, Lookups } from "@/features/employees/api"
+import { STATUS_LABELS } from "@/features/employees/status"
 
 // Radix Select can't hold an empty value, so "all" stands for "no filter".
 const ALL = "all"
@@ -118,8 +119,8 @@ export function DirectoryFiltersBar({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="active">Active</SelectItem>
-          <SelectItem value="terminated">Terminated</SelectItem>
+          <SelectItem value="active">{STATUS_LABELS.active}</SelectItem>
+          <SelectItem value="terminated">{STATUS_LABELS.terminated}</SelectItem>
           <SelectItem value="all">All statuses</SelectItem>
         </SelectContent>
       </Select>

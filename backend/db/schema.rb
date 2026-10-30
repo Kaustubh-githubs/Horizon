@@ -10,9 +10,31 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_232633) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_30_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "audits", force: :cascade do |t|
+    t.bigint "auditable_id"
+    t.string "auditable_type"
+    t.bigint "associated_id"
+    t.string "associated_type"
+    t.bigint "user_id"
+    t.string "user_type"
+    t.string "username"
+    t.string "action"
+    t.jsonb "audited_changes"
+    t.integer "version", default: 0
+    t.string "comment"
+    t.string "remote_address"
+    t.string "request_uuid"
+    t.datetime "created_at"
+    t.index ["associated_type", "associated_id"], name: "associated_index"
+    t.index ["auditable_type", "auditable_id", "version"], name: "auditable_index"
+    t.index ["created_at"], name: "index_audits_on_created_at"
+    t.index ["request_uuid"], name: "index_audits_on_request_uuid"
+    t.index ["user_id", "user_type"], name: "user_index"
+  end
 
   create_table "countries", force: :cascade do |t|
     t.string "code", null: false
@@ -24,6 +46,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_232633) do
     t.index ["code"], name: "index_countries_on_code", unique: true
     t.check_constraint "code::text ~ '^[A-Z]{2}$'::text", name: "countries_code_format"
     t.check_constraint "currency_code::text ~ '^[A-Z]{3}$'::text", name: "countries_currency_code_format"
+  end
+
+  create_table "department_budgets", force: :cascade do |t|
+    t.bigint "department_id", null: false
+    t.integer "year", null: false
+    t.decimal "amount", precision: 15, scale: 2, null: false
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["department_id", "year"], name: "index_department_budgets_on_department_id_and_year", unique: true
+    t.check_constraint "amount > 0::numeric", name: "department_budgets_amount_positive"
+    t.check_constraint "year >= 2000 AND year <= 2100", name: "department_budgets_year_sensible"
   end
 
   create_table "departments", force: :cascade do |t|
@@ -122,6 +156,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_232633) do
     t.index ["persona_id"], name: "index_users_on_persona_id"
   end
 
+  add_foreign_key "department_budgets", "departments"
   add_foreign_key "employees", "countries"
   add_foreign_key "employees", "departments"
   add_foreign_key "employees", "job_titles"

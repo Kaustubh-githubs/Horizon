@@ -9,7 +9,10 @@ module Api
 
     # Field for each unique index, so a duplicate that slips past the model's check (two saves
     # racing) still gets the usual field error instead of a 500.
-    UNIQUE_INDEX_FIELDS = { "index_employees_on_email" => :email }.freeze
+    UNIQUE_INDEX_FIELDS = {
+      "index_employees_on_email" => :email,
+      "index_department_budgets_on_department_id_and_year" => :year
+    }.freeze
 
     # List endpoints page 25 at a time by default, and never more than 100 (ADR 0016).
     PER_PAGE = 25
@@ -39,6 +42,11 @@ module Api
     end
 
     private
+
+    # The audited gem asks the controller who is making a change, when it writes the audit row (ADR 0012).
+    def current_user
+      Current.user
+    end
 
     # A single value from the query or body. An array or hash (`job_title_id[]=5`) counts as
     # missing, so a malformed request gets the normal validation error instead of a 500.

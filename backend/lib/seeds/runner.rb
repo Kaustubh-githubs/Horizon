@@ -18,10 +18,20 @@ module Seeds
       @demo_password = demo_password
     end
 
+    # Budget as a share of payroll, taken in turn by the departments in name order, so the demo
+    # always has some over budget (below 1), some near the limit and most under (ADR 0020).
+    BUDGET_SHARES = %w[1.25 0.94 1.06 1.3 0.97 1.18 1.04 1.4].map { |share| BigDecimal(share) }.freeze
+
     def call
       seed_reference_data
       seed_demo_user
+      seed_employees
+      seed_budgets
+    end
 
+    private
+
+    def seed_employees
       if Employee.exists?
         @out.puts "Employees already seeded (#{Employee.count}), skipping. Use bin/rails db:reset for a fresh start."
         return
@@ -36,7 +46,24 @@ module Seeds
                        employees: Employee.count, revisions: SalaryRevision.count, seconds:)
     end
 
-    private
+    # This year's budget for every department with active staff, set from its payroll in INR.
+    # Runs on its own, so a database seeded before budgets existed gets them too. Created one by one
+    # (there are only a few), so each budget's history starts with it being set (ADR 0012).
+    # Always this year, whatever `today` the employees were generated for: it's the only year a
+    # budget can have (ADR 0020).
+    def seed_budgets
+      year = DepartmentBudget.current_year
+      return if DepartmentBudget.exists?(year:)
+
+      payrolls = Insights.with_rates(Employee.active).joins(:department)
+                         .group(:department_id, "departments.name").order("departments.name")
+                         .pluck(:department_id, Arel.sql("SUM(#{Insights::CONVERTED_SALARY})"))
+      payrolls.each_with_index do |(department_id, payroll), index|
+        share = BUDGET_SHARES[index % BUDGET_SHARES.size]
+        DepartmentBudget.create!(department_id:, year:, amount: [ (payroll * share).round(-3), 1_000 ].max)
+      end
+      @out.puts "Seeded #{payrolls.size} department budgets for #{year}."
+    end
 
     # Upsert so re-running refreshes names and rates; lookups that already exist are skipped.
     def seed_reference_data

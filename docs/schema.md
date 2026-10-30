@@ -15,6 +15,7 @@ erDiagram
     job_titles ||--o{ employees : "titles"
     employees ||--o{ salary_revisions : "has history of"
     countries }o..|| exchange_rates : "currency converts via"
+    departments ||--o{ department_budgets : "budgeted by"
 
     countries {
         bigint id PK
@@ -59,19 +60,29 @@ erDiagram
         date effective_from "not in the future, not before hire"
         string reason "hire | annual_raise | promotion | market_adjustment | correction"
     }
+    department_budgets {
+        bigint id PK
+        bigint department_id FK
+        integer year "UK with department"
+        decimal amount "INR, greater than 0, decimal(15,2)"
+        integer lock_version "optimistic locking"
+    }
 ```
+
+`department_budgets` ✅ (ADR 0020): one yearly budget per department, always in INR (the reporting currency), so it has no currency column.
 
 All tables also have `created_at` and `updated_at`.
 
-### Login ✅ and audit trail ⏳
+### Login ✅ and audit trail ✅ (budgets) ⏳ (employees, salaries)
 
-Login tables (personas, users, sessions) are built. The audit trail (add-on) is still planned. They link to the domain only through `audits`, which records which user changed which employee or salary revision.
+Login tables (personas, users, sessions) are built. The `audits` table is built and department budgets use it (ADR 0020). Employees and salary revisions join it in the audit-trail add-on. Users link to the domain only through `audits`, which records which user changed which record.
 
 ```mermaid
 erDiagram
     personas ||--o{ users : "describes"
     users ||--o{ sessions : "logs in with"
     users ||--o{ audits : "made"
+    department_budgets ||--o{ audits : "changes recorded in"
     employees ||--o{ audits : "changes recorded in"
     employees ||--o{ salary_revisions : "has history of"
     salary_revisions ||--o{ audits : "changes recorded in"
@@ -97,7 +108,7 @@ erDiagram
     }
     audits {
         bigint id PK
-        string auditable_type "polymorphic: Employee or SalaryRevision"
+        string auditable_type "polymorphic: DepartmentBudget, later Employee and SalaryRevision"
         bigint auditable_id
         string associated_type "Employee, for salary revisions"
         bigint associated_id
@@ -108,6 +119,9 @@ erDiagram
         string remote_address
         string request_uuid
     }
+    department_budgets {
+        bigint id PK
+    }
     employees {
         bigint id PK
     }
@@ -116,7 +130,7 @@ erDiagram
     }
 ```
 
-`audits` comes from the `audited` gem's generator (ADR 0012). It has no `updated_at`, because audit rows are never changed. The link from `audits` to employees and salary revisions is polymorphic (a type column plus an ID column), so it can't be a real foreign key.
+`audits` comes from the `audited` gem's generator (ADR 0012). It has no `updated_at`, because audit rows are never changed. The link from `audits` to the record it describes is polymorphic (a type column plus an ID column), so it can't be a real foreign key.
 
 ## Tables
 
@@ -131,7 +145,8 @@ erDiagram
 | `personas` | ✅ | The kind of user, e.g. HR Manager | ADR 0010 |
 | `users` | ✅ | People who log in, each with a persona | ADR 0009, 0010 |
 | `sessions` | ✅ | One row per login | ADR 0009 |
-| `audits` | ⏳ audit add-on | Who changed what, and when (`audited` gem) | ADR 0012 |
+| `department_budgets` | ✅ | Each department's yearly budget, in INR | ADR 0020 |
+| `audits` | ✅ budgets, ⏳ employees and salaries | Who changed what, and when (`audited` gem) | ADR 0012, 0020 |
 
 ## Rules the database enforces
 
@@ -145,7 +160,8 @@ Some rules can't be check constraints, so the models enforce them:
 - **Rules that depend on today's date:** a salary revision's `effective_from` can't be in the future. Postgres expects check constraints to give the same answer forever, and `CURRENT_DATE` doesn't.
 - **Rules that compare against another table:** `effective_from` can't be before the employee's `hire_date`, and a currency must match the country's. A check constraint only sees its own row.
 - **Append-only history:** a saved salary revision can't be edited or deleted. Mistakes are fixed with a new `correction` row. An employee with salary history can't be deleted either.
-- **Unique:** `countries.code`, `exchange_rates.currency_code`, `employees.employee_code`, `employees.email`.
+- **Unique:** `countries.code`, `exchange_rates.currency_code`, `employees.employee_code`, `employees.email`, `department_budgets (department_id, year)`.
+- **Budgets:** `amount > 0`, and `year` between 2000 and 2100. Only this year's budget can be set or changed, which depends on today's date, so the model enforces it.
 - **Unique, ignoring case:** `countries.name`, `departments.name` and `job_titles.name` use a unique index on `LOWER(name)`. "Engineering" and "engineering" can't both exist, but the display keeps HR's capitalisation. A plain unique index would let the spreadsheet's spelling problem back in through the lookup tables.
 - **Formats:** `countries.code` is two uppercase letters, and currency codes are three (check constraints, e.g. `code ~ '^[A-Z]{2}$'`).
 - **Status:** `status IN ('active', 'terminated')`. `terminated_on` is set if and only if the status is `terminated`, and is never before `hire_date`.

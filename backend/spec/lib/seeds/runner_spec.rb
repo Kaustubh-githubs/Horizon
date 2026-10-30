@@ -57,6 +57,38 @@ RSpec.describe Seeds::Runner do
   it "does not duplicate anything when run again" do
     run
 
-    expect { run }.not_to(change { [ Country.count, JobTitle.count, Persona.count, User.count, Employee.count, SalaryRevision.count ] })
+    expect { run }.not_to(change do
+      [ Country.count, JobTitle.count, Persona.count, User.count, Employee.count, SalaryRevision.count,
+        DepartmentBudget.count ]
+    end)
+  end
+
+  # So the Budgets page has something to show (ADR 0020).
+  describe "budgets" do
+    it "sets this year's budget for every department with active staff" do
+      run
+
+      with_staff = Employee.active.distinct.pluck(:department_id).sort
+      expect(DepartmentBudget.where(year: today.year).pluck(:department_id).sort).to eq(with_staff)
+    end
+
+    it "makes a mix of over, near and under budget for the demo" do
+      run
+
+      expect(Budgets::OverviewQuery.new.call[:departments].pluck(:status)).to include("over", "near", "under")
+    end
+
+    it "starts each budget's history with it being set" do
+      run
+
+      expect(DepartmentBudget.all.map { |budget| budget.audits.pluck(:action) }).to all(eq([ "create" ]))
+    end
+
+    it "adds budgets to a database that already has employees" do
+      run
+      DepartmentBudget.delete_all
+
+      expect { run }.to change(DepartmentBudget, :count).from(0)
+    end
   end
 end

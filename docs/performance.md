@@ -63,3 +63,9 @@ Every figure is one SQL aggregate over the 9,194 active employees (`GROUP BY` wi
 | Pay changes, last 12 months (a `LAG` window over all 30,287 revisions) | 45 ms |
 
 **What we decided:** no caching or summary tables. The slowest call, pay changes, takes about 45 ms because the window has to see every employee's whole history to find each change's previous salary. Everything else is under 20 ms. If the data grows tenfold, the first step would be caching the overview and segments for a few minutes, since pay changes rarely.
+
+## Department budgets (ADR 0020)
+
+**Overview** (`GET /budgets`): three small queries over the 9,193 active employees (headcount per department, payroll in INR per department with a `GROUP BY` and the exchange-rate joins, and this year's 8 budgets), then the % used, status and runway per department in Ruby. About 2 ms on the seeded database (average of 5 warm runs).
+
+**History** (`GET /budgets/:id/audits`): a budget has a handful of audit rows, read in one query on the gem's `(auditable_type, auditable_id, version)` index, with the users in a second query.

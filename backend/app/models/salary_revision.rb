@@ -9,14 +9,21 @@ class SalaryRevision < ApplicationRecord
     correction: "correction"
   }, validate: true
 
+  # Money columns are decimal(15,2), so amounts must stay below 10^13 (ADR 0006). Checked in the
+  # model, so a huge number is a field error instead of a database overflow.
+  MAX_AMOUNT = 10**13
+
   normalizes :currency, with: ->(value) { value.strip.upcase }
 
   validates :amount, presence: true, numericality: { greater_than: 0, allow_blank: true }
+  validate :amount_fits_column
   validates :currency, presence: true
   validates :effective_from, presence: true
   validate :effective_from_not_in_future
   validate :effective_from_not_before_hire_date
   validate :currency_matches_employee_country
+  # Former employees' pay is frozen with the rest of their record (ADR 0017).
+  validate :employee_still_employed, on: :create
 
   # History is append-only: a mistake is fixed with a new `correction` revision, never by editing.
   def readonly?
@@ -24,6 +31,14 @@ class SalaryRevision < ApplicationRecord
   end
 
   private
+
+  def amount_fits_column
+    errors.add(:amount, "is too large") if amount.present? && amount >= MAX_AMOUNT
+  end
+
+  def employee_still_employed
+    errors.add(:base, "Former employees' salaries can't be changed") if employee&.terminated?
+  end
 
   def effective_from_not_in_future
     return if effective_from.blank? || effective_from <= Date.current

@@ -16,6 +16,10 @@ Rails.application.routes.draw do
       resources :employees, only: %i[index show create update] do
         # POST to terminate. Employees are never deleted (ADR 0008).
         resource :termination, only: :create
+        # Salary history, and recording a change (ADR 0018).
+        resources :salary_revisions, only: %i[index create]
+        # What peers in the same country and job title earn, for the change-salary dialog.
+        resource :pay_comparison, only: :show
       end
     end
   end

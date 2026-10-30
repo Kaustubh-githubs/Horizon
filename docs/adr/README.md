@@ -21,5 +21,6 @@ Short notes on the decisions that shape Horizon: what we chose, what else we con
 | [0015](0015-seeding-10000-employees.md) | Seeding 10,000 employees | Accepted |
 | [0016](0016-api-conventions.md) | API conventions | Accepted |
 | [0017](0017-editing-and-terminating-employees.md) | Editing and terminating employees | Accepted |
+| [0018](0018-changing-salaries.md) | Changing salaries | Accepted |
 
 Each note has the same parts: **Context** (why we had to decide), **Decision**, **Options considered** and **Consequences** (good and bad).

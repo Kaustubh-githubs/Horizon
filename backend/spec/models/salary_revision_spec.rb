@@ -75,6 +75,15 @@ RSpec.describe SalaryRevision, type: :model do
 
       expect(revision).not_to be_valid
     end
+
+    # Keeps history in order, so the latest revision is always the current salary (ADR 0004).
+    it "rejects a date before the employee's latest revision" do
+      employee = create(:employee, hire_date: Date.new(2024, 1, 15))
+      create(:salary_revision, employee:, effective_from: Date.new(2026, 10, 28))
+      later = build(:salary_revision, employee:, effective_from: Date.new(2026, 10, 27), reason: "correction")
+
+      expect(later.tap(&:valid?).errors[:effective_from]).to eq([ "can't be before the latest salary change (2026-10-28)" ])
+    end
   end
 
   describe "append-only history" do

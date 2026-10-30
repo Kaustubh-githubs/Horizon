@@ -33,7 +33,9 @@ module Horizon
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    # Everything on the server is UTC: timestamps are stored in UTC, and "today" in every date
+    # rule is the UTC date, so all users share one clock. The UI converts for display (ADR 0017).
+    config.time_zone = "UTC"
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Only loads a smaller set of middleware suitable for API only apps.

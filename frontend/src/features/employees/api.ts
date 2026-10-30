@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 
-import { apiRequest } from "@/lib/api"
+import { apiRequest, toQueryString } from "@/lib/api"
 
 export type EmployeeStatus = "active" | "terminated"
 
@@ -51,11 +51,7 @@ export type DirectoryFilters = {
 }
 
 export function useEmployees(filters: DirectoryFilters) {
-  const query = new URLSearchParams(
-    Object.entries(filters).filter((entry): entry is [string, string] =>
-      Boolean(entry[1]),
-    ),
-  ).toString()
+  const query = toQueryString(filters)
 
   return useQuery({
     queryKey: ["employees", filters],

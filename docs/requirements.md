@@ -21,7 +21,7 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 - **Add, edit and view employees,** with country, department and title picked from fixed lists so data stays clean.
 - **End employment instead of deleting.** The record is kept, read-only, with a last working day of today or earlier.
 - **Salary history.** Each change has an amount, currency and reason, and takes effect on the day it's recorded. The latest one is the current salary. A promotion also updates the job title.
-- **Pay insights.** Per country and per title: headcount, lowest/median/average/highest pay and total payroll in local currency. An org-wide USD total from a fixed, dated exchange-rate table. A list of people paid well below their role's median.
+- **Pay insights dashboard.** By country, department, job title and tenure: headcount, lowest/median/average/highest pay and total payroll. One country is shown in its own currency; figures across countries are converted to INR from a fixed, dated exchange-rate table. People paid more than 40% below or above the median for their role in their country are flagged with a ★, on the dashboard and on their profile.
 - **Seed script** that creates the same 10,000 realistic employees on every run, in seconds.
 
 "Salary" means annual gross base pay in local currency, compared within a country.

@@ -18,3 +18,6 @@ ACME pays people in several currencies. An "average salary" across INR and USD a
 - Good: per-country numbers are exact and stable, and tests stay predictable.
 - Good: org-wide totals are possible and clearly labelled as approximate.
 - Cost: rates go stale. Updating them is a data change, and a live rate API can be plugged in later.
+
+## Updates
+- **2026-10-30, INR for converted figures:** the insights dashboard converts figures across countries to **INR** rather than USD, because HR thinks in rupees and India is the largest country. Single-country figures still never convert. See ADR 0019.

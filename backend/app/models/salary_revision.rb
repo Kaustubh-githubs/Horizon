@@ -21,6 +21,8 @@ class SalaryRevision < ApplicationRecord
   validates :effective_from, presence: true
   validate :effective_from_not_in_future
   validate :effective_from_not_before_hire_date
+  # History stays in order, so the latest revision is always the current salary (ADR 0004).
+  validate :effective_from_not_before_latest_revision, on: :create
   validate :currency_matches_employee_country
   # Former employees' pay is frozen with the rest of their record (ADR 0017).
   validate :employee_still_employed, on: :create
@@ -34,6 +36,13 @@ class SalaryRevision < ApplicationRecord
 
   def amount_fits_column
     errors.add(:amount, "is too large") if amount.present? && amount >= MAX_AMOUNT
+  end
+
+  def effective_from_not_before_latest_revision
+    return if effective_from.blank? || employee.nil? || employee.new_record?
+
+    latest = employee.salary_revisions.maximum(:effective_from)
+    errors.add(:effective_from, "can't be before the latest salary change (#{latest})") if latest && effective_from < latest
   end
 
   def employee_still_employed

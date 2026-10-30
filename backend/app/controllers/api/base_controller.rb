@@ -11,8 +11,6 @@ module Api
     # racing) still gets the usual field error instead of a 500.
     UNIQUE_INDEX_FIELDS = { "index_employees_on_email" => :email }.freeze
 
-    around_action :use_browser_time_zone
-
     # Turn the usual failures into the shared error shape (ADR 0016), so controllers stay on the happy path.
     rescue_from ActiveRecord::RecordNotFound do |error|
       render_errors({ base: [ "#{error.model || 'Record'} not found" ] }, :not_found)
@@ -38,11 +36,11 @@ module Api
 
     private
 
-    # "Today" for date rules (hire date, last working day, salary changes) is the user's today,
-    # not the server's: the app sends the browser's time zone, and an unknown or missing one
-    # falls back to the app default (ADR 0017).
-    def use_browser_time_zone(&)
-      Time.use_zone(Time.find_zone(request.headers["X-Time-Zone"]) || Time.zone_default, &)
+    # A single value from the query or body. An array or hash (`job_title_id[]=5`) counts as
+    # missing, so a malformed request gets the normal validation error instead of a 500.
+    def scalar_param(key)
+      value = params[key]
+      value unless value.is_a?(Array) || value.is_a?(ActionController::Parameters)
     end
 
     # Every error response has the same shape: { "errors": { "field": ["message"] } } (ADR 0016).

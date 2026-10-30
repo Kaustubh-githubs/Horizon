@@ -131,7 +131,11 @@ export function OutliersCard({
             error={outliers.error}
             what="the outliers"
             onRetry={() => void outliers.refetch()}
-            onShowAllCountries={() => onChange({ ocountry: undefined })}
+            notFound={{
+              message: "That country isn't in Horizon.",
+              action: "Show all countries",
+              onAction: () => onChange({ ocountry: undefined }),
+            }}
           />
         ) : rows.length === 0 ? (
           <p className="rounded-lg border p-6 text-sm text-muted-foreground">

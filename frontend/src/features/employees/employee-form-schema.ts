@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { todayIso } from "@/lib/dates"
+import { moneyAmount } from "@/lib/money"
 
 // The same rules the API enforces (ADR 0017), checked in the browser first for quick feedback.
 export const employeeFormSchema = z.object({
@@ -17,13 +18,7 @@ export const employeeFormSchema = z.object({
   country_id: z.string().min(1, "Pick a country"),
   department_id: z.string().min(1, "Pick a department"),
   job_title_id: z.string().min(1, "Pick a job title"),
-  current_salary: z
-    .string()
-    .trim()
-    .regex(/^\d+(\.\d{1,2})?$/, "Enter an amount like 1250000 or 1250000.50")
-    .refine((amount) => Number(amount) > 0, "Must be more than zero")
-    // Money columns hold up to 13 digits before the decimal point (ADR 0006).
-    .refine((amount) => Number(amount) < 1e13, "That amount is too large"),
+  current_salary: moneyAmount,
 })
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>

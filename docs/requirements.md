@@ -20,7 +20,7 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 - **Employee directory** that stays quick at 10,000 rows: search, filter by country, department, title or status, sort, and paging.
 - **Add, edit and view employees,** with country, department and title picked from fixed lists so data stays clean.
 - **End employment instead of deleting.** The record is kept, read-only, with a last working day of today or earlier.
-- **Salary history.** Each change has an amount, currency and reason, and takes effect on the day it's recorded. The latest one is the current salary.
+- **Salary history.** Each change has an amount, currency and reason, and takes effect on the day it's recorded. The latest one is the current salary. A promotion also updates the job title.
 - **Pay insights.** Per country and per title: headcount, lowest/median/average/highest pay and total payroll in local currency. An org-wide USD total from a fixed, dated exchange-rate table. A list of people paid well below their role's median.
 - **Seed script** that creates the same 10,000 realistic employees on every run, in seconds.
 
@@ -30,7 +30,7 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 - **Three screens:** Employees, Employee details (profile, salary history, change history) and Insights. Built for a laptop first.
 - **Directory feels like a better spreadsheet:** filters update the table instantly and live in the URL, so a refresh or shared link keeps the view.
 - **Money always shows its currency.** Local and converted amounts are never mixed.
-- **Forms help:** dropdowns for reference data, errors next to the field, and an old vs new salary preview with the % change so an extra zero is easy to spot.
+- **Forms help:** dropdowns for reference data, errors next to the field, and an old vs new salary preview with the % change and the average pay for the same role in the same country, with a warning on unusually big changes, so an extra zero is easy to spot.
 - **Ending someone's employment asks for confirmation.** Every screen has clear loading, empty and error states, and an unexpected error shows a friendly page instead of crashing the app.
 - **Insights lead with numbers, then charts,** with click-through from a country to its titles and from a flagged person to their profile.
 - **Accessible and consistent:** keyboard-friendly, colour never the only signal, one component library (shadcn/ui).

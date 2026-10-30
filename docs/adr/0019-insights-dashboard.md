@@ -29,3 +29,17 @@ The brief's second job is answering "how does the org pay people?". HR wants pay
 - Good: the threshold and the minimum group size are constants in one place, and HR can tune the threshold without a deploy.
 - Cost: converted figures move when the rate table is updated, not when pay changes. The rates' date is shown next to them.
 - Cost: people in roles with fewer than 5 peers in their country are never flagged.
+
+## Updates
+- **2026-10-30, slicing, spread and pay changes:**
+  - **Group by plus a filter for each dimension**, instead of one tab per segment. HR picks the rows (country, department, job title or tenure) and narrows who's counted with any combination of the four filters, for example "Engineering in India with 1–3 years, by job title". The currency rule is unchanged: one country is in its own currency; otherwise figures are converted to INR. An unknown filter value is a 404, as for countries.
+  - **Pay spread:** each segment also has the 25th and 75th percentiles. The chart shows a bar for the middle half of salaries with a dot at the median, so a role with consistent pay looks different from one where pay is all over the place.
+  - **Pay changes in the last 12 months** (`GET /insights/pay_changes`): salary changes effective in the last 12 months (UTC), by reason, not counting hires. Each change is compared with that employee's previous salary (a `LAG` window over their history). The card shows how many there were, the average % change, and how much they added to yearly pay, converted to INR. People who have since left are included, because the changes still happened.
+- **Rupees read the Indian way:** full INR amounts use Indian digit grouping (₹53,07,247.34), and summary figures (tiles, chart axes, pay-change totals) use lakh and crore (₹53.07 L, ₹334.88 Cr) instead of million and billion. Other currencies keep their usual formatting.
+- **Later ideas** (not built yet):
+  - the yearly cost of bringing underpaid ★ people up to their role's median
+  - clicking a segment row to open the directory filtered to those people
+  - a compa-ratio (salary ÷ the role's median) per department
+  - a country × department headcount heatmap
+  - CSV export of any view
+  - a gender pay gap, which needs data Horizon deliberately doesn't store

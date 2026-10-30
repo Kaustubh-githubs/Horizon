@@ -14,6 +14,8 @@ Rails.application.routes.draw do
       # Countries, departments and job titles for filters and dropdowns.
       resource :lookups, only: :show
       resources :employees, only: %i[index show create update] do
+        # Counts for the cards above the directory, following its filters.
+        get :summary, on: :collection
         # POST to terminate. Employees are never deleted (ADR 0008).
         resource :termination, only: :create
         # Salary history, and recording a change (ADR 0018).
@@ -28,6 +30,7 @@ Rails.application.routes.draw do
       get "insights/overview" => "insights#overview"
       get "insights/segments" => "insights#segments"
       get "insights/outliers" => "insights#outliers"
+      get "insights/pay_changes" => "insights#pay_changes"
     end
   end
 end

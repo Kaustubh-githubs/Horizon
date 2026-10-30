@@ -36,6 +36,28 @@ RSpec.describe "Insights API", type: :request do
       expect(response.parsed_body).to include("by" => "job_title", "currency" => "INR", "converted" => false,
                                               "rows" => [ hash_including("label" => "Software Engineer", "headcount" => 6) ])
     end
+
+    # Everyone here was hired in 2024, so a filter for the newest band must leave no one.
+    it "passes the job title and tenure filters through too" do
+      get "/api/v1/insights/segments", params: { by: "country", job_title_id: engineer.id, tenure: "under_1" }
+
+      expect(response.parsed_body["rows"]).to eq([])
+    end
+
+    it "answers 404 for an unknown department" do
+      get "/api/v1/insights/segments", params: { department_id: 0 }
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe "GET /api/v1/insights/pay_changes" do
+    it "summarises the last 12 months of salary changes, in INR" do
+      get "/api/v1/insights/pay_changes"
+
+      expect(response.parsed_body).to include("currency" => "INR", "rows" => [],
+                                              "total" => { "count" => 0, "average_percent" => nil, "yearly_cost" => nil })
+    end
   end
 
   # Both lists answer an unknown country the same way, so the UI can offer "Show all countries".

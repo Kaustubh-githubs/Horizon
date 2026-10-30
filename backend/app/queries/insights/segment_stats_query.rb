@@ -1,10 +1,12 @@
 module Insights
-  # Pay by segment: country, department, job title or tenure band (ADR 0019). For each one:
-  # headcount, lowest, median, average and highest pay, and total payroll, for active employees.
+  # Pay by segment (ADR 0019). `by` picks the rows (country, department, job title or tenure band);
+  # the filters narrow who's counted, in any combination. For each row: headcount, lowest, 25th
+  # percentile, median, 75th percentile, average and highest pay, and total payroll, for active
+  # employees.
   #
-  # Currency: one country's figures are in its own currency, exactly. Across countries they're
-  # converted to the reporting currency (INR). The country view does both: each row in its own
-  # currency, plus its median and payroll in INR, so countries can be compared on a chart.
+  # Currency: figures for one country (filtered to it) are in its own currency, exactly. Across
+  # countries they're converted to the reporting currency (INR). Rows by country do both: each in
+  # its own currency, plus its figures in INR, so countries can be compared on one chart.
   class SegmentStatsQuery
     SEGMENTS = %w[country department job_title tenure].freeze
     # [key, label, from years, to years]: tenure is worked out from the hire date.
@@ -13,19 +15,23 @@ module Insights
       [ "5_10", "5–10 years", 5, 10 ], [ "10_plus", "10+ years", 10, nil ]
     ].freeze
 
-    def initialize(by: "country", country_code: nil)
+    # Unknown filter values raise ActiveRecord::RecordNotFound (a 404), like an unknown country.
+    def initialize(by: "country", country_code: nil, department_id: nil, job_title_id: nil, tenure: nil)
       @by = SEGMENTS.include?(by.to_s) ? by.to_s : "country"
       @country = Country.find_by!(code: country_code.to_s.upcase) if country_code.present?
+      @department = Department.find(department_id) if department_id.present?
+      @job_title = JobTitle.find(job_title_id) if job_title_id.present?
+      @tenure = tenure_band!(tenure) if tenure.present?
     end
 
     def call
       {
         by: @by,
-        country: @country && { code: @country.code, name: @country.name },
+        filters: filters,
         currency: currency,
         converted: converted?,
         rates_as_of: Insights.rates_as_of,
-        excluded_currencies: converted? || @by == "country" ? Insights.excluded_currencies(scope) : [],
+        excluded_currencies: converted? || by_country? ? Insights.excluded_currencies(scope) : [],
         rows: @by == "tenure" ? with_every_band(rows) : rows
       }
     end
@@ -34,7 +40,11 @@ module Insights
 
     # Across countries, unless filtered to one country or showing countries side by side.
     def converted?
-      @country.nil? && @by != "country"
+      @country.nil? && !by_country?
+    end
+
+    def by_country?
+      @by == "country"
     end
 
     def currency
@@ -43,13 +53,26 @@ module Insights
       end
     end
 
+    def filters
+      {
+        country: @country && { code: @country.code, name: @country.name },
+        department: @department && { id: @department.id, name: @department.name },
+        job_title: @job_title && { id: @job_title.id, name: @job_title.name },
+        tenure: @tenure && { key: @tenure[0], label: @tenure[1] }
+      }
+    end
+
     def scope
       employees = Employee.active
-      @country ? employees.where(country: @country) : employees
+      employees = employees.where(country: @country) if @country
+      employees = employees.where(department: @department) if @department
+      employees = employees.where(job_title: @job_title) if @job_title
+      employees = employees.where(hire_date: hired_range(@tenure)) if @tenure
+      employees
     end
 
     def rows
-      return country_rows if @by == "country"
+      return country_rows if by_country?
 
       key, label = segment_sql
       relation = converted? ? Insights.with_rates(scope) : scope
@@ -62,8 +85,8 @@ module Insights
 
     def country_rows
       in_reporting = Insights.with_rates(scope).group("employees.country_id")
-                             .pluck("employees.country_id", *Insights.aggregates(CONVERTED_SALARY).values_at(2, 5))
-                             .to_h { |id, median, payroll| [ id, { median:, payroll: } ] }
+                             .pluck("employees.country_id", *Insights.aggregates(CONVERTED_SALARY))
+                             .to_h { |id, *stats| [ id, STATS.zip(stats).to_h ] }
 
       scope.joins(:country).group("countries.id", "countries.code", "countries.name", "countries.currency_code")
            .order("countries.name")
@@ -72,15 +95,17 @@ module Insights
            .map do |id, code, name, currency_code, *stats|
              converted = in_reporting[id]
              row(code, name, currency_code, stats).merge(
-               converted: converted && { currency: REPORTING_CURRENCY, median: Insights.money(converted[:median]),
-                                         payroll: Insights.money(converted[:payroll]) }
+               converted: converted && { currency: REPORTING_CURRENCY }.merge(
+                 converted.slice(:p25, :median, :p75, :payroll).transform_values { |value| Insights.money(value) }
+               )
              )
            end
     end
 
-    def row(key, label, currency, (headcount, min, median, mean, max, payroll))
-      { key:, label:, currency:, headcount:, min: Insights.money(min), median: Insights.money(median),
-        mean: Insights.money(mean), max: Insights.money(max), payroll: Insights.money(payroll) }
+    def row(key, label, currency, stats)
+      figures = STATS.zip(stats).to_h
+      { key:, label:, currency:, headcount: figures[:headcount] }
+        .merge(figures.except(:headcount).transform_values { |value| Insights.money(value) })
     end
 
     # [group key, label] SQL for each segment.
@@ -96,7 +121,20 @@ module Insights
       { "department" => :department, "job_title" => :job_title }.fetch(@by, [])
     end
 
-    # The band key for each hire date: "under_1" for under a year ago, and so on (today is UTC, ADR 0017).
+    def tenure_band!(key)
+      TENURE_BANDS.find { |band| band[0] == key.to_s } ||
+        raise(ActiveRecord::RecordNotFound.new("Couldn't find tenure band #{key}", "Tenure band"))
+    end
+
+    # Hire dates in a band, matching `tenure_sql` exactly: "1–3 years" is hired at least 1 year ago
+    # and less than 3 years ago (today is UTC, ADR 0017).
+    def hired_range(band)
+      _key, _label, from, to = band
+      latest = Date.current - from.years
+      to ? (Date.current - to.years + 1.day)..latest : ..latest
+    end
+
+    # The band key for each hire date: "under_1" for under a year ago, and so on.
     def tenure_sql
       @tenure_sql ||= begin
         branches = TENURE_BANDS.filter_map do |key, _label, _from, to|
@@ -110,7 +148,7 @@ module Insights
     def with_every_band(found)
       by_key = found.index_by { |r| r[:key] }
       TENURE_BANDS.map do |key, label, _from, _to|
-        by_key[key]&.merge(label:) || row(key, label, currency, [ 0, nil, nil, nil, nil, nil ])
+        by_key[key]&.merge(label:) || row(key, label, currency, [ 0 ])
       end
     end
   end

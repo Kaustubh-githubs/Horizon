@@ -38,6 +38,8 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 
 **Country filter:** we filter with `country_id IN (SELECT id FROM countries WHERE code = ...)` rather than joining `countries`. A join made Rails switch the preloads to one wide `LEFT JOIN` across four tables and count with `COUNT(DISTINCT)`. The subquery keeps the small separate preload queries and a plain count, at the same speed.
 
+**Summary cards** (`GET /employees/summary`): the list's own filters, counted three ways (total, by country, by department). About 1 ms without a search and about 24 ms with one, since each count repeats the `ILIKE` search.
+
 **N+1 guard:** a request spec checks that a page of 10 employees runs the same number of queries as a page of 2. Without preloading country, department and title, that went from 9 queries to 33. The spec fails, as it should.
 
 ## Salary changes (ADR 0018)
@@ -57,5 +59,7 @@ Every figure is one SQL aggregate over the 9,194 active employees (`GROUP BY` wi
 | Segments: job titles in one country | 2.4 ms |
 | ★ outliers, first page of 25 | 7 ms |
 | One employee's pay position (profile banner) | 2.7 ms |
+| Segments with every filter set (e.g. Engineering in India, 1–3 years, by job title) | 2 ms |
+| Pay changes, last 12 months (a `LAG` window over all 30,287 revisions) | 45 ms |
 
-**What we decided:** no caching or summary tables. The slowest call is about 20 ms, and the dashboard makes three requests. If the data grows tenfold, the first step would be caching the overview and segments for a few minutes, since pay changes rarely.
+**What we decided:** no caching or summary tables. The slowest call, pay changes, takes about 45 ms because the window has to see every employee's whole history to find each change's previous salary. Everything else is under 20 ms. If the data grows tenfold, the first step would be caching the overview and segments for a few minutes, since pay changes rarely.

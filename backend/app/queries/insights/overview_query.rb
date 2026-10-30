@@ -4,7 +4,8 @@ module Insights
   class OverviewQuery
     def call
       active = Employee.active
-      _count, _min, median, mean, _max, payroll = Insights.with_rates(active).pick(*Insights.aggregates(CONVERTED_SALARY))
+      stats = STATS.zip(Insights.with_rates(active).pick(*Insights.aggregates(CONVERTED_SALARY)) || []).to_h
+      median, mean, payroll = stats.values_at(:median, :mean, :payroll)
 
       {
         currency: REPORTING_CURRENCY,

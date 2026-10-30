@@ -9,6 +9,7 @@ When pay data changes, someone will eventually ask "who changed this, and when?"
 Use the [`audited`](https://github.com/collectiveidea/audited) gem for now.
 - Its generator creates the `audits` table. We store changes as JSONB (`--audited-changes-column-type jsonb`) so they can be queried in Postgres.
 - Models opt in through a small `Auditable` concern that calls the gem with our shared options. Models just `include Auditable`, starting with `Employee` and `SalaryRevision`. If we ever replace the gem, only the concern changes.
+  - Update 2026-10-30: department budgets (ADR 0020) are the first model on the trail; `Employee` and `SalaryRevision` follow in the audit-trail add-on. `ApplicationRecord` includes the concern, and a model opts in by calling `auditable`, which passes per-model options (such as `associated_with`) to the gem.
 - `SalaryRevision` audits are linked to their employee (`associated_with: :employee`), so the "Change history" tab can show employee and salary changes together.
 - "Who" comes from the logged-in user. The gem asks the controller for the current user, which we point at `Current.user` from the login code (0009).
 - The gem already skips noise like `updated_at` and `lock_version`.

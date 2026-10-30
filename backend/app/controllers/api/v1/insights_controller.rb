@@ -1,6 +1,7 @@
 module Api
   module V1
-    # The insights dashboard (ADR 0019): headline numbers, pay by segment, and who has a ★.
+    # The insights dashboard (ADR 0019): headline numbers, pay by segment, recent pay changes,
+    # and who has a ★.
     class InsightsController < Api::BaseController
       include Pagy::Method
 
@@ -9,7 +10,14 @@ module Api
       end
 
       def segments
-        render json: ::Insights::SegmentStatsQuery.new(by: scalar_param(:by), country_code: scalar_param(:country)).call
+        render json: ::Insights::SegmentStatsQuery.new(
+          by: scalar_param(:by), country_code: scalar_param(:country), department_id: scalar_param(:department_id),
+          job_title_id: scalar_param(:job_title_id), tenure: scalar_param(:tenure)
+        ).call
+      end
+
+      def pay_changes
+        render json: ::Insights::PayChangesQuery.new.call
       end
 
       def outliers

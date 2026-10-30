@@ -17,11 +17,11 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 
 ## What's in the first version
 - **Login.** Each user has a persona (only "HR Manager" for now), so permissions can be added later.
-- **Employee directory** that stays quick at 10,000 rows: search, filter by country, department, title or status, sort, and paging.
+- **Employee directory** that stays quick at 10,000 rows: search, filter by country, department, title or status, sort, and paging. Summary cards above it count the same people by country and department.
 - **Add, edit and view employees,** with country, department and title picked from fixed lists so data stays clean.
 - **End employment instead of deleting.** The record is kept, read-only, with a last working day of today or earlier.
 - **Salary history.** Each change has an amount, currency and reason, and takes effect on the day it's recorded. The latest one is the current salary. A promotion also updates the job title.
-- **Pay insights dashboard.** By country, department, job title and tenure: headcount, lowest/median/average/highest pay and total payroll. One country is shown in its own currency; figures across countries are converted to INR from a fixed, dated exchange-rate table. People paid more than 40% below or above the median for their role in their country are flagged with a ★, on the dashboard and on their profile.
+- **Pay insights dashboard.** Group by country, department, job title or tenure, filtered by any combination of them: headcount, lowest/25th/median/75th/average/highest pay and total payroll, plus the salary changes of the last 12 months by reason. One country is shown in its own currency; figures across countries are converted to INR from a fixed, dated exchange-rate table. People paid more than 40% below or above the median for their role in their country are flagged with a ★, on the dashboard and on their profile.
 - **Seed script** that creates the same 10,000 realistic employees on every run, in seconds.
 
 "Salary" means annual gross base pay in local currency, compared within a country.

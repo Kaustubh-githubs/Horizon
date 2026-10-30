@@ -1,6 +1,6 @@
 import type { SegmentBy } from "@/features/insights/api"
 
-/** How each segment is named in text ("Median pay by job title"). */
+/** How each grouping is named in text ("Median pay by job title"). */
 export const SEGMENT_NAMES: Record<SegmentBy, string> = {
   country: "country",
   department: "department",
@@ -8,10 +8,19 @@ export const SEGMENT_NAMES: Record<SegmentBy, string> = {
   tenure: "tenure",
 }
 
-/** The tabs, in order. */
-export const SEGMENT_TABS: { by: SegmentBy; label: string }[] = [
+/** The "Group by" choices, in order. */
+export const GROUP_BY_OPTIONS: { by: SegmentBy; label: string }[] = [
   { by: "country", label: "Country" },
   { by: "department", label: "Department" },
   { by: "job_title", label: "Job title" },
   { by: "tenure", label: "Tenure" },
+]
+
+/** Tenure bands, matching the API's (ADR 0019). */
+export const TENURE_BANDS: { key: string; label: string }[] = [
+  { key: "under_1", label: "Under 1 year" },
+  { key: "1_3", label: "1–3 years" },
+  { key: "3_5", label: "3–5 years" },
+  { key: "5_10", label: "5–10 years" },
+  { key: "10_plus", label: "10+ years" },
 ]

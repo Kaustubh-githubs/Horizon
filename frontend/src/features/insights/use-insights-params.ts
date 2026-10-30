@@ -1,6 +1,6 @@
 import { useSearchParams } from "react-router"
 
-import type { SegmentBy } from "@/features/insights/api"
+import type { SegmentBy, SegmentQuery } from "@/features/insights/api"
 
 const SEGMENTS: SegmentBy[] = ["country", "department", "job_title", "tenure"]
 /** The thresholds HR can pick, in %. The API accepts 20–50 and uses 40 for anything else. */
@@ -18,8 +18,9 @@ const oneOf = (
 
 /**
  * The dashboard's choices live in the URL, like the directory's, so a refresh or a shared
- * link shows the same view. Segments and outliers have their own filters: `by` and `country`
- * for the segment table, `ocountry`, `direction`, `threshold` and `opage` for the ★ list.
+ * link shows the same view. Segments and outliers have their own filters: `by`, `country`,
+ * `department_id`, `job_title_id` and `tenure` for the segment table; `ocountry`, `direction`,
+ * `threshold` and `opage` for the ★ list.
  */
 export function useInsightsParams() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -27,8 +28,14 @@ export function useInsightsParams() {
 
   const requestedBy = get("by") as SegmentBy | undefined
   const params = {
-    by: requestedBy && SEGMENTS.includes(requestedBy) ? requestedBy : "country",
-    country: get("country"),
+    segments: {
+      by:
+        requestedBy && SEGMENTS.includes(requestedBy) ? requestedBy : "country",
+      country: get("country"),
+      department_id: get("department_id"),
+      job_title_id: get("job_title_id"),
+      tenure: get("tenure"),
+    } satisfies SegmentQuery,
     outlierCountry: get("ocountry"),
     direction: oneOf(get("direction"), DIRECTIONS, "all"),
     threshold: oneOf(get("threshold"), THRESHOLDS, DEFAULT_THRESHOLD),

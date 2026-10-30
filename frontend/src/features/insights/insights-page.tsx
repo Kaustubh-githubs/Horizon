@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useOverview } from "@/features/insights/api"
 import { OutliersCard } from "@/features/insights/outliers-card"
+import { PayChangesCard } from "@/features/insights/pay-changes-card"
 import { SegmentsCard } from "@/features/insights/segments-card"
 import { useInsightsParams } from "@/features/insights/use-insights-params"
 import { formatCount, formatMoney, formatMoneyCompact } from "@/lib/format"
@@ -29,7 +30,7 @@ function StatTile({
   )
 }
 
-/** "How does the org pay people?": headline numbers, pay by segment, then the ★ list (ADR 0019). */
+/** "How does the org pay people?": headline numbers, pay by segment, recent pay changes, then the ★ list (ADR 0019). */
 export function InsightsPage() {
   const overview = useOverview()
   const { params, update } = useInsightsParams()
@@ -96,11 +97,9 @@ export function InsightsPage() {
         )}
       </div>
 
-      <SegmentsCard
-        by={params.by}
-        country={params.country}
-        onChange={(changes) => update(changes)}
-      />
+      <SegmentsCard query={params.segments} onChange={update} />
+
+      <PayChangesCard />
 
       <OutliersCard
         threshold={params.threshold}

@@ -2,33 +2,32 @@ import { Button } from "@/components/ui/button"
 import { ApiError } from "@/lib/api"
 
 /**
- * What a dashboard card shows when its figures fail to load. An unknown country (a 404, e.g.
- * from an old or edited link) offers to show every country, since retrying can't help.
+ * What a dashboard card shows when its figures fail to load. A 404 means a filter value from
+ * the link doesn't exist (an old or edited link), so it offers to drop the filters instead of a
+ * retry that can't help. Each card says which filters that means.
  */
 export function LoadError({
   error,
   what,
+  notFound,
   onRetry,
-  onShowAllCountries,
 }: {
   error: unknown
   what: string
+  notFound: { message: string; action: string; onAction: () => void }
   onRetry: () => void
-  onShowAllCountries: () => void
 }) {
-  const unknownCountry = error instanceof ApiError && error.status === 404
+  const missing = error instanceof ApiError && error.status === 404
 
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-      {unknownCountry
-        ? "That country isn't in Horizon."
-        : `Couldn't load ${what}.`}
+      {missing ? notFound.message : `Couldn't load ${what}.`}
       <Button
         variant="outline"
         size="sm"
-        onClick={unknownCountry ? onShowAllCountries : onRetry}
+        onClick={missing ? notFound.onAction : onRetry}
       >
-        {unknownCountry ? "Show all countries" : "Try again"}
+        {missing ? notFound.action : "Try again"}
       </Button>
     </div>
   )

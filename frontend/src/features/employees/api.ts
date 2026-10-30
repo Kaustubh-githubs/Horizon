@@ -62,6 +62,31 @@ export function useEmployees(filters: DirectoryFilters) {
   })
 }
 
+/** Counts for the cards above the directory, for the same people as the list. */
+export type DirectorySummary = {
+  total: number
+  countries: { code: string; name: string; count: number }[]
+  departments: { id: number; name: string; count: number }[]
+}
+
+/** Follows the list's search and filters; sorting and paging don't change who's counted. */
+export function useDirectorySummary(filters: DirectoryFilters) {
+  const who = {
+    q: filters.q,
+    country: filters.country,
+    department_id: filters.department_id,
+    job_title_id: filters.job_title_id,
+    status: filters.status,
+  }
+  return useQuery({
+    // Under "employees", so anything that refreshes the list refreshes the cards too.
+    queryKey: ["employees", "summary", who],
+    queryFn: () =>
+      apiRequest<DirectorySummary>(`/employees/summary?${toQueryString(who)}`),
+    placeholderData: keepPreviousData,
+  })
+}
+
 export const employeeKey = (id: number | string) => ["employee", String(id)]
 
 export function useEmployee(id: string) {

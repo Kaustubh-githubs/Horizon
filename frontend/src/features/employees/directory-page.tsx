@@ -4,6 +4,7 @@ import { Link } from "react-router"
 
 import { Button } from "@/components/ui/button"
 import { DirectoryFiltersBar } from "@/features/employees/directory-filters"
+import { DirectorySummary } from "@/features/employees/directory-summary"
 import { EmployeesTable } from "@/features/employees/employees-table"
 import { useEmployees, useLookups } from "@/features/employees/api"
 import { useDirectoryFilters } from "@/features/employees/use-directory-filters"
@@ -52,14 +53,7 @@ export function DirectoryPage() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold">Employees</h1>
-          <p className="text-sm text-muted-foreground">
-            {meta
-              ? `${formatCount(meta.total_count)} ${meta.total_count === 1 ? "employee" : "employees"}`
-              : "Loading…"}
-          </p>
-        </div>
+        <h1 className="font-heading text-2xl font-semibold">Employees</h1>
         <Button asChild>
           <Link to="/employees/new">
             <PlusIcon data-icon="inline-start" />
@@ -67,6 +61,9 @@ export function DirectoryPage() {
           </Link>
         </Button>
       </div>
+
+      {/* The total now lives in the first summary card, which follows the filters like the list. */}
+      <DirectorySummary filters={filters} onFilter={setFilters} />
 
       <DirectoryFiltersBar
         filters={filters}

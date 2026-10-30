@@ -21,3 +21,6 @@ Salaries must be exact. Floating-point numbers can't represent many decimal valu
 - Good: exact sums and averages in SQL, and simple, readable columns.
 - Good: storing the currency on each revision means history stays correct even if an employee's currency ever changes.
 - Cost: amounts arrive in the UI as strings, so the UI must parse them before any arithmetic (for example, the % change preview).
+
+## Updates
+- **2026-10-30, upper limit:** `decimal(15,2)` holds amounts below 10^13. The models now reject anything larger as "is too large", so an extra-long number is a normal field error instead of a database overflow (which came back as a 500). The add form checks the same limit.

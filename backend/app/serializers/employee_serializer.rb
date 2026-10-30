@@ -14,7 +14,7 @@ class EmployeeSerializer
       hire_date: @employee.hire_date,
       status: @employee.status,
       terminated_on: @employee.terminated_on,
-      country: { code: @employee.country.code, name: @employee.country.name },
+      country: { id: @employee.country_id, code: @employee.country.code, name: @employee.country.name },
       department: { id: @employee.department_id, name: @employee.department.name },
       job_title: { id: @employee.job_title_id, name: @employee.job_title.name },
       current_salary: @employee.current_salary.to_s("F"),

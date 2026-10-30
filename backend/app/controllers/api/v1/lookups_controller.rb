@@ -4,7 +4,7 @@ module Api
     class LookupsController < Api::BaseController
       def show
         render json: {
-          countries: Country.order(:name).map { |c| { code: c.code, name: c.name, currency_code: c.currency_code } },
+          countries: Country.order(:name).map { |c| { id: c.id, code: c.code, name: c.name, currency_code: c.currency_code } },
           departments: Department.order(:name).map { |d| { id: d.id, name: d.name } },
           job_titles: JobTitle.order(:name).map { |t| { id: t.id, name: t.name } }
         }

@@ -102,11 +102,77 @@ RSpec.describe Employee, type: :model do
       expect(employee).not_to be_valid
     end
 
+    it "rejects a salary too large for the money column, instead of overflowing on save" do
+      employee.current_salary = 10**13
+
+      expect(employee.tap(&:valid?).errors[:current_salary]).to eq([ "is too large" ])
+    end
+
     it "rejects a currency that is not the country's currency" do
       employee.country = build(:country, currency_code: "INR")
       employee.current_currency = "USD"
 
       expect(employee).not_to be_valid
+    end
+  end
+
+  it "rejects a hire date in the future" do
+    employee.hire_date = Date.current.tomorrow
+
+    expect(employee).not_to be_valid
+  end
+
+  # Salary history starts on the hire date and is in the country's currency (ADR 0017).
+  describe "fields fixed after creation" do
+    let(:saved) { create(:employee) }
+
+    it "doesn't allow the country to change" do
+      expect { saved.country = create(:country) }.to raise_error(ActiveRecord::ReadonlyAttributeError)
+    end
+
+    it "doesn't allow the hire date to change" do
+      expect { saved.hire_date = saved.hire_date.yesterday }.to raise_error(ActiveRecord::ReadonlyAttributeError)
+    end
+  end
+
+  describe "#terminate!" do
+    let(:saved) { create(:employee, hire_date: Date.new(2024, 1, 15)) }
+
+    it "marks the employee terminated on the given date" do
+      saved.terminate!(on: Date.new(2026, 6, 30))
+
+      expect(saved.reload).to have_attributes(status: "terminated", terminated_on: Date.new(2026, 6, 30))
+    end
+
+    it "rejects a date in the future" do
+      expect { saved.terminate!(on: Date.current.tomorrow) }
+        .to raise_error(ActiveRecord::RecordInvalid, /can't be in the future/)
+    end
+
+    it "rejects a date before the latest salary change" do
+      create(:salary_revision, employee: saved, effective_from: Date.new(2026, 7, 1), reason: "annual_raise")
+
+      expect { saved.terminate!(on: Date.new(2026, 6, 30)) }
+        .to raise_error(ActiveRecord::RecordInvalid, /can't be before the latest salary change/)
+    end
+
+    it "refuses to terminate someone who is already terminated" do
+      saved.terminate!(on: Date.new(2026, 6, 30))
+
+      expect { saved.terminate!(on: Date.new(2026, 7, 1)) }
+        .to raise_error(ActiveRecord::RecordInvalid, /Former employees can't be changed/)
+    end
+  end
+
+  describe "terminated employees" do
+    let(:saved) { create(:employee, :terminated) }
+
+    it "can't be changed" do
+      expect(saved.update(full_name: "Asha R.")).to be(false)
+    end
+
+    it "still count as valid when nothing is being changed" do
+      expect(saved).to be_valid
     end
   end
 

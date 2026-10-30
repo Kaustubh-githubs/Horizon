@@ -13,7 +13,10 @@ Rails.application.routes.draw do
 
       # Countries, departments and job titles for filters and dropdowns.
       resource :lookups, only: :show
-      resources :employees, only: :index
+      resources :employees, only: %i[index show create update] do
+        # POST to terminate. Employees are never deleted (ADR 0008).
+        resource :termination, only: :create
+      end
     end
   end
 end

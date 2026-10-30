@@ -20,7 +20,14 @@ Rails.application.routes.draw do
         resources :salary_revisions, only: %i[index create]
         # What peers in the same country and job title earn, for the change-salary dialog.
         resource :pay_comparison, only: :show
+        # Whether the employee is a ★ outlier, for the profile banner (ADR 0019).
+        resource :pay_position, only: :show
       end
+
+      # The insights dashboard (ADR 0019).
+      get "insights/overview" => "insights#overview"
+      get "insights/segments" => "insights#segments"
+      get "insights/outliers" => "insights#outliers"
     end
   end
 end

@@ -11,6 +11,10 @@ module Api
     # racing) still gets the usual field error instead of a 500.
     UNIQUE_INDEX_FIELDS = { "index_employees_on_email" => :email }.freeze
 
+    # List endpoints page 25 at a time by default, and never more than 100 (ADR 0016).
+    PER_PAGE = 25
+    MAX_PER_PAGE = 100
+
     # Turn the usual failures into the shared error shape (ADR 0016), so controllers stay on the happy path.
     rescue_from ActiveRecord::RecordNotFound do |error|
       render_errors({ base: [ "#{error.model || 'Record'} not found" ] }, :not_found)
@@ -41,6 +45,14 @@ module Api
     def scalar_param(key)
       value = params[key]
       value unless value.is_a?(Array) || value.is_a?(ActionController::Parameters)
+    end
+
+    # Pagy's own per_page parsing lets a negative value through (and then raises),
+    # so we read it here: missing, zero, negative or junk means the default. to_s first,
+    # because per_page[]=1 arrives as an Array and per_page[a]=1 as a Hash.
+    def per_page
+      requested = params[:per_page].to_s.to_i
+      requested.positive? ? [ requested, MAX_PER_PAGE ].min : PER_PAGE
     end
 
     # Every error response has the same shape: { "errors": { "field": ["message"] } } (ADR 0016).

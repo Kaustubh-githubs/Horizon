@@ -3,8 +3,6 @@ module Api
     class EmployeesController < Api::BaseController
       include Pagy::Method
 
-      PER_PAGE = 25
-      MAX_PER_PAGE = 100
       # Country and hire date are fixed after creation, and salary has its own endpoint (ADR 0017).
       EDITABLE = %i[full_name email department_id job_title_id].freeze
 
@@ -38,16 +36,6 @@ module Api
         employee.update!(params.permit(*EDITABLE).merge(lock_version: params.require(:lock_version)))
 
         render json: EmployeeSerializer.new(employee)
-      end
-
-      private
-
-      # Pagy's own per_page parsing lets a negative value through (and then raises),
-      # so we read it here: missing, zero, negative or junk means the default. to_s first,
-      # because per_page[]=1 arrives as an Array and per_page[a]=1 as a Hash.
-      def per_page
-        requested = params[:per_page].to_s.to_i
-        requested.positive? ? [ requested, MAX_PER_PAGE ].min : PER_PAGE
       end
     end
   end

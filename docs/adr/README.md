@@ -22,5 +22,6 @@ Short notes on the decisions that shape Horizon: what we chose, what else we con
 | [0016](0016-api-conventions.md) | API conventions | Accepted |
 | [0017](0017-editing-and-terminating-employees.md) | Editing and terminating employees | Accepted |
 | [0018](0018-changing-salaries.md) | Changing salaries | Accepted |
+| [0019](0019-insights-dashboard.md) | Insights dashboard | Accepted |
 
 Each note has the same parts: **Context** (why we had to decide), **Decision**, **Options considered** and **Consequences** (good and bad).

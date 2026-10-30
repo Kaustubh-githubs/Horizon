@@ -45,3 +45,17 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 **Peer pay** (`GET /employees/:id/pay_comparison`): one aggregate query (`COUNT`, `AVG`, `PERCENTILE_CONT`) over active employees with the same country and job title. The largest group in the seed, India × Software Engineer with 846 peers, runs in about 1.4 ms, with a bitmap scan on the existing `(country_id, job_title_id)` index. No new index needed.
 
 **History** (`GET /employees/:id/salary_revisions`): an employee has a handful of revisions (at most 5 in the seed), read in one query on the `(employee_id, effective_from)` index and not paged.
+
+## Insights (ADR 0019)
+
+Every figure is one SQL aggregate over the 9,194 active employees (`GROUP BY` with `COUNT`, `MIN`, `PERCENTILE_CONT`, `AVG`, `MAX`, `SUM`), with no Ruby loops. Median of 5 warm runs on the seeded database:
+
+| Query | Time |
+|---|---|
+| Overview (headline numbers and ★ count, converted to INR) | 19 ms |
+| Segments: country / department / job title / tenure | 14–17 ms |
+| Segments: job titles in one country | 2.4 ms |
+| ★ outliers, first page of 25 | 7 ms |
+| One employee's pay position (profile banner) | 2.7 ms |
+
+**What we decided:** no caching or summary tables. The slowest call is about 20 ms, and the dashboard makes three requests. If the data grows tenfold, the first step would be caching the overview and segments for a few minutes, since pay changes rarely.

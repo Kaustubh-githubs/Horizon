@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEmployee } from "@/features/employees/api"
 import { EmployeeLoadState } from "@/features/employees/employee-load-state"
 import { EndEmploymentDialog } from "@/features/employees/end-employment-dialog"
+import { PayPositionBanner } from "@/features/employees/pay-position-banner"
 import { SalaryCard } from "@/features/employees/salary-card"
 import { STATUS_LABELS } from "@/features/employees/status"
 import { formatDate } from "@/lib/format"
@@ -69,6 +70,8 @@ export function EmployeePage() {
           and can&apos;t be changed.
         </p>
       )}
+
+      <PayPositionBanner employee={employee} />
 
       <Card>
         <CardHeader>

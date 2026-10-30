@@ -27,6 +27,23 @@ export function formatMoney(amount: string, currency: string): string {
   return format.format(Number(amount))
 }
 
+const compactMoneyFormats = new Map<string, Intl.NumberFormat>()
+
+/** A large amount, shortened for a headline or an axis: "₹60B", "$1.2M". */
+export function formatMoneyCompact(amount: string, currency: string): string {
+  let format = compactMoneyFormats.get(currency)
+  if (!format) {
+    format = new Intl.NumberFormat("en", {
+      style: "currency",
+      currency,
+      notation: "compact",
+      maximumFractionDigits: 1,
+    })
+    compactMoneyFormats.set(currency, format)
+  }
+  return format.format(Number(amount))
+}
+
 /** A calendar date (hire date, effective date). It has no time zone, so it's shown as stored. */
 export function formatDate(isoDate: string): string {
   return dateFormat.format(new Date(isoDate))

@@ -51,6 +51,17 @@ export async function apiRequest<T>(
   return payload as T
 }
 
+/** Query-string from filters, leaving out empty ones: { q: "rao", page: undefined } → "q=rao". */
+export function toQueryString(
+  params: Record<string, string | undefined>,
+): string {
+  return new URLSearchParams(
+    Object.entries(params).filter((entry): entry is [string, string] =>
+      Boolean(entry[1]),
+    ),
+  ).toString()
+}
+
 export function isUnauthorized(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401
 }

@@ -8,7 +8,7 @@ import { DirectoryPage } from "@/features/employees/directory-page"
 import { EditEmployeePage } from "@/features/employees/edit-employee-page"
 import { EmployeePage } from "@/features/employees/employee-page"
 import { NewEmployeePage } from "@/features/employees/new-employee-page"
-import { PlaceholderPage } from "@/pages/placeholder-page"
+import { InsightsPage } from "@/features/insights/insights-page"
 
 export const router = createBrowserRouter([
   {
@@ -33,15 +33,7 @@ export const router = createBrowserRouter([
               { path: "/employees/new", element: <NewEmployeePage /> },
               { path: "/employees/:id", element: <EmployeePage /> },
               { path: "/employees/:id/edit", element: <EditEmployeePage /> },
-              {
-                path: "/insights",
-                element: (
-                  <PlaceholderPage
-                    title="Insights"
-                    description="Pay insights arrive in a later slice."
-                  />
-                ),
-              },
+              { path: "/insights", element: <InsightsPage /> },
               { path: "*", element: <NotFound /> },
             ],
           },

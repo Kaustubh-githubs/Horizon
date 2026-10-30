@@ -1,0 +1,240 @@
+import { ArrowDownIcon, ArrowUpIcon, StarIcon } from "lucide-react"
+import { Link } from "react-router"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { useLookups } from "@/features/employees/api"
+import { useOutliers } from "@/features/insights/api"
+import { LoadError } from "@/features/insights/load-error"
+import { THRESHOLDS } from "@/features/insights/use-insights-params"
+import { formatCount, formatMoney } from "@/lib/format"
+import { cn } from "@/lib/utils"
+
+const ALL = "all"
+
+/**
+ * The ★ list (ADR 0019): people paid far from the median for their job title in their
+ * country, furthest first. Each name opens the profile.
+ */
+export function OutliersCard({
+  threshold,
+  direction,
+  country,
+  page,
+  onChange,
+}: {
+  threshold: string
+  direction: string
+  country: string | undefined
+  page: string | undefined
+  onChange: (changes: Record<string, string | undefined>) => void
+}) {
+  const outliers = useOutliers({ threshold, direction, country, page })
+  const lookups = useLookups()
+  const meta = outliers.data?.meta
+  const rows = outliers.data?.data ?? []
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <StarIcon className="size-4 fill-current" aria-hidden="true" />
+          Outliers
+          {meta && (
+            <span className="font-normal text-muted-foreground">
+              · {formatCount(meta.total_count)}
+            </span>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <p className="text-sm text-muted-foreground">
+          Active employees paid at least {threshold}% below or above the median
+          for their job title in their country. Only roles with 5 or more people
+          in a country are compared.
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          <Select
+            value={country ?? ALL}
+            onValueChange={(next) =>
+              onChange({ ocountry: next === ALL ? undefined : next })
+            }
+          >
+            <SelectTrigger aria-label="Country" className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>All countries</SelectItem>
+              {(lookups.data?.countries ?? []).map((c) => (
+                <SelectItem key={c.code} value={c.code}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={direction}
+            onValueChange={(next) =>
+              onChange({ direction: next === ALL ? undefined : next })
+            }
+          >
+            <SelectTrigger aria-label="Paid below or above" className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Below and above</SelectItem>
+              <SelectItem value="below">Paid below peers</SelectItem>
+              <SelectItem value="above">Paid above peers</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={threshold}
+            onValueChange={(next) => onChange({ threshold: next })}
+          >
+            <SelectTrigger
+              aria-label="How far from the median"
+              className="w-48"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {THRESHOLDS.map((value) => (
+                <SelectItem key={value} value={value}>
+                  ±{value}% from the median
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {outliers.isPending ? (
+          <Skeleton className="h-48 w-full" />
+        ) : outliers.isError ? (
+          <LoadError
+            error={outliers.error}
+            what="the outliers"
+            onRetry={() => void outliers.refetch()}
+            onShowAllCountries={() => onChange({ ocountry: undefined })}
+          />
+        ) : rows.length === 0 ? (
+          <p className="rounded-lg border p-6 text-sm text-muted-foreground">
+            No one is paid {threshold}% or more away from their peers&apos;
+            median with these filters.
+          </p>
+        ) : (
+          <Table
+            className={cn(
+              "transition-opacity",
+              outliers.isPlaceholderData && "opacity-60",
+            )}
+          >
+            <TableHeader>
+              <TableRow>
+                <TableHead>Employee</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="text-right">Salary</TableHead>
+                <TableHead className="text-right">Peers&apos; median</TableHead>
+                <TableHead className="text-right">Difference</TableHead>
+                <TableHead className="text-right">Peers</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => {
+                const below = row.deviation_percent < 0
+                const Icon = below ? ArrowDownIcon : ArrowUpIcon
+                return (
+                  <TableRow key={row.employee.id}>
+                    <TableCell>
+                      <Link
+                        to={`/employees/${row.employee.id}`}
+                        className="inline-flex items-center gap-1.5 font-medium hover:underline"
+                      >
+                        <StarIcon
+                          className="size-3.5 fill-amber-400 text-amber-500"
+                          aria-label="Outlier"
+                        />
+                        {row.employee.full_name}
+                      </Link>
+                      <div className="font-mono text-xs text-muted-foreground">
+                        {row.employee.employee_code}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>{row.job_title.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {row.country.name}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatMoney(row.salary, row.currency)}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground tabular-nums">
+                      {formatMoney(row.peer_median, row.currency)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      <span className="inline-flex items-center gap-0.5">
+                        <Icon
+                          className={cn(
+                            "size-3.5",
+                            below ? "text-destructive" : "text-emerald-700",
+                          )}
+                          aria-hidden="true"
+                        />
+                        {Math.abs(row.deviation_percent)}%{" "}
+                        {below ? "below" : "above"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {row.peer_count}
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        )}
+
+        {meta && meta.total_pages > 1 && (
+          <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
+            <span>
+              Page {meta.page} of {formatCount(meta.total_pages)}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={meta.page <= 1}
+              onClick={() => onChange({ opage: String(meta.page - 1) })}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={meta.page >= meta.total_pages}
+              onClick={() => onChange({ opage: String(meta.page + 1) })}
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}

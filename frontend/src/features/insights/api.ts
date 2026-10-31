@@ -7,9 +7,27 @@ import { apiRequest, toQueryString } from "@/lib/api"
 
 export type SegmentBy = "country" | "department" | "job_title" | "tenure"
 
+/** The page's filters, as the URL holds them. Every part of the page takes them (ADR 0019). */
+export type InsightFilters = {
+  country?: string
+  department_id?: string
+  job_title_id?: string
+  tenure?: string
+}
+
+/** Who's counted, as the API applied it. Each is null when not filtered. */
+export type FiltersApplied = {
+  country: { code: string; name: string } | null
+  department: { id: number; name: string } | null
+  job_title: { id: number; name: string } | null
+  tenure: { key: string; label: string } | null
+}
+
 export type Overview = {
-  /** The reporting currency every figure here is converted to (INR). */
+  filters: FiltersApplied
+  /** One country's own currency when filtered to it; otherwise INR, everything converted. */
   currency: string
+  converted: boolean
   rates_as_of: string | null
   /** Currencies with no exchange rate: their employees are left out of converted figures. */
   excluded_currencies: string[]
@@ -46,26 +64,12 @@ export type SegmentRow = {
   } | null
 }
 
-/** Who's counted, beyond the grouping. Each is null when not filtered. */
-export type SegmentFiltersApplied = {
-  country: { code: string; name: string } | null
-  department: { id: number; name: string } | null
-  job_title: { id: number; name: string } | null
-  tenure: { key: string; label: string } | null
-}
-
-/** What the segment card asks for: the grouping, and the filters as the URL holds them. */
-export type SegmentQuery = {
-  by: SegmentBy
-  country?: string
-  department_id?: string
-  job_title_id?: string
-  tenure?: string
-}
+/** What the segment card asks for: the grouping, and the page's filters. */
+export type SegmentQuery = InsightFilters & { by: SegmentBy }
 
 export type SegmentStats = {
   by: SegmentBy
-  filters: SegmentFiltersApplied
+  filters: FiltersApplied
   /** The currency of every row, or null when grouped by country, where each row has its own. */
   currency: string | null
   converted: boolean
@@ -86,10 +90,10 @@ export type Outlier = {
   deviation_percent: number
 }
 
-export type OutlierFilters = {
+/** The page's filters choose whose stars are listed; peers are still the whole role and country. */
+export type OutlierFilters = InsightFilters & {
   threshold: string
   direction: string
-  country?: string
   page?: string
 }
 
@@ -106,10 +110,12 @@ export type PayPosition = {
   country: string
 }
 
-export function useOverview() {
+export function useOverview(filters: InsightFilters) {
   return useQuery({
-    queryKey: ["insights", "overview"],
-    queryFn: () => apiRequest<Overview>("/insights/overview"),
+    queryKey: ["insights", "overview", filters],
+    queryFn: () =>
+      apiRequest<Overview>(`/insights/overview?${toQueryString(filters)}`),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -132,17 +138,22 @@ export type PayChangeFigures = {
 
 export type PayChanges = {
   since: string
+  filters: FiltersApplied
+  /** One country's own currency when filtered to it; otherwise INR, converted. */
   currency: string
+  converted: boolean
   rates_as_of: string | null
   excluded_currencies: string[]
   rows: (PayChangeFigures & { reason: Exclude<SalaryReason, "hire"> })[]
   total: PayChangeFigures
 }
 
-export function usePayChanges() {
+export function usePayChanges(filters: InsightFilters) {
   return useQuery({
-    queryKey: ["insights", "pay_changes"],
-    queryFn: () => apiRequest<PayChanges>("/insights/pay_changes"),
+    queryKey: ["insights", "pay_changes", filters],
+    queryFn: () =>
+      apiRequest<PayChanges>(`/insights/pay_changes?${toQueryString(filters)}`),
+    placeholderData: keepPreviousData,
   })
 }
 

@@ -1,4 +1,24 @@
-import type { SegmentBy } from "@/features/insights/api"
+import type { FiltersApplied, SegmentBy } from "@/features/insights/api"
+
+/**
+ * Who a figure is about, as the API applied the filters, e.g. "Active employees in Engineering
+ * with 1–3 years at ACME in India". `who` starts the sentence.
+ */
+export function describeScope(
+  filters: FiltersApplied,
+  who = "Active employees",
+): string {
+  const { country, department, job_title, tenure } = filters
+  return [
+    who,
+    department && `in ${department.name}`,
+    job_title && `working as ${job_title.name}`,
+    tenure && `with ${tenure.label.toLowerCase()} at ACME`,
+    country && `in ${country.name}`,
+  ]
+    .filter(Boolean)
+    .join(" ")
+}
 
 /** How each grouping is named in text ("Median pay by job title"). */
 export const SEGMENT_NAMES: Record<SegmentBy, string> = {

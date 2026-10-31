@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button"
 import { DirectoryFiltersBar } from "@/features/employees/directory-filters"
 import { DirectorySummary } from "@/features/employees/directory-summary"
 import { EmployeesTable } from "@/features/employees/employees-table"
-import { useEmployees, useLookups } from "@/features/employees/api"
+import {
+  useDirectorySummary,
+  useEmployees,
+  useLookups,
+} from "@/features/employees/api"
 import { useDirectoryFilters } from "@/features/employees/use-directory-filters"
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { formatCount } from "@/lib/format"
@@ -14,6 +18,7 @@ import { formatCount } from "@/lib/format"
 export function DirectoryPage() {
   const { filters, setFilters, clearFilters } = useDirectoryFilters()
   const employees = useEmployees(filters)
+  const summary = useDirectorySummary(filters)
   const lookups = useLookups()
 
   // Search updates the URL once typing pauses, not on every key.
@@ -62,17 +67,24 @@ export function DirectoryPage() {
         </Button>
       </div>
 
-      {/* The total now lives in the first summary card, which follows the filters like the list. */}
-      <DirectorySummary filters={filters} onFilter={setFilters} />
-
       <DirectoryFiltersBar
         filters={filters}
         lookups={lookups.data}
+        counts={summary.data}
         searchText={searchText}
         onSearchTextChange={setSearchText}
         onChange={setFilters}
         onClear={onClear}
       />
+
+      {/* The list's own error says it if the counts can't load either. */}
+      {!summary.isError && (
+        <DirectorySummary
+          summary={summary.data}
+          filters={filters}
+          refreshing={summary.isPlaceholderData}
+        />
+      )}
 
       {sortingByPayAcrossCountries && (
         <p className="text-sm text-muted-foreground">

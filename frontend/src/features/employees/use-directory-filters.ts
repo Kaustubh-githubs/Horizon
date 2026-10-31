@@ -23,6 +23,9 @@ export function useDirectoryFilters() {
   const filters: DirectoryFilters = Object.fromEntries(
     KEYS.map((key) => [key, searchParams.get(key) ?? undefined]),
   )
+  // Country codes are uppercase in the filter's options; the API accepts any case, so a typed
+  // or older link with "in" still shows India as picked.
+  filters.country = filters.country?.toUpperCase()
 
   const setFilters = (changes: Partial<DirectoryFilters>) => {
     setSearchParams(

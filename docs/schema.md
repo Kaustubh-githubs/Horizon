@@ -160,6 +160,8 @@ Some rules can't be check constraints, so the models enforce them:
 - **Rules that depend on today's date:** a salary revision's `effective_from` can't be in the future. Postgres expects check constraints to give the same answer forever, and `CURRENT_DATE` doesn't.
 - **Rules that compare against another table:** `effective_from` can't be before the employee's `hire_date`, and a currency must match the country's. A check constraint only sees its own row.
 - **Append-only history:** a saved salary revision can't be edited or deleted. Mistakes are fixed with a new `correction` row. An employee with salary history can't be deleted either.
+- **What a value looked like before Rails cast it:** money with more than two decimal places is refused rather than rounded by the column, and a date that doesn't exist is "not a valid date" (ADR 0006, 0016). The column only ever sees the cast value.
+- **Lengths:** a full name is at most 120 characters and an email at most 254 (model validations; the columns are unlimited `varchar`).
 - **Unique:** `countries.code`, `exchange_rates.currency_code`, `employees.employee_code`, `employees.email`, `department_budgets (department_id, year)`.
 - **Budgets:** `amount > 0`, and `year` between 2000 and 2100. Only this year's budget can be set or changed, which depends on today's date, so the model enforces it.
 - **Unique, ignoring case:** `countries.name`, `departments.name` and `job_titles.name` use a unique index on `LOWER(name)`. "Engineering" and "engineering" can't both exist, but the display keeps HR's capitalisation. A plain unique index would let the spreadsheet's spelling problem back in through the lookup tables.

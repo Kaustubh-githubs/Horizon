@@ -200,6 +200,11 @@
   ::selection {
     @apply bg-brand-soft text-brand-strong;
   }
+  /* A page's heading takes focus after navigating (useFocusPageHeading), for screen readers.
+     It isn't something to act on, so it gets no focus ring. */
+  main h1[tabindex="-1"]:focus {
+    outline: none;
+  }
   html {
     @apply font-sans;
   }

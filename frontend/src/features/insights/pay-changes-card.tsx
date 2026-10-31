@@ -82,41 +82,56 @@ export function PayChangesCard({ filters }: { filters: InsightFilters }) {
                 No salary changes in the last 12 months for these filters.
               </p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Reason</TableHead>
-                    <TableHead className="text-right">Changes</TableHead>
-                    <TableHead className="text-right">Average change</TableHead>
-                    <TableHead className="text-right">
-                      Added to yearly pay
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.rows.map((row) => (
+              <div className="@container">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Reason</TableHead>
+                      <TableHead className={cn("text-right", SHOWN_FROM.count)}>
+                        Changes
+                      </TableHead>
+                      <TableHead
+                        className={cn("text-right", SHOWN_FROM.average)}
+                      >
+                        Average change
+                      </TableHead>
+                      <TableHead className="text-right">
+                        Added to yearly pay
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.rows.map((row) => (
+                      <FiguresRow
+                        key={row.reason}
+                        label={REASON_LABELS[row.reason]}
+                        figures={row}
+                        currency={data.currency}
+                      />
+                    ))}
+                  </TableBody>
+                  <TableFooter>
                     <FiguresRow
-                      key={row.reason}
-                      label={REASON_LABELS[row.reason]}
-                      figures={row}
+                      label="All changes"
+                      figures={data.total}
                       currency={data.currency}
                     />
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <FiguresRow
-                    label="All changes"
-                    figures={data.total}
-                    currency={data.currency}
-                  />
-                </TableFooter>
-              </Table>
+                  </TableFooter>
+                </Table>
+              </div>
             )}
           </div>
         )}
       </CardContent>
     </Card>
   )
+}
+
+// On a narrow card the count and then the average give way (container queries, as in the segment
+// table); the reason and what it added to yearly pay always show.
+const SHOWN_FROM = {
+  average: "hidden @min-[26rem]:table-cell",
+  count: "hidden @min-[31rem]:table-cell",
 }
 
 function FiguresRow({
@@ -135,10 +150,10 @@ function FiguresRow({
   return (
     <TableRow>
       <TableCell className="font-medium">{label}</TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className={cn("text-right tabular-nums", SHOWN_FROM.count)}>
         {formatCount(figures.count)}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className={cn("text-right tabular-nums", SHOWN_FROM.average)}>
         {average === null ? (
           "—"
         ) : (

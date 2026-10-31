@@ -71,6 +71,18 @@ function SortHeader({
 
 const HOVER_INTENT_MS = 100
 
+// Columns give way as the table narrows (container queries on its box, so the sidebar and a phone
+// are handled alike): first the code (the name already identifies the person), then the hire
+// date, the status, the job title and the country. The name and the salary always show, so a
+// phone lists who earns what without scrolling sideways.
+const SHOWN_FROM = {
+  country: "hidden @min-[26rem]:table-cell",
+  jobTitle: "hidden @min-[41rem]:table-cell",
+  status: "hidden @min-[45rem]:table-cell",
+  hired: "hidden @min-[52rem]:table-cell",
+  code: "hidden @min-[57rem]:table-cell",
+}
+
 export function EmployeesTable({
   employees,
   isLoading,
@@ -109,7 +121,7 @@ export function EmployeesTable({
   return (
     <div
       className={cn(
-        "rounded-lg border transition-opacity",
+        "@container rounded-lg border transition-opacity",
         isRefreshing && "opacity-60",
       )}
     >
@@ -121,6 +133,7 @@ export function EmployeesTable({
               label="Code"
               sort={sort}
               onSort={onSort}
+              className={SHOWN_FROM.code}
             />
             <SortHeader
               column="full_name"
@@ -128,13 +141,14 @@ export function EmployeesTable({
               sort={sort}
               onSort={onSort}
             />
-            <TableHead>Job title</TableHead>
-            <TableHead>Country</TableHead>
+            <TableHead className={SHOWN_FROM.jobTitle}>Job title</TableHead>
+            <TableHead className={SHOWN_FROM.country}>Country</TableHead>
             <SortHeader
               column="hire_date"
               label="Hired"
               sort={sort}
               onSort={onSort}
+              className={SHOWN_FROM.hired}
             />
             <SortHeader
               column="current_salary"
@@ -143,7 +157,7 @@ export function EmployeesTable({
               onSort={onSort}
               className="text-right"
             />
-            <TableHead>Status</TableHead>
+            <TableHead className={SHOWN_FROM.status}>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -152,27 +166,27 @@ export function EmployeesTable({
               // the table doesn't jump when they arrive.
               Array.from({ length: 10 }, (_, row) => (
                 <TableRow key={row} aria-hidden="true">
-                  <TableCell>
+                  <TableCell className={SHOWN_FROM.code}>
                     <TextLine className="w-20" />
                   </TableCell>
                   <TableCell>
                     <TextLine className="w-36" />
                     <Skeleton className="mt-1 h-3 w-48" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={SHOWN_FROM.jobTitle}>
                     <TextLine className="w-40" />
                     <Skeleton className="mt-1 h-3 w-24" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={SHOWN_FROM.country}>
                     <TextLine className="w-24" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={SHOWN_FROM.hired}>
                     <TextLine className="w-24" />
                   </TableCell>
                   <TableCell>
                     <TextLine className="ml-auto w-28" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={SHOWN_FROM.status}>
                     <Skeleton className="h-5 w-14 rounded-full" />
                   </TableCell>
                 </TableRow>
@@ -185,7 +199,12 @@ export function EmployeesTable({
                   onPointerEnter={() => startPrefetch(employee.id)}
                   onPointerLeave={cancelPrefetch}
                 >
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell
+                    className={cn(
+                      "font-mono text-xs text-muted-foreground",
+                      SHOWN_FROM.code,
+                    )}
+                  >
                     {employee.employee_code}
                   </TableCell>
                   <TableCell>
@@ -199,21 +218,25 @@ export function EmployeesTable({
                       {employee.email}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={SHOWN_FROM.jobTitle}>
                     <div>{employee.job_title.name}</div>
                     <div className="text-xs text-muted-foreground">
                       {employee.department.name}
                     </div>
                   </TableCell>
-                  <TableCell>{employee.country.name}</TableCell>
-                  <TableCell>{formatDate(employee.hire_date)}</TableCell>
+                  <TableCell className={SHOWN_FROM.country}>
+                    {employee.country.name}
+                  </TableCell>
+                  <TableCell className={SHOWN_FROM.hired}>
+                    {formatDate(employee.hire_date)}
+                  </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatMoney(
                       employee.current_salary,
                       employee.current_currency,
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={SHOWN_FROM.status}>
                     <Badge
                       variant={
                         employee.status === "active" ? "secondary" : "outline"

@@ -70,8 +70,10 @@ Every figure is one SQL aggregate over the 9,194 active employees (`GROUP BY` wi
 
 **History** (`GET /budgets/:id/audits`): a budget has a handful of audit rows, read in one query on the gem's `(auditable_type, auditable_id, version)` index, with the users in a second query.
 
-## Employee change history (ADR 0012)
+## Employee timeline and audit log (ADR 0012, 0021)
 
-**History** (`GET /employees/:id/audits`): one query for the employee's own audit rows and their salary revisions' rows (an `OR` of the gem's `auditable_index` and `associated_index`), one for the users, and one each for the department, job title and country names. Grouping by request happens in Ruby. About 1 ms for an employee with four entries (average of 20 warm runs).
+**Audit log** (`GET /employees/:id/audits`): one query for the employee's own audit rows and their salary revisions' rows (an `OR` of the gem's `auditable_index` and `associated_index`), one for the users, and one each for the department, job title and country names. About 1 ms for an employee with a handful of changes (average of 20 warm runs).
+
+**Timeline** (`GET /employees/:id/timeline`): the same audit query, the employee's salary revisions (on the `(employee_id, effective_from)` index) and the names; anniversaries are worked out in Ruby. About 1.2 ms for a seeded employee with eight years of anniversaries and five revisions (average of 20 warm runs).
 
 **Writes:** every employee and salary save adds one `INSERT` into `audits`, in the same transaction. The full RSpec suite, which creates thousands of records, went from about 5.4 s to 6.2 s. The seed is unaffected, because bulk inserts skip the audit.

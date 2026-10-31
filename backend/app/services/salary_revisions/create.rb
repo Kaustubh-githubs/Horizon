@@ -21,11 +21,14 @@ module SalaryRevisions
                                     currency: @employee.current_currency, effective_from: Date.current)
       check(revision)
 
-      SalaryRevision.transaction do
-        # check has already run every validation; running them again would only repeat its queries.
-        revision.save!(validate: false)
-        @employee.update!(current_salary: revision.amount, lock_version: @lock_version,
-                          **(@reason == "promotion" ? { job_title_id: @job_title_id } : {}))
+      # One change in the audit trail, wherever this runs, so a promotion keeps its title (ADR 0021).
+      Auditable.as_one_change do
+        SalaryRevision.transaction do
+          # check has already run every validation; running them again would only repeat its queries.
+          revision.save!(validate: false)
+          @employee.update!(current_salary: revision.amount, lock_version: @lock_version,
+                            **(@reason == "promotion" ? { job_title_id: @job_title_id } : {}))
+        end
       end
       revision
     end

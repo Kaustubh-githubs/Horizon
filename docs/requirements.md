@@ -49,7 +49,7 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 - **Phone layout, dark mode, other languages.** Nice extras that don't help the core job yet.
 
 ## Add-on: audit trail
-Every change to an employee or salary records who made it, what changed (old and new values) and when. Records can't be edited or deleted from the app and are saved together with the change. Shown in a "Change history" card on the employee's profile, one entry per action (added, details edited, salary change, employment ended), it answers "who changed this salary, and when?". Department budgets keep the same kind of history (ADR 0020). Employees loaded by the seed start with an empty history.
+Every change to an employee or salary records who made it, what changed (old and new values) and when. Records can't be edited or deleted from the app and are saved together with the change. An "Audit log" panel on the employee's profile lists every saved change, column by column, and answers "who changed this salary, and when?". The profile's timeline tells the person's story by date: joining, salary revisions, promotions, department and title moves, work anniversaries and leaving (ADR 0021). Department budgets keep the same kind of history (ADR 0020). Employees loaded by the seed start with an empty audit log.
 
 ## Assumptions (to confirm with ACME)
 - One HR Manager, with no restricted regional users. If the team grows, the persona setup supports more users and permissions.

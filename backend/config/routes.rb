@@ -24,7 +24,8 @@ Rails.application.routes.draw do
         resource :pay_comparison, only: :show
         # Whether the employee is a ★ outlier, for the profile banner (ADR 0019).
         resource :pay_position, only: :show
-        # Who changed what, and when: the profile's change history (ADR 0012).
+        # The profile's timeline (ADR 0021) and audit log: who changed what, and when (ADR 0012).
+        resource :timeline, only: :show
         resources :audits, only: :index, controller: "employee_audits"
       end
 

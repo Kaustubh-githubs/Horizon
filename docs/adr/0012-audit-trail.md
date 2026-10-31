@@ -35,3 +35,4 @@ Use the [`audited`](https://github.com/collectiveidea/audited) gem for now.
 - **Where:** a "Change history" card on the employee's profile, newest first, with who and when. No company-wide activity page yet.
 - **No reason note** on edits or ending employment for now. Salary changes already carry a reason. The gem's `audit_comment` can add one later.
 - **Seeded employees** were bulk-loaded without audits, so their history starts empty and says so ("No changes recorded since this employee was loaded into Horizon"). Their salary history still shows the seeded pay timeline. Writing 10,000 "loaded" entries would say nothing useful about who did what.
+- Later the same day, ADR 0021 replaced the grouped "Change history" card with a timeline and an audit log panel that lists every saved change. What's recorded, the readable values, no reason note and the empty seeded history stand.

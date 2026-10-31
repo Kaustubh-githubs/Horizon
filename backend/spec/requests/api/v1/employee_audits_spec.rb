@@ -1,6 +1,7 @@
 require "rails_helper"
 
-# An employee's change history (ADR 0012): one entry per thing HR did, with who and when.
+# An employee's audit log (ADR 0012, 0021): every saved change to them or their salary revisions,
+# column by column, with who, when and why. Newest first.
 RSpec.describe "GET /api/v1/employees/:id/audits", type: :request do
   let(:user) { create(:user, name: "Asha Rao") }
   let(:india) { create(:country, code: "IN", name: "India", currency_code: "INR") }
@@ -29,90 +30,80 @@ RSpec.describe "GET /api/v1/employees/:id/audits", type: :request do
     patch "/api/v1/employees/#{id}", params: { lock_version: Employee.find(id).lock_version, **params }, as: :json
   end
 
-  def history(id)
+  def audit_log(id)
     get "/api/v1/employees/#{id}/audits"
     response.parsed_body
   end
 
-  it "starts with the employee being added, with their first salary, as one entry" do
+  it "lists every save of the employee and their salary revisions, newest first, with who" do
     id = add_employee
+    edit(id, department_id: create(:department, name: "Sales").id)
 
-    expect(history(id)).to match([
-      include("kind" => "added", "changed_by" => "Asha Rao", "currency" => "INR",
-              "changes" => include({ "field" => "department", "from" => nil, "to" => "Engineering" },
-                                   { "field" => "job_title", "from" => nil, "to" => "Software Engineer" },
-                                   { "field" => "salary", "from" => nil, "to" => "1200000.0" }))
+    expect(audit_log(id).map { |row| row.values_at("model", "action", "changed_by") }).to eq([
+      [ "employee", "update", "Asha Rao" ], [ "salary_revision", "create", "Asha Rao" ],
+      [ "employee", "create", "Asha Rao" ]
     ])
   end
 
-  it "records an edit, with names instead of ids" do
+  it "shows every column that was set, with names instead of ids" do
     id = add_employee
-    edit(id, email: "ravi.k@acme.test", department_id: create(:department, name: "Sales").id)
 
-    expect(history(id).first).to include(
-      "kind" => "edited", "changed_by" => "Asha Rao",
-      "changes" => [ { "field" => "email", "from" => "ravi@acme.test", "to" => "ravi.k@acme.test" },
-                     { "field" => "department", "from" => "Engineering", "to" => "Sales" } ]
+    expect(audit_log(id).last).to include(
+      "currency" => "INR",
+      "changes" => include({ "field" => "department", "from" => nil, "to" => "Engineering" },
+                           { "field" => "status", "from" => nil, "to" => "active" },
+                           { "field" => "current_salary", "from" => nil, "to" => "1200000.0" },
+                           { "field" => "current_currency", "from" => nil, "to" => "INR" })
     )
   end
 
-  it "records a salary change once, from the old salary to the new, with its reason" do
+  it "shows the old and new value of each changed column" do
+    id = add_employee
+    edit(id, email: "ravi.k@acme.test")
+
+    expect(audit_log(id).first["changes"]).to eq([
+      { "field" => "email", "from" => "ravi@acme.test", "to" => "ravi.k@acme.test" }
+    ])
+  end
+
+  it "gives a salary change's reason, next to the salary copy it changed", :aggregate_failures do
     id = add_employee
     change_salary(id, amount: "1300000", reason: "annual_raise")
+    employee_row, revision_row = audit_log(id).first(2)
 
-    expect(history(id).first).to include(
-      "kind" => "salary_change", "reason" => "annual_raise",
-      "changes" => [ { "field" => "salary", "from" => "1200000.0", "to" => "1300000.0" } ]
-    )
+    expect(revision_row).to include("model" => "salary_revision", "reason" => "annual_raise",
+                                    "changes" => include({ "field" => "amount", "from" => nil, "to" => "1300000.0" }))
+    expect(employee_row["changes"]).to eq([ { "field" => "current_salary", "from" => "1200000.0", "to" => "1300000.0" } ])
   end
 
-  it "records a promotion as one entry, with the new job title and salary" do
-    id = add_employee
-    change_salary(id, amount: "1500000", reason: "promotion",
-                      job_title_id: create(:job_title, name: "Senior Software Engineer").id)
-
-    expect(history(id).first).to include(
-      "kind" => "salary_change", "reason" => "promotion",
-      "changes" => [ { "field" => "job_title", "from" => "Software Engineer", "to" => "Senior Software Engineer" },
-                     { "field" => "salary", "from" => "1200000.0", "to" => "1500000.0" } ]
-    )
-  end
-
-  it "records the end of employment" do
+  it "shows the end of employment as a status change" do
     id = add_employee
     post "/api/v1/employees/#{id}/termination", params: { terminated_on: "2026-10-30", lock_version: 0 }, as: :json
 
-    expect(history(id).first).to include(
-      "kind" => "ended", "changes" => [ { "field" => "terminated_on", "from" => nil, "to" => "2026-10-30" } ]
-    )
-  end
-
-  it "lists entries newest first" do
-    id = add_employee
-    change_salary(id, amount: "1300000", reason: "annual_raise")
-    edit(id, full_name: "Ravi K. Kumar")
-
-    expect(history(id).pluck("kind")).to eq(%w[edited salary_change added])
+    expect(audit_log(id).first["changes"]).to eq([
+      { "field" => "status", "from" => "active", "to" => "terminated" },
+      { "field" => "terminated_on", "from" => nil, "to" => "2026-10-30" }
+    ])
   end
 
   it "records nothing for a change that was refused" do
     id = add_employee
     patch "/api/v1/employees/#{id}", params: { full_name: "Ravi K. Kumar", lock_version: 5 }, as: :json
 
-    expect(history(id).pluck("kind")).to eq(%w[added])
+    expect(audit_log(id).size).to eq(2)
   end
 
   it "has no name for a change made outside the app" do
     employee = create(:employee)
 
-    expect(history(employee.id)).to match([ include("kind" => "added", "changed_by" => nil) ])
+    expect(audit_log(employee.id)).to match([ include("model" => "employee", "action" => "create", "changed_by" => nil) ])
   end
 
   it "is empty for an employee loaded in bulk, like the seed" do
     employee = create(:employee)
     Audited::Audit.delete_all
 
-    expect(history(employee.id)).to eq([])
+    expect(audit_log(employee.id)).to eq([])
   end
 
   it "answers 404 for an unknown employee" do

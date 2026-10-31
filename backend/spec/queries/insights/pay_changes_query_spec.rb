@@ -50,4 +50,27 @@ RSpec.describe Insights::PayChangesQuery do
   it "totals every change" do
     expect(result[:total]).to eq(count: 3, average_percent: 4.9, yearly_cost: "-563333.33")
   end
+
+  # The page's filters, matched on each person's current details (ADR 0019).
+  describe "with filters" do
+    def filtered(**filters)
+      described_class.new(filters: Insights::Filters.new(**filters)).call
+    end
+
+    it "counts only the matching people's changes" do
+      expect(filtered(country_code: "in")[:total]).to eq(count: 2, average_percent: 12.4, yearly_cost: "270000.0")
+    end
+
+    it "is in one country's own currency, not converted", :aggregate_failures do
+      result = filtered(country_code: "us")
+
+      expect(result).to include(currency: "USD", converted: false, filters: include(country: include(code: "US")))
+      expect(result[:rows]).to eq([ { reason: "correction", count: 1, average_percent: -10.0, yearly_cost: "-10000.0" } ])
+    end
+
+    # John has been here 3 years and 9 months; Asha 2 years and 9 months.
+    it "still counts people who have since left, by tenure too" do
+      expect(filtered(tenure: "3_5")[:rows].pluck(:reason)).to eq(%w[correction])
+    end
+  end
 end

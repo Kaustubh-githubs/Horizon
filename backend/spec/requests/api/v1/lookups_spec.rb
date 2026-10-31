@@ -29,5 +29,18 @@ RSpec.describe "GET /api/v1/lookups", type: :request do
       expect(response.parsed_body["departments"].pluck("name")).to eq(%w[Engineering Sales])
       expect(response.parsed_body["job_titles"].pluck("name")).to eq([ "Account Executive", "Software Engineer" ])
     end
+
+    # So the Job title filter can offer only the titles people in the picked department hold (ADR 0019).
+    it "lists the job titles held in each department, by anyone, current or former" do
+      engineering = Department.find_by!(name: "Engineering")
+      engineer = JobTitle.find_by!(name: "Software Engineer")
+      create_list(:employee, 2, department: engineering, job_title: engineer)
+      create(:employee, :terminated, department: engineering, job_title: JobTitle.find_by!(name: "Account Executive"))
+
+      get "/api/v1/lookups"
+
+      departments = response.parsed_body["departments"].index_by { |d| d["name"] }
+      expect(departments.transform_values { |d| d["job_title_ids"].size }).to eq("Engineering" => 2, "Sales" => 0)
+    end
   end
 end

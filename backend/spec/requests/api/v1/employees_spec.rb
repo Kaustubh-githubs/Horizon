@@ -100,7 +100,8 @@ RSpec.describe "GET /api/v1/employees", type: :request do
       get "/api/v1/employees/summary", params: { q: "nair", country: "in" }
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body).to include("total" => 1, "countries" => [ { "code" => "IN", "name" => "India", "count" => 1 } ])
+      expect(response.parsed_body).to include("total" => 1, "country_count" => 1,
+                                              "countries" => [ { "code" => "IN", "name" => "India", "count" => 1 } ])
     end
   end
 

@@ -27,6 +27,20 @@ RSpec.describe "Insights API", type: :request do
         "median" => "1000000.0", "outlier_count" => 1, "excluded_currencies" => []
       )
     end
+
+    # The page's filters apply to the headline numbers too (ADR 0019).
+    it "follows the filters, in one country's own currency" do
+      create(:exchange_rate, currency_code: "USD", rate_to_usd: "1.0", as_of: Date.new(2026, 10, 1))
+      create(:employee, country: create(:country, code: "US", name: "United States", currency_code: "USD"),
+                        job_title: engineer, current_salary: "120000")
+
+      get "/api/v1/insights/overview", params: { country: "us" }
+
+      expect(response.parsed_body).to include(
+        "currency" => "USD", "converted" => false, "headcount" => 1, "countries" => 1, "payroll" => "120000.0",
+        "median" => "120000.0", "outlier_count" => 0, "filters" => hash_including("country" => hash_including("code" => "US"))
+      )
+    end
   end
 
   describe "GET /api/v1/insights/segments" do
@@ -60,14 +74,38 @@ RSpec.describe "Insights API", type: :request do
     end
   end
 
-  # Both lists answer an unknown country the same way, so the UI can offer "Show all countries".
-  describe "an unknown country" do
-    it "is a 404 for the segment figures and for the outliers", :aggregate_failures do
-      get "/api/v1/insights/segments", params: { country: "xx" }
-      expect(response).to have_http_status(:not_found)
+  # Every part of the page answers a filter that doesn't exist the same way, so the UI can offer
+  # "Clear filters".
+  describe "an unknown filter value" do
+    it "is a 404 everywhere", :aggregate_failures do
+      %w[overview segments pay_changes outliers].each do |endpoint|
+        get "/api/v1/insights/#{endpoint}", params: { country: "xx" }
+        expect(response).to have_http_status(:not_found), "#{endpoint} with an unknown country"
 
-      get "/api/v1/insights/outliers", params: { country: "xx" }
-      expect(response).to have_http_status(:not_found)
+        get "/api/v1/insights/#{endpoint}", params: { department_id: 0 }
+        expect(response).to have_http_status(:not_found), "#{endpoint} with an unknown department"
+      end
+    end
+  end
+
+  describe "the page's filters" do
+    it "pass through to the pay changes" do
+      get "/api/v1/insights/pay_changes", params: { country: "in", tenure: "1_3" }
+
+      expect(response.parsed_body).to include(
+        "currency" => "INR", "converted" => false,
+        "filters" => hash_including("country" => hash_including("code" => "IN"), "tenure" => hash_including("key" => "1_3"))
+      )
+    end
+
+    it "pass through to the outliers, which still compare people with their whole role", :aggregate_failures do
+      underpaid = Employee.find_by!(full_name: "Underpaid")
+
+      get "/api/v1/insights/outliers", params: { department_id: underpaid.department_id }
+      expect(response.parsed_body["data"]).to match([ hash_including("peer_count" => 6, "deviation_percent" => -50.0) ])
+
+      get "/api/v1/insights/outliers", params: { department_id: create(:department).id }
+      expect(response.parsed_body["data"]).to eq([])
     end
   end
 

@@ -21,8 +21,8 @@ RSpec.describe Insights::SegmentStatsQuery do
     create(:employee, :terminated, country: india, department: engineering, current_salary: "9000000")
   end
 
-  def stats(**params)
-    described_class.new(**params).call
+  def stats(by: "country", **filters)
+    described_class.new(by:, filters: Insights::Filters.new(**filters)).call
   end
 
   def row(result, label)

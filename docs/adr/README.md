@@ -24,5 +24,6 @@ Short notes on the decisions that shape Horizon: what we chose, what else we con
 | [0018](0018-changing-salaries.md) | Changing salaries | Accepted |
 | [0019](0019-insights-dashboard.md) | Insights dashboard | Accepted |
 | [0020](0020-department-budgets.md) | Department budgets | Accepted |
+| [0021](0021-employee-timeline-and-audit-log.md) | Employee timeline and audit log | Accepted |
 
 Each note has the same parts: **Context** (why we had to decide), **Decision**, **Options considered** and **Consequences** (good and bad).

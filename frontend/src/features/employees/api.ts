@@ -35,7 +35,8 @@ export type PageMeta = {
 
 export type Lookups = {
   countries: { id: number; code: string; name: string; currency_code: string }[]
-  departments: { id: number; name: string }[]
+  /** `job_title_ids`: the titles people in the department hold, current or former (ADR 0019). */
+  departments: { id: number; name: string; job_title_ids: number[] }[]
   job_titles: { id: number; name: string }[]
 }
 
@@ -62,9 +63,15 @@ export function useEmployees(filters: DirectoryFilters) {
   })
 }
 
-/** Counts for the cards above the directory, for the same people as the list. */
+/**
+ * How many people the list holds, and in how many countries and departments (ADR 0019). Each
+ * country's and department's count ignores its own filter, so the filter options can say how
+ * many each would give.
+ */
 export type DirectorySummary = {
   total: number
+  country_count: number
+  department_count: number
   countries: { code: string; name: string; count: number }[]
   departments: { id: number; name: string; count: number }[]
 }
@@ -79,7 +86,7 @@ export function useDirectorySummary(filters: DirectoryFilters) {
     status: filters.status,
   }
   return useQuery({
-    // Under "employees", so anything that refreshes the list refreshes the cards too.
+    // Under "employees", so anything that refreshes the list refreshes the counts too.
     queryKey: ["employees", "summary", who],
     queryFn: () =>
       apiRequest<DirectorySummary>(`/employees/summary?${toQueryString(who)}`),
@@ -116,12 +123,14 @@ export type EmployeeChanges = Pick<
 export type Termination = { terminated_on: string; lock_version: number }
 
 // After any change: store the fresh employee, and refetch directory pages and the employee's
-// timeline and audit log so they show it too.
+// timeline and audit log so they show it too. Lookups too: which titles each department holds
+// may have changed (ADR 0019).
 function useEmployeeSaved() {
   const queryClient = useQueryClient()
   return (employee: Employee) => {
     queryClient.setQueryData(employeeKey(employee.id), employee)
     void queryClient.invalidateQueries({ queryKey: ["employees"] })
+    void queryClient.invalidateQueries({ queryKey: ["lookups"] })
     for (const part of ["timeline", "audits"])
       void queryClient.invalidateQueries({
         queryKey: [...employeeKey(employee.id), part],
@@ -291,10 +300,11 @@ export function useChangeSalary(employeeId: number) {
         body: change,
       }),
     // The employee (current salary, title, lock_version), their history and peer figures all
-    // changed, and so may directory pages.
+    // changed, and so may directory pages and, after a promotion, the titles a department holds.
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: employeeKey(employeeId) })
       void queryClient.invalidateQueries({ queryKey: ["employees"] })
+      void queryClient.invalidateQueries({ queryKey: ["lookups"] })
     },
   })
 }

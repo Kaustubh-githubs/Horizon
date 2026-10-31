@@ -13,7 +13,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatPercent, REASON_LABELS } from "@/features/employees/salary"
-import { usePayChanges, type PayChangeFigures } from "@/features/insights/api"
+import {
+  usePayChanges,
+  type InsightFilters,
+  type PayChangeFigures,
+} from "@/features/insights/api"
+import { describeScope } from "@/features/insights/segments"
 import {
   formatCount,
   formatDate,
@@ -24,10 +29,11 @@ import { cn } from "@/lib/utils"
 
 /**
  * Salary changes in the last 12 months, by reason (ADR 0019): how many, the average change, and
- * what they added to yearly pay in INR. Answers "what did promotions cost us this year?".
+ * what they added to yearly pay, for the page's filters. Answers "what did promotions cost us
+ * this year?", for the whole company or one slice of it.
  */
-export function PayChangesCard() {
-  const changes = usePayChanges()
+export function PayChangesCard({ filters }: { filters: InsightFilters }) {
+  const changes = usePayChanges(filters)
   const data = changes.data
 
   return (
@@ -50,22 +56,33 @@ export function PayChangesCard() {
         ) : !data ? (
           <Skeleton className="h-40 w-full" />
         ) : (
-          <>
+          <div
+            className={cn(
+              "flex flex-col gap-4 transition-opacity",
+              changes.isPlaceholderData && "opacity-60",
+            )}
+          >
             <p className="text-sm text-muted-foreground">
               Raises, promotions, market adjustments and corrections effective
-              since {formatDate(data.since)}, including people who have since
-              left. Each is compared with the person&apos;s previous salary;
-              amounts are converted to {data.currency}
-              {data.rates_as_of
-                ? ` at rates as of ${formatDate(data.rates_as_of)}`
-                : ""}
+              since {formatDate(data.since)}, for{" "}
+              {describeScope(data.filters, "everyone")}, including people who
+              have since left. Each is compared with the person&apos;s previous
+              salary; amounts are{" "}
+              {data.converted
+                ? `converted to ${data.currency}${data.rates_as_of ? ` at rates as of ${formatDate(data.rates_as_of)}` : ""}`
+                : `in ${data.currency}`}
               .
+              {/* We keep only today's department, title and hire date, not past ones (ADR 0019). */}
+              {(data.filters.department ||
+                data.filters.job_title ||
+                data.filters.tenure) &&
+                " People are matched on their current department, job title and tenure."}
               {data.excluded_currencies.length > 0 &&
                 ` Left out (no exchange rate): ${data.excluded_currencies.join(", ")}.`}
             </p>
             {data.total.count === 0 ? (
               <p className="rounded-lg border p-6 text-sm text-muted-foreground">
-                No salary changes in the last 12 months.
+                No salary changes in the last 12 months for these filters.
               </p>
             ) : (
               <Table>
@@ -98,7 +115,7 @@ export function PayChangesCard() {
                 </TableFooter>
               </Table>
             )}
-          </>
+          </div>
         )}
       </CardContent>
     </Card>

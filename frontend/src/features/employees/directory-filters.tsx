@@ -9,8 +9,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { DirectoryFilters, Lookups } from "@/features/employees/api"
+import type {
+  DirectoryFilters,
+  DirectorySummary,
+  Lookups,
+} from "@/features/employees/api"
+import {
+  departmentChange,
+  titlesForDepartment,
+} from "@/features/employees/job-titles"
 import { STATUS_LABELS } from "@/features/employees/status"
+import { formatCount } from "@/lib/format"
 
 // Radix Select can't hold an empty value, so "all" stands for "no filter".
 const ALL = "all"
@@ -48,9 +57,15 @@ function FilterSelect({
   )
 }
 
+// "India (3,648)": how many people the option would give with the other filters and the search.
+// Options nobody matches say 0. Before the counts load, just the name.
+const withCount = (name: string, count: number | undefined, loaded: boolean) =>
+  loaded ? `${name} (${formatCount(count ?? 0)})` : name
+
 export function DirectoryFiltersBar({
   filters,
   lookups,
+  counts,
   searchText,
   onSearchTextChange,
   onChange,
@@ -58,6 +73,8 @@ export function DirectoryFiltersBar({
 }: {
   filters: DirectoryFilters
   lookups: Lookups | undefined
+  /** Each country's and department's count ignores its own filter (ADR 0019). */
+  counts: DirectorySummary | undefined
   searchText: string
   onSearchTextChange: (text: string) => void
   onChange: (changes: Partial<DirectoryFilters>) => void
@@ -66,6 +83,8 @@ export function DirectoryFiltersBar({
   const hasFilters = Object.entries(filters).some(
     ([key, value]) => key !== "page" && key !== "sort" && Boolean(value),
   )
+  const byCountry = new Map(counts?.countries.map((c) => [c.code, c.count]))
+  const byDepartment = new Map(counts?.departments.map((d) => [d.id, d.count]))
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -86,7 +105,7 @@ export function DirectoryFiltersBar({
         value={filters.country}
         options={(lookups?.countries ?? []).map((c) => ({
           value: c.code,
-          label: c.name,
+          label: withCount(c.name, byCountry.get(c.code), Boolean(counts)),
         }))}
         onChange={(country) => onChange({ country })}
       />
@@ -95,17 +114,23 @@ export function DirectoryFiltersBar({
         value={filters.department_id}
         options={(lookups?.departments ?? []).map((d) => ({
           value: String(d.id),
-          label: d.name,
+          label: withCount(d.name, byDepartment.get(d.id), Boolean(counts)),
         }))}
-        onChange={(department_id) => onChange({ department_id })}
+        onChange={(department_id) =>
+          onChange(
+            departmentChange(lookups, department_id, filters.job_title_id),
+          )
+        }
       />
       <FilterSelect
         label="Job titles"
         value={filters.job_title_id}
-        options={(lookups?.job_titles ?? []).map((t) => ({
-          value: String(t.id),
-          label: t.name,
-        }))}
+        options={titlesForDepartment(lookups, filters.department_id).map(
+          (t) => ({
+            value: String(t.id),
+            label: t.name,
+          }),
+        )}
         onChange={(job_title_id) => onChange({ job_title_id })}
       />
 

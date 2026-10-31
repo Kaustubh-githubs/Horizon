@@ -19,10 +19,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useLookups } from "@/features/employees/api"
-import { useOutliers } from "@/features/insights/api"
+import { useOutliers, type InsightFilters } from "@/features/insights/api"
 import { LoadError } from "@/features/insights/load-error"
-import { THRESHOLDS } from "@/features/insights/use-insights-params"
+import { NO_FILTERS, THRESHOLDS } from "@/features/insights/use-insights-params"
 import { formatCount, formatMoney } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -30,23 +29,23 @@ const ALL = "all"
 
 /**
  * The ★ list (ADR 0019): people paid far from the median for their job title in their
- * country, furthest first. Each name opens the profile.
+ * country, furthest first. The page's filters choose whose stars are listed; each person is
+ * still compared with everyone in their role and country. Each name opens the profile.
  */
 export function OutliersCard({
+  filters,
   threshold,
   direction,
-  country,
   page,
   onChange,
 }: {
+  filters: InsightFilters
   threshold: string
   direction: string
-  country: string | undefined
   page: string | undefined
   onChange: (changes: Record<string, string | undefined>) => void
 }) {
-  const outliers = useOutliers({ threshold, direction, country, page })
-  const lookups = useLookups()
+  const outliers = useOutliers({ ...filters, threshold, direction, page })
   const meta = outliers.data?.meta
   const rows = outliers.data?.data ?? []
 
@@ -67,28 +66,12 @@ export function OutliersCard({
         <p className="text-sm text-muted-foreground">
           Active employees paid at least {threshold}% below or above the median
           for their job title in their country. Only roles with 5 or more people
-          in a country are compared.
+          in a country are compared. The filters above choose whose stars are
+          listed; everyone is still compared with their whole role in their
+          country.
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <Select
-            value={country ?? ALL}
-            onValueChange={(next) =>
-              onChange({ ocountry: next === ALL ? undefined : next })
-            }
-          >
-            <SelectTrigger aria-label="Country" className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All countries</SelectItem>
-              {(lookups.data?.countries ?? []).map((c) => (
-                <SelectItem key={c.code} value={c.code}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <Select
             value={direction}
             onValueChange={(next) =>
@@ -132,9 +115,9 @@ export function OutliersCard({
             what="the outliers"
             onRetry={() => void outliers.refetch()}
             notFound={{
-              message: "That country isn't in Horizon.",
-              action: "Show all countries",
-              onAction: () => onChange({ ocountry: undefined }),
+              message: "A filter in this link doesn't exist in Horizon.",
+              action: "Clear filters",
+              onAction: () => onChange(NO_FILTERS),
             }}
           />
         ) : rows.length === 0 ? (

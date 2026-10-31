@@ -5,13 +5,18 @@ import { moneyAmount } from "@/lib/money"
 
 // The same rules the API enforces (ADR 0017), checked in the browser first for quick feedback.
 export const employeeFormSchema = z.object({
-  full_name: z.string().trim().min(1, "Enter the employee's name"),
+  full_name: z
+    .string()
+    .trim()
+    .min(1, "Enter the employee's name")
+    .max(120, "Use at most 120 characters"),
   // Deliberately loose, like the API's check (name@domain): a stricter browser rule would
   // block saving employees whose address the API already accepted.
   email: z
     .string()
     .trim()
-    .regex(/^[^\s@]+@[^\s@]+$/, "Enter a valid email address"),
+    .regex(/^[^\s@]+@[^\s@]+$/, "Enter a valid email address")
+    .max(254, "Use at most 254 characters"),
   hire_date: z.iso
     .date("Pick the hire date")
     .refine((date) => date <= todayIso(), "Can't be in the future"),

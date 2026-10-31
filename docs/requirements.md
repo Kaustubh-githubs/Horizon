@@ -17,11 +17,11 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 
 ## What's in the first version
 - **Login.** Each user has a persona (only "HR Manager" for now), so permissions can be added later.
-- **Employee directory** that stays quick at 10,000 rows: search, filter by country, department, title or status, sort, and paging. Summary cards above it count the same people by country and department.
+- **Employee directory** that stays quick at 10,000 rows: search, filter by country, department, title or status, sort, and paging. A line above it says how many people match, and the country and department filters show how many each option would give.
 - **Add, edit and view employees,** with country, department and title picked from fixed lists so data stays clean.
 - **End employment instead of deleting.** The record is kept, read-only, with a last working day of today or earlier.
 - **Salary history.** Each change has an amount, currency and reason, and takes effect on the day it's recorded. The latest one is the current salary. A promotion also updates the job title.
-- **Pay insights dashboard.** Group by country, department, job title or tenure, filtered by any combination of them: headcount, lowest/25th/median/75th/average/highest pay and total payroll, plus the salary changes of the last 12 months by reason. One country is shown in its own currency; figures across countries are converted to INR from a fixed, dated exchange-rate table. People paid more than 40% below or above the median for their role in their country are flagged with a ★, on the dashboard and on their profile.
+- **Pay insights dashboard.** Group by country, department, job title or tenure, filtered by any combination of them: headcount, lowest/25th/median/75th/average/highest pay and total payroll, plus the salary changes of the last 12 months by reason. The filters apply to the whole page: headline numbers, segments, pay changes and the ★ list. One country is shown in its own currency; figures across countries are converted to INR from a fixed, dated exchange-rate table. People paid more than 40% below or above the median for their role in their country are flagged with a ★, on the dashboard and on their profile.
 - **Department budgets** (a good-to-have beyond the brief). HR sets this year's budget for each department in INR and sees whether today's payroll is over, near or under it, how many months it lasts, the headcount, the combined budget for the company, and who changed each budget and when.
 - **Seed script** that creates the same 10,000 realistic employees on every run, in seconds.
 

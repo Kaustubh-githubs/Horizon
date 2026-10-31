@@ -1,10 +1,12 @@
 module Insights
   # The headline numbers (ADR 0019): headcount, and payroll, median and average pay, plus how many
   # people have a ★, for the page's filters (the whole org when there are none). One country is in
-  # its own currency; otherwise figures are converted to the reporting currency (INR).
+  # its own currency; otherwise figures are converted to the reporting currency (INR). Stars are
+  # counted at the ★ list's threshold, so the tile and the list agree.
   class OverviewQuery
-    def initialize(filters: Filters.new)
+    def initialize(filters: Filters.new, threshold: OutliersQuery::DEFAULT_THRESHOLD)
       @filters = filters
+      @outliers = OutliersQuery.new(threshold:, filters:)
     end
 
     def call
@@ -27,8 +29,8 @@ module Insights
         median: Insights.money(median),
         mean: Insights.money(mean),
         # count(:all): the outliers query selects extra columns, which a plain count would try to count.
-        outlier_count: OutliersQuery.new(filters: @filters).call.count(:all),
-        outlier_threshold: OutliersQuery::DEFAULT_THRESHOLD
+        outlier_count: @outliers.call.count(:all),
+        outlier_threshold: @outliers.threshold
       }
     end
   end

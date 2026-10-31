@@ -66,7 +66,7 @@ class Employee < ApplicationRecord
     return if terminated_on.blank? || !will_save_change_to_terminated_on? || new_record?
 
     latest = salary_revisions.maximum(:effective_from)
-    errors.add(:terminated_on, "can't be before the latest salary change (#{latest})") if latest && terminated_on < latest
+    errors.add(:terminated_on, "can't be before the latest salary change (#{latest.to_fs(:readable)})") if latest && terminated_on < latest
   end
 
   # Only when something is being changed, so a saved terminated employee still counts as valid.

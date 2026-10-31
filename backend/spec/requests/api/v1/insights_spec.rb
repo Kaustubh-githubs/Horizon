@@ -41,6 +41,17 @@ RSpec.describe "Insights API", type: :request do
         "median" => "120000.0", "outlier_count" => 0, "filters" => hash_including("country" => hash_including("code" => "US"))
       )
     end
+
+    # The ★ tile counts the same people as the ★ list, at the threshold HR picked there.
+    it "counts the stars at the ★ list's threshold", :aggregate_failures do
+      create(:employee, country: india, job_title: engineer, current_salary: "700000")
+
+      get "/api/v1/insights/overview", params: { threshold: 30 }
+      expect(response.parsed_body).to include("outlier_count" => 2, "outlier_threshold" => 30)
+
+      get "/api/v1/insights/overview"
+      expect(response.parsed_body).to include("outlier_count" => 1, "outlier_threshold" => 40)
+    end
   end
 
   describe "GET /api/v1/insights/segments" do

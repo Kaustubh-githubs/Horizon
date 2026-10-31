@@ -88,7 +88,7 @@ RSpec.describe SalaryRevision, type: :model do
       create(:salary_revision, employee:, effective_from: Date.new(2026, 10, 28))
       later = build(:salary_revision, employee:, effective_from: Date.new(2026, 10, 27), reason: "correction")
 
-      expect(later.tap(&:valid?).errors[:effective_from]).to eq([ "can't be before the latest salary change (2026-10-28)" ])
+      expect(later.tap(&:valid?).errors[:effective_from]).to eq([ "can't be before the latest salary change (28 Oct 2026)" ])
     end
   end
 

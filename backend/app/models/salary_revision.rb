@@ -45,7 +45,7 @@ class SalaryRevision < ApplicationRecord
     return if effective_from.blank? || employee.nil? || employee.new_record?
 
     latest = employee.salary_revisions.maximum(:effective_from)
-    errors.add(:effective_from, "can't be before the latest salary change (#{latest})") if latest && effective_from < latest
+    errors.add(:effective_from, "can't be before the latest salary change (#{latest.to_fs(:readable)})") if latest && effective_from < latest
   end
 
   def employee_still_employed

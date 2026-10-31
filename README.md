@@ -174,11 +174,10 @@ Each push to master deploys again; every boot runs the migrations, and the seed 
 
 - [ ] **CI on GitHub:** run `bin/ci` and the frontend checks on every pull request.
 - [ ] **More Frontend Tests:** the first suite covers formatting, the API client, signing out on a 401, URL filters and the unsaved-changes guard; the forms and dialogs are next.
-- [ ] **Mobile Responsive Design:** Below tablet width the sidebar should become a top bar with a menu.
-- [ ] **Performance:** Review query performance for 50k+ employees, and load more pages on demand to shrink the main bundle.
+- [ ] **Performance:** Review query performance for 50k+ employees.
 - [ ] **Advanced Analytics:** Trends over time, compa-ratios, and CSV export.
 
-More UI ideas are tracked in [docs/ui-todo.md](docs/ui-todo.md).
+The UI polish list, now worked through, is in [docs/ui-todo.md](docs/ui-todo.md).
 
 ## Documentation
 

@@ -200,6 +200,11 @@
   ::selection {
     @apply bg-brand-soft text-brand-strong;
   }
+  /* A page's heading takes focus after navigating (useFocusPageHeading), for screen readers.
+     It isn't something to act on, so it gets no focus ring. */
+  main h1[tabindex="-1"]:focus {
+    outline: none;
+  }
   html {
     @apply font-sans;
   }
@@ -268,4 +273,36 @@
       var(--progress-to)
     );
   }
+}
+
+/* The date picker's calendar (components/date-picker.tsx, react-day-picker), in the app's
+   colours: the picked day in the brand colour, today in brand text, smaller cells. The library's
+   own sheet sets these variables on `.rdp-root` and loads later, with the employee pages, so the
+   selector names both classes to outrank it. */
+.rdp-root.horizon-calendar {
+  --rdp-accent-color: var(--primary);
+  --rdp-accent-background-color: var(--brand-soft);
+  --rdp-today-color: var(--brand-strong);
+  --rdp-day-height: 2.25rem;
+  --rdp-day-width: 2.25rem;
+  --rdp-day_button-height: 2.125rem;
+  --rdp-day_button-width: 2.125rem;
+  --rdp-day_button-border-radius: var(--radius-md);
+  --rdp-nav-height: 2.25rem;
+  --rdp-nav_button-height: 2rem;
+  --rdp-nav_button-width: 2rem;
+  font-size: var(--text-sm);
+}
+.horizon-calendar .rdp-selected .rdp-day_button {
+  border-color: transparent;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 500;
+}
+.horizon-calendar .rdp-chevron {
+  fill: var(--muted-foreground);
+}
+.horizon-calendar .rdp-dropdown {
+  background: var(--popover);
+  color: var(--popover-foreground);
 }

@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { DatePicker } from "@/components/date-picker"
 import { Label } from "@/components/ui/label"
 import {
   employeeKey,
@@ -22,15 +22,11 @@ import {
   type Employee,
   type TimelineEvent,
 } from "@/features/employees/api"
-import { ApiError } from "@/lib/api"
+import { ApiError, errorSentences } from "@/lib/api"
 import { todayIso } from "@/lib/dates"
 import { formatDate } from "@/lib/format"
 
 const SALARY_EVENTS: TimelineEvent["kind"][] = ["salary_change", "promotion"]
-
-// API messages are fragments ("can't be in the future"); there's only one field here, so show them as sentences.
-const asSentence = (message: string) =>
-  `${message.charAt(0).toUpperCase()}${message.slice(1)}.`
 
 /**
  * Ending someone's employment asks for confirmation and their last working day
@@ -55,7 +51,8 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
   ]
     .sort()
     .at(-1)!
-  // A date picker keeps to min and max, but a typed date doesn't.
+  // The calendar keeps to min and max, but the limit can move after a day is picked (the
+  // timeline loads a later salary change), so the day is checked again here.
   const outOfRange = lastDay !== "" && (lastDay < earliest || lastDay > today)
 
   const error = endEmployment.error
@@ -63,9 +60,11 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
   const message = outOfRange
     ? `Pick a day from ${formatDate(earliest)} to today.`
     : conflict
-      ? "This employee changed since you opened the page. We've loaded the latest version, so check it and try again."
+      ? "Someone else changed this employee while this was open. Their changes are loaded now; check the date and try again."
       : error instanceof ApiError
-        ? Object.values(error.errors).flat().map(asSentence).join(" ")
+        ? errorSentences(error.errors, {
+            terminated_on: "The last working day",
+          }).join(" ")
         : error && "Couldn't save. Try again."
 
   const onConfirm = () =>
@@ -74,7 +73,7 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
       {
         onSuccess: () => {
           setOpen(false)
-          toast.success(`${employee.full_name}'s employment has ended`)
+          toast.success(`${employee.full_name}'s employment ended`)
         },
         onError: (failure) => {
           if (failure instanceof ApiError && failure.status === 409)
@@ -110,14 +109,13 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="last_working_day">Last working day</Label>
-          <Input
+          <DatePicker
             id="last_working_day"
-            type="date"
             min={earliest}
             max={today}
             value={lastDay}
-            onChange={(event) => {
-              setLastDay(event.target.value)
+            onChange={(day) => {
+              setLastDay(day)
               endEmployment.reset() // the old error was about the old date
             }}
             aria-invalid={message ? true : undefined}

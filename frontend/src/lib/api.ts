@@ -65,3 +65,30 @@ export function toQueryString(
 export function isUnauthorized(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401
 }
+
+// "department_id" → "Department", "lock_version" → "Lock version".
+const fieldName = (field: string) => {
+  const words = field.replace(/_id$/, "").replaceAll("_", " ")
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+/**
+ * An API error's messages as sentences, for errors that can't be shown next to a field: the API
+ * says "is required" under `lock_version`, which on its own reads as a fragment, so it becomes
+ * "Lock version is required." `base` messages are sentences already. `names` words a field the
+ * way the page does, e.g. { terminated_on: "The last working day" }.
+ */
+export function errorSentences(
+  errors: ApiErrors,
+  names: Record<string, string> = {},
+): string[] {
+  return Object.entries(errors).flatMap(([field, messages]) =>
+    messages.map((message) => {
+      const sentence =
+        field === "base"
+          ? message
+          : `${names[field] ?? fieldName(field)} ${message}`
+      return /[.!?]$/.test(sentence) ? sentence : `${sentence}.`
+    }),
+  )
+}

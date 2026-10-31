@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import { toast } from "sonner"
 
-import { BackLink } from "@/components/back-link"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 import { Button } from "@/components/ui/button"
 import {
   useEmployee,
@@ -54,7 +54,13 @@ export function EditEmployeePage() {
 
   return (
     <section className="flex max-w-3xl flex-col gap-4">
-      <BackLink to={`/employees/${employee.id}`}>{employee.full_name}</BackLink>
+      <Breadcrumbs
+        items={[
+          { label: "Employees", to: "/employees" },
+          { label: employee.full_name, to: `/employees/${employee.id}` },
+          { label: "Edit" },
+        ]}
+      />
       <h1 className="font-heading text-2xl font-semibold">Edit employee</h1>
 
       {employee.status === "terminated" ? (
@@ -147,7 +153,7 @@ function EditForm({
           },
           {
             onSuccess: (saved) => {
-              toast.success("Changes saved")
+              toast.success(`${saved.full_name}'s details saved`)
               void navigate(`/employees/${saved.id}`)
             },
           },

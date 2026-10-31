@@ -7,6 +7,7 @@ import { toast } from "sonner"
 
 import { Combobox } from "@/components/combobox"
 import { FormField } from "@/components/form-field"
+import { LoadError } from "@/components/load-error"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -30,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import {
   employeeKey,
   useChangeSalary,
+  useEmployee,
   usePayComparison,
   type Employee,
   type PayComparison,
@@ -47,7 +49,7 @@ import {
   type SalaryChangeInput,
   type SalaryChangeOutput,
 } from "@/features/employees/salary-change-schema"
-import { ApiError } from "@/lib/api"
+import { ApiError, errorSentences } from "@/lib/api"
 import { formatCount, formatMoney, formatMoneyWhole } from "@/lib/format"
 import { isValidAmount, typedAmount } from "@/lib/money"
 import { cn } from "@/lib/utils"
@@ -70,18 +72,69 @@ export function ChangeSalaryDialog({ employee }: { employee: Employee }) {
         <Button variant="outline">Change salary</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Change {employee.full_name}&apos;s salary</DialogTitle>
-          <DialogDescription>
-            The new salary takes effect today. History can&apos;t be edited
-            afterwards, so a mistake is fixed with a correction.
-          </DialogDescription>
-        </DialogHeader>
+        <DialogHeading name={employee.full_name} />
         {/* The dialog's content mounts each time it opens, so each opening starts with an empty
             form, and stays through the closing animation, so it doesn't vanish first. */}
         <ChangeSalaryForm employee={employee} onDone={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * The same dialog from a list that only has the employee's id and name (the ★ list), for HR
+ * acting on an underpaid case straight away. The employee loads when the dialog opens.
+ */
+export function ChangeSalaryFromList({
+  employeeId,
+  name,
+}: {
+  employeeId: number
+  name: string
+}) {
+  const [open, setOpen] = useState(false)
+  const employee = useEmployee(String(employeeId), { enabled: open })
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={`Change ${name}'s salary`}
+        >
+          Change salary
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeading name={name} />
+        {employee.data ? (
+          <ChangeSalaryForm
+            employee={employee.data}
+            onDone={() => setOpen(false)}
+          />
+        ) : employee.isError ? (
+          <LoadError
+            what={`${name}'s details`}
+            onRetry={() => void employee.refetch()}
+          />
+        ) : (
+          <Skeleton className="h-48 w-full" />
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function DialogHeading({ name }: { name: string }) {
+  return (
+    <DialogHeader>
+      <DialogTitle>Change {name}&apos;s salary</DialogTitle>
+      <DialogDescription>
+        The new salary takes effect today. History can&apos;t be edited
+        afterwards, so a mistake is fixed with a correction.
+      </DialogDescription>
+    </DialogHeader>
   )
 }
 
@@ -139,9 +192,13 @@ function ChangeSalaryForm({
   }, [error, conflict, setError])
   const otherErrors =
     error instanceof ApiError && !conflict
-      ? Object.entries(error.errors)
-          .filter(([field]) => !isFormField(field))
-          .flatMap(([, messages]) => messages)
+      ? errorSentences(
+          Object.fromEntries(
+            Object.entries(error.errors).filter(
+              ([field]) => !isFormField(field),
+            ),
+          ),
+        )
       : []
 
   const currency = employee.current_currency
@@ -163,7 +220,7 @@ function ChangeSalaryForm({
       {
         onSuccess: (revision) => {
           toast.success(
-            `Salary changed to ${formatMoney(revision.amount, revision.currency)}`,
+            `${employee.full_name}'s salary changed to ${formatMoney(revision.amount, revision.currency)}`,
           )
           onDone()
         },
@@ -297,7 +354,7 @@ function ChangeSalaryForm({
       {(conflict || otherErrors.length > 0) && (
         <div role="alert" className="text-sm text-destructive">
           {conflict
-            ? "This employee changed since you opened this (perhaps another salary change). We've loaded the latest version, so check the figures and save again."
+            ? "Someone else changed this employee while this was open (perhaps another salary change). Their changes are loaded now; check the figures and save again."
             : otherErrors.join(" ")}
         </div>
       )}

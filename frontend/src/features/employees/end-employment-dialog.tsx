@@ -60,7 +60,7 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
   const message = outOfRange
     ? `Pick a day from ${formatDate(earliest)} to today.`
     : conflict
-      ? "This employee changed since you opened the page. We've loaded the latest version, so check it and try again."
+      ? "Someone else changed this employee while this was open. Their changes are loaded now; check the date and try again."
       : error instanceof ApiError
         ? errorSentences(error.errors, {
             terminated_on: "The last working day",
@@ -73,7 +73,7 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
       {
         onSuccess: () => {
           setOpen(false)
-          toast.success(`${employee.full_name}'s employment has ended`)
+          toast.success(`${employee.full_name}'s employment ended`)
         },
         onError: (failure) => {
           if (failure instanceof ApiError && failure.status === 409)

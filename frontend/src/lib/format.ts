@@ -1,16 +1,23 @@
 // Intl formatters are costly to build, so each one is made once and reused.
 const moneyFormats = new Map<string, Intl.NumberFormat>()
-const dateFormat = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-})
+// Dates read "8 Sep 2022", as the API writes them in its messages (Date::DATE_FORMATS[:readable]).
+// Intl's en-GB short month for September is "Sept", so the month names are spelled out here.
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+]
 // No timeZone option: the browser's own zone, so a UTC timestamp shows in the user's local time.
-const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
+const timeFormat = new Intl.DateTimeFormat("en-GB", {
   hour: "2-digit",
   minute: "2-digit",
 })
@@ -138,12 +145,14 @@ export function formatMoneyCompact(amount: string, currency: string): string {
 
 /** A calendar date (hire date, effective date). It has no time zone, so it's shown as stored. */
 export function formatDate(isoDate: string): string {
-  return dateFormat.format(new Date(isoDate))
+  const date = new Date(isoDate) // "2026-10-31" parses as UTC midnight, so read it in UTC
+  return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`
 }
 
 /** A moment the API stores in UTC (e.g. when a change was recorded), in the user's local time. */
 export function formatDateTime(isoTimestamp: string): string {
-  return dateTimeFormat.format(new Date(isoTimestamp))
+  const date = new Date(isoTimestamp)
+  return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}, ${timeFormat.format(date)}`
 }
 
 export function formatCount(count: number): string {

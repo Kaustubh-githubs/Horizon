@@ -146,7 +146,7 @@ function SetBudgetForm({
       {
         onSuccess: (saved) => {
           toast.success(
-            `${department.name}: ${formatMoney(saved.amount, saved.currency)} for ${saved.year}`,
+            `${department.name}'s ${saved.year} budget set to ${formatMoney(saved.amount, saved.currency)}`,
           )
           onDone()
         },
@@ -211,7 +211,7 @@ function SetBudgetForm({
       {(conflict || formErrors.length > 0) && (
         <p role="alert" className="text-sm text-destructive">
           {conflict
-            ? "Someone else saved this budget while you were editing. Their number is shown above; check it and save again."
+            ? "Someone else saved this budget while this was open. Their amount is shown above; check it and save again."
             : formErrors.join(" ")}
         </p>
       )}

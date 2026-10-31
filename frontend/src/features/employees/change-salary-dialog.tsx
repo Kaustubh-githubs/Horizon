@@ -220,7 +220,7 @@ function ChangeSalaryForm({
       {
         onSuccess: (revision) => {
           toast.success(
-            `Salary changed to ${formatMoney(revision.amount, revision.currency)}`,
+            `${employee.full_name}'s salary changed to ${formatMoney(revision.amount, revision.currency)}`,
           )
           onDone()
         },
@@ -354,7 +354,7 @@ function ChangeSalaryForm({
       {(conflict || otherErrors.length > 0) && (
         <div role="alert" className="text-sm text-destructive">
           {conflict
-            ? "This employee changed since you opened this (perhaps another salary change). We've loaded the latest version, so check the figures and save again."
+            ? "Someone else changed this employee while this was open (perhaps another salary change). Their changes are loaded now; check the figures and save again."
             : otherErrors.join(" ")}
         </div>
       )}

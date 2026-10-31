@@ -153,7 +153,7 @@ function EditForm({
           },
           {
             onSuccess: (saved) => {
-              toast.success("Changes saved")
+              toast.success(`${saved.full_name}'s details saved`)
               void navigate(`/employees/${saved.id}`)
             },
           },

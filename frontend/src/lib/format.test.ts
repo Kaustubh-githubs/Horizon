@@ -4,6 +4,7 @@ import {
   compactMoney,
   formatCount,
   formatDate,
+  formatDateTime,
   formatMoney,
   formatMoneyCompact,
   formatMoneyWhole,
@@ -55,6 +56,16 @@ describe("formatMoneyWhole", () => {
 describe("formatDate and formatCount", () => {
   it("shows a calendar date as stored, whatever the browser's time zone", () => {
     expect(formatDate("2026-10-31")).toBe("31 Oct 2026")
+  })
+
+  // As the API writes dates in its messages; Intl's en-GB form would say "Sept".
+  it("abbreviates September to three letters, like every other month", () => {
+    expect(formatDate("2022-09-08")).toBe("8 Sep 2022")
+  })
+
+  it("shows a recorded moment in the user's local time", () => {
+    const localMoment = new Date(2022, 8, 8, 14, 5).toISOString()
+    expect(formatDateTime(localMoment)).toBe("8 Sep 2022, 14:05")
   })
 
   it("groups counts in thousands", () => {

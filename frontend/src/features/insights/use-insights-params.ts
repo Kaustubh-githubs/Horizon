@@ -68,7 +68,8 @@ export function useInsightsParams() {
           next.delete("opage")
         return next
       },
-      { replace: true },
+      // The same page with other choices, so the scroll position stays.
+      { replace: true, preventScrollReset: true },
     )
 
   return { params, update }

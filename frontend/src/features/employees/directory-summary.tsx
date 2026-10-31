@@ -1,3 +1,4 @@
+import { AnimatedNumber } from "@/components/animated-number"
 import type {
   DirectoryFilters,
   DirectorySummary as Summary,
@@ -39,7 +40,7 @@ export function DirectorySummary({
       )}
     >
       <span className="font-medium text-foreground tabular-nums">
-        {formatCount(summary.total)}
+        <AnimatedNumber id="directory.total" value={summary.total} />
       </span>{" "}
       {who} {summary.total === 1 ? "matches" : "match"} ·{" "}
       {plural(summary.country_count, "country", "countries")} ·{" "}

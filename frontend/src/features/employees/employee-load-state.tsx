@@ -1,7 +1,13 @@
 import type { UseQueryResult } from "@tanstack/react-query"
 
 import { BackLink } from "@/components/back-link"
+import {
+  DetailsCardSkeleton,
+  TextLine,
+  TimelineSkeleton,
+} from "@/components/skeletons"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ApiError } from "@/lib/api"
 
@@ -12,9 +18,12 @@ import { ApiError } from "@/lib/api"
 export function EmployeeLoadState({
   queries,
   ready = true,
+  shape = "profile",
 }: {
   queries: UseQueryResult[]
   ready?: boolean
+  /** What the loading placeholder looks like: the profile, or the add and edit form. */
+  shape?: "profile" | "form"
 }) {
   const failed = queries.find((query) => query.isError)
 
@@ -43,13 +52,68 @@ export function EmployeeLoadState({
 
   if (!ready || queries.some((query) => query.isPending)) {
     return (
-      <section className="flex flex-col gap-4" aria-busy="true">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-48 w-full max-w-3xl" />
+      <section className="flex max-w-3xl flex-col gap-4" aria-busy="true">
+        <TextLine className="w-24" />
+        {shape === "profile" ? <ProfileSkeleton /> : <FormSkeleton />}
       </section>
     )
   }
 
   return null
+}
+
+function ProfileSkeleton() {
+  return (
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <Skeleton className="h-8 w-56" />
+          <TextLine className="w-32" />
+        </div>
+        <div className="flex gap-2">
+          {Array.from({ length: 3 }, (_, index) => (
+            <Skeleton key={index} className="h-8 w-28 rounded-lg" />
+          ))}
+        </div>
+      </div>
+      <DetailsCardSkeleton />
+      <Card aria-hidden="true">
+        <CardHeader>
+          <Skeleton className="h-5 w-16" />
+        </CardHeader>
+        <CardContent className="flex flex-col gap-1">
+          <Skeleton className="my-1 h-7 w-44" />
+          <TextLine className="w-56" />
+        </CardContent>
+      </Card>
+      <Card aria-hidden="true">
+        <CardHeader>
+          <Skeleton className="h-5 w-20" />
+        </CardHeader>
+        <CardContent>
+          <TimelineSkeleton />
+        </CardContent>
+      </Card>
+    </>
+  )
+}
+
+function FormSkeleton() {
+  return (
+    <>
+      <Skeleton className="h-8 w-48" />
+      <div className="grid gap-4 sm:grid-cols-2" aria-hidden="true">
+        {Array.from({ length: 6 }, (_, index) => (
+          <div key={index} className="flex flex-col gap-2">
+            <TextLine className="w-24" />
+            <Skeleton className="h-8 w-full rounded-lg" />
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Skeleton className="h-8 w-28 rounded-lg" />
+        <Skeleton className="h-8 w-20 rounded-lg" />
+      </div>
+    </>
+  )
 }

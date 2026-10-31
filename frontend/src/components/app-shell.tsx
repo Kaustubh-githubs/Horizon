@@ -1,5 +1,5 @@
 import { BarChart3Icon, LogOutIcon, UsersIcon, WalletIcon } from "lucide-react"
-import { NavLink, Outlet, useNavigate } from "react-router"
+import { NavLink, Outlet, ScrollRestoration, useNavigate } from "react-router"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -26,12 +26,18 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-svh">
-      <aside className="flex w-60 shrink-0 flex-col border-r bg-muted/40">
+      {/* A new page opens at the top and Back returns to where you were. Filter changes opt
+          out of the reset (preventScrollReset), so they keep the scroll position. */}
+      <ScrollRestoration />
+
+      {/* The page scrolls in the window (so Back can restore it); the sidebar stays put, with
+          the user and Sign out always at its foot. */}
+      <aside className="sticky top-0 flex h-svh w-60 shrink-0 flex-col border-r bg-muted/40">
         <div className="px-5 py-4 font-heading text-xl font-semibold">
           Horizon
         </div>
 
-        <nav className="flex flex-1 flex-col gap-1 px-3">
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3">
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}

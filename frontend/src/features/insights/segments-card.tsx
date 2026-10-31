@@ -1,3 +1,4 @@
+import { TableSkeleton, TextLine } from "@/components/skeletons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Select,
@@ -6,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -73,7 +73,10 @@ export function SegmentsCard({
         </div>
 
         {segments.isPending ? (
-          <Skeleton className="h-64 w-full" />
+          <div className="flex flex-col gap-6">
+            <TextLine className="w-2/3" />
+            <TableSkeleton columns={9} rows={8} />
+          </div>
         ) : segments.isError ? (
           <LoadError
             error={segments.error}

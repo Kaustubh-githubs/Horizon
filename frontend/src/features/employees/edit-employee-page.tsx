@@ -32,15 +32,24 @@ export function EditEmployeePage() {
   const lookups = useLookups()
   // Bumped by "Load their changes", to start the form again from the latest version.
   const [formVersion, setFormVersion] = useState(0)
-  // The form keeps the version it starts from, so it must not start from an old cached copy:
-  // wait until the employee has been fetched since this page opened.
+  // The form keeps the version it starts from, so it must not start from an old cached copy
+  // (ADR 0017). Until the employee has been fetched since this page opened, the cached copy
+  // (from the profile) is shown but can't be edited; the form then starts again from the
+  // fresh one. With nothing cached, a skeleton.
   const [openedAt] = useState(Date.now)
   const fresh = employeeQuery.dataUpdatedAt >= openedAt
 
+  // If loading the latest version fails, that's an error even with a cached copy: editing it
+  // would only conflict. A background refetch failing later leaves the form (and typing) alone.
   const loadState = (
-    <EmployeeLoadState queries={[employeeQuery, lookups]} ready={fresh} />
+    <EmployeeLoadState
+      queries={[employeeQuery, lookups]}
+      ready={Boolean(employeeQuery.data)}
+      shape="form"
+    />
   )
-  if (!employeeQuery.data || !lookups.data || !fresh) return loadState
+  if (!employeeQuery.data || !lookups.data || (!fresh && employeeQuery.isError))
+    return loadState
 
   const employee = employeeQuery.data
 
@@ -56,8 +65,9 @@ export function EditEmployeePage() {
         </p>
       ) : (
         <EditForm
-          key={formVersion}
+          key={`${formVersion}-${fresh}`}
           employee={employee}
+          checking={!fresh}
           lookups={lookups.data}
           onReload={() =>
             void employeeQuery.refetch().then((result) => {
@@ -76,10 +86,13 @@ export function EditEmployeePage() {
 
 function EditForm({
   employee,
+  checking,
   lookups,
   onReload,
 }: {
   employee: Employee
+  /** Still loading the latest version: show this copy, not editable. */
+  checking: boolean
   lookups: Lookups
   onReload: () => void
 }) {
@@ -122,6 +135,7 @@ function EditForm({
       }
       submitLabel="Save changes"
       isSubmitting={updateEmployee.isPending}
+      disabled={checking}
       onCancel={() => void navigate(`/employees/${loaded.id}`)}
       onSubmit={(values) =>
         updateEmployee.mutate(

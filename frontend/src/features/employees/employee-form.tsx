@@ -2,7 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect, type ReactNode } from "react"
 import { Controller, useForm, useWatch, type Control } from "react-hook-form"
 
+import { Combobox } from "@/components/combobox"
 import { FormField as Field } from "@/components/form-field"
+import { UnsavedChangesGuard } from "@/components/unsaved-changes-guard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -26,10 +28,12 @@ const FIELDS = Object.keys(employeeFormSchema.shape) as FieldName[]
 const isField = (key: string): key is FieldName =>
   (FIELDS as string[]).includes(key)
 
+// A Select, or with `searchPlaceholder`, a Combobox you can type into (for the long lists).
 function SelectField({
   name,
   label,
   placeholder,
+  searchPlaceholder,
   options,
   control,
   error,
@@ -39,6 +43,7 @@ function SelectField({
   name: "country_id" | "department_id" | "job_title_id"
   label: string
   placeholder: string
+  searchPlaceholder?: string
   options: { value: string; label: string }[]
   control: Control<EmployeeFormValues>
   error?: string
@@ -50,30 +55,46 @@ function SelectField({
       <Controller
         name={name}
         control={control}
-        render={({ field }) => (
-          <Select
-            value={field.value}
-            onValueChange={field.onChange}
-            disabled={disabled}
-          >
-            <SelectTrigger
+        render={({ field }) =>
+          searchPlaceholder ? (
+            <Combobox
               id={name}
+              value={field.value || undefined}
+              onChange={(value) => field.onChange(value ?? "")}
+              onBlur={field.onBlur}
+              options={options}
+              placeholder={placeholder}
+              searchPlaceholder={searchPlaceholder}
+              disabled={disabled}
               className="w-full"
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? `${name}-error` : undefined}
-              onBlur={field.onBlur}
+            />
+          ) : (
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={disabled}
             >
-              <SelectValue placeholder={placeholder} />
-            </SelectTrigger>
-            <SelectContent>
-              {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+              <SelectTrigger
+                id={name}
+                className="w-full"
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? `${name}-error` : undefined}
+                onBlur={field.onBlur}
+              >
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )
+        }
       />
     </Field>
   )
@@ -92,6 +113,7 @@ export function EmployeeForm({
   formMessage,
   submitLabel,
   isSubmitting,
+  disabled = false,
   onSubmit,
   onCancel,
 }: {
@@ -102,6 +124,8 @@ export function EmployeeForm({
   formMessage?: ReactNode
   submitLabel: string
   isSubmitting: boolean
+  /** Shown but not editable, e.g. while the latest version of the employee loads. */
+  disabled?: boolean
   onSubmit: (values: EmployeeFormValues) => void
   onCancel: () => void
 }) {
@@ -110,7 +134,7 @@ export function EmployeeForm({
     control,
     handleSubmit,
     setError,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
     defaultValues,
@@ -154,7 +178,14 @@ export function EmployeeForm({
       onSubmit={(event) => void handleSubmit(onSubmit)(event)}
       className="flex flex-col gap-6"
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* While saving, nothing is lost by leaving (the save carries on), and the page's own
+          move to the profile after saving must not ask. */}
+      <UnsavedChangesGuard when={isDirty && !isSubmitting} />
+
+      <fieldset
+        disabled={disabled}
+        className="grid min-w-0 gap-4 transition-opacity disabled:opacity-60 sm:grid-cols-2"
+      >
         <Field
           id="full_name"
           label="Full name"
@@ -170,6 +201,7 @@ export function EmployeeForm({
           name="department_id"
           label="Department"
           placeholder="Pick a department"
+          searchPlaceholder="Search departments"
           control={control}
           error={errors.department_id?.message}
           options={lookups.departments.map((d) => ({
@@ -181,6 +213,7 @@ export function EmployeeForm({
           name="job_title_id"
           label="Job title"
           placeholder="Pick a job title"
+          searchPlaceholder="Search job titles"
           control={control}
           error={errors.job_title_id?.message}
           // Editing the title is for fixing a wrong entry. A promotion changes pay too (ADR 0018).
@@ -240,7 +273,7 @@ export function EmployeeForm({
             />
           </Field>
         )}
-      </div>
+      </fieldset>
 
       {(otherErrors.length > 0 || formMessage) && (
         <div
@@ -255,7 +288,11 @@ export function EmployeeForm({
       )}
 
       <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting}>
+        {/* Editing, there's nothing to save until something changes. */}
+        <Button
+          type="submit"
+          disabled={isSubmitting || disabled || (fixed && !isDirty)}
+        >
           {isSubmitting ? "Saving…" : submitLabel}
         </Button>
         <Button type="button" variant="ghost" onClick={onCancel}>

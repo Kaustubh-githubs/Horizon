@@ -14,3 +14,12 @@ export const moneyAmount = z
 /** Whether a typed amount is valid, e.g. to decide when to show a preview. */
 export const isValidAmount = (value: string) =>
   moneyAmount.safeParse(value).success
+
+/**
+ * An API amount the way someone would type it, e.g. as a placeholder: "1500000.0" becomes
+ * "1500000", and "1500000.5" becomes "1500000.50".
+ */
+export function typedAmount(amount: string): string {
+  const [whole, fraction = ""] = amount.split(".")
+  return /^0*$/.test(fraction) ? whole : `${whole}.${fraction.padEnd(2, "0")}`
+}

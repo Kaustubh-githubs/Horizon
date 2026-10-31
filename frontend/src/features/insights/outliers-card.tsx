@@ -1,6 +1,7 @@
 import { ArrowDownIcon, ArrowUpIcon, StarIcon } from "lucide-react"
 import { Link } from "react-router"
 
+import { TableSkeleton } from "@/components/skeletons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -10,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -22,7 +22,7 @@ import {
 import { useOutliers, type InsightFilters } from "@/features/insights/api"
 import { LoadError } from "@/features/insights/load-error"
 import { NO_FILTERS, THRESHOLDS } from "@/features/insights/use-insights-params"
-import { formatCount, formatMoney } from "@/lib/format"
+import { formatCount, formatMoney, formatMoneyWhole } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 const ALL = "all"
@@ -108,7 +108,7 @@ export function OutliersCard({
         </div>
 
         {outliers.isPending ? (
-          <Skeleton className="h-48 w-full" />
+          <TableSkeleton columns={6} rows={6} />
         ) : outliers.isError ? (
           <LoadError
             error={outliers.error}
@@ -173,7 +173,7 @@ export function OutliersCard({
                       {formatMoney(row.salary, row.currency)}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground tabular-nums">
-                      {formatMoney(row.peer_median, row.currency)}
+                      {formatMoneyWhole(row.peer_median, row.currency)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       <span className="inline-flex items-center gap-0.5">

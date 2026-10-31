@@ -1,7 +1,9 @@
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react"
-import { Link } from "react-router"
+import { useEffect, useRef, type MouseEvent } from "react"
+import { Link, useNavigate } from "react-router"
 
 import { Badge } from "@/components/ui/badge"
+import { TextLine } from "@/components/skeletons"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -11,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { Employee } from "@/features/employees/api"
+import { usePrefetchEmployee, type Employee } from "@/features/employees/api"
 import { STATUS_LABELS } from "@/features/employees/status"
 import { formatDate, formatMoney } from "@/lib/format"
 import { cn } from "@/lib/utils"
@@ -67,7 +69,7 @@ function SortHeader({
   )
 }
 
-const COLUMN_COUNT = 7
+const HOVER_INTENT_MS = 100
 
 export function EmployeesTable({
   employees,
@@ -82,6 +84,28 @@ export function EmployeesTable({
   sort: string | undefined
   onSort: (sort: string) => void
 }) {
+  const navigate = useNavigate()
+  const prefetch = usePrefetchEmployee()
+  const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  // Only a pointer that rests on a row prefetches, not one passing over the list on its way.
+  const startPrefetch = (id: number) => {
+    clearTimeout(hoverTimer.current)
+    hoverTimer.current = setTimeout(() => prefetch(id), HOVER_INTENT_MS)
+  }
+  const cancelPrefetch = () => clearTimeout(hoverTimer.current)
+  useEffect(() => cancelPrefetch, [])
+
+  // The whole row opens the profile. The name stays a real link, for the keyboard, screen
+  // readers and opening in a new tab; clicks on it (or while selecting text) are left alone.
+  const openRow = (event: MouseEvent, id: number) => {
+    const target = event.target as HTMLElement
+    if (target.closest("a, button") || window.getSelection()?.toString()) return
+    const to = `/employees/${id}`
+    if (event.metaKey || event.ctrlKey) window.open(to, "_blank", "noopener")
+    else void navigate(to)
+  }
+
   return (
     <div
       className={cn(
@@ -124,17 +148,43 @@ export function EmployeesTable({
         </TableHeader>
         <TableBody>
           {isLoading
-            ? Array.from({ length: 8 }, (_, row) => (
-                <TableRow key={row}>
-                  {Array.from({ length: COLUMN_COUNT }, (_, cell) => (
-                    <TableCell key={cell}>
-                      <Skeleton className="h-4 w-full" />
-                    </TableCell>
-                  ))}
+            ? // Shaped like real rows (name and email, title and department on two lines), so
+              // the table doesn't jump when they arrive.
+              Array.from({ length: 10 }, (_, row) => (
+                <TableRow key={row} aria-hidden="true">
+                  <TableCell>
+                    <TextLine className="w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <TextLine className="w-36" />
+                    <Skeleton className="mt-1 h-3 w-48" />
+                  </TableCell>
+                  <TableCell>
+                    <TextLine className="w-40" />
+                    <Skeleton className="mt-1 h-3 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <TextLine className="w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <TextLine className="w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <TextLine className="ml-auto w-28" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-14 rounded-full" />
+                  </TableCell>
                 </TableRow>
               ))
             : employees.map((employee) => (
-                <TableRow key={employee.id}>
+                <TableRow
+                  key={employee.id}
+                  className="cursor-pointer"
+                  onClick={(event) => openRow(event, employee.id)}
+                  onPointerEnter={() => startPrefetch(employee.id)}
+                  onPointerLeave={cancelPrefetch}
+                >
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {employee.employee_code}
                   </TableCell>

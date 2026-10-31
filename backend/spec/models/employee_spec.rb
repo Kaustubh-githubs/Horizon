@@ -108,6 +108,19 @@ RSpec.describe Employee, type: :model do
       expect(employee.tap(&:valid?).errors[:current_salary]).to eq([ "is too large" ])
     end
 
+    # The column keeps two decimals, so a third would be rounded away without anyone noticing (ADR 0006).
+    it "rejects more than two decimal places instead of rounding them" do
+      employee.current_salary = "1200000.999"
+
+      expect(employee.tap(&:valid?).errors[:current_salary]).to eq([ "can have at most 2 decimal places" ])
+    end
+
+    it "accepts two decimal places, and zeros after them" do
+      employee.current_salary = "1200000.500"
+
+      expect(employee).to be_valid
+    end
+
     it "rejects a currency that is not the country's currency" do
       employee.country = build(:country, currency_code: "INR")
       employee.current_currency = "USD"
@@ -120,6 +133,35 @@ RSpec.describe Employee, type: :model do
     employee.hire_date = Date.current.tomorrow
 
     expect(employee).not_to be_valid
+  end
+
+  # A date that doesn't exist casts to nothing, which used to read as "can't be blank".
+  describe "dates that don't exist" do
+    it "says a hire date like 30 February isn't a valid date" do
+      employee.hire_date = "2026-02-30"
+
+      expect(employee.tap(&:valid?).errors[:hire_date]).to eq([ "is not a valid date" ])
+    end
+
+    it "says the same for a last working day like month 13" do
+      employee.assign_attributes(status: "terminated", terminated_on: "2026-13-45")
+
+      expect(employee.tap(&:valid?).errors[:terminated_on]).to eq([ "is not a valid date" ])
+    end
+  end
+
+  describe "lengths" do
+    it "rejects a name longer than 120 characters" do
+      employee.full_name = "A" * 121
+
+      expect(employee.tap(&:valid?).errors[:full_name]).to eq([ "is too long (maximum is 120 characters)" ])
+    end
+
+    it "rejects an email longer than 254 characters" do
+      employee.email = "#{'a' * 250}@acme.test"
+
+      expect(employee.tap(&:valid?).errors[:email]).to include("is too long (maximum is 254 characters)")
+    end
   end
 
   # Salary history starts on the hire date and is in the country's currency (ADR 0017).

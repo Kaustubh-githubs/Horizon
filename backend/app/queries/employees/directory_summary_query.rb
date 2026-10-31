@@ -1,19 +1,22 @@
 module Employees
-  # The summary cards above the directory: how many people the list holds, and how many in each
-  # country and department, largest first. It reuses DirectoryQuery's search and filters, so the
-  # cards always describe exactly the people in the list below them. Three small count queries.
+  # The line above the directory and the counts in its Country and Department filters (ADR 0019).
+  # It reuses DirectoryQuery's search and filters, so the total is exactly the people in the list.
+  # Each option's count ignores its own filter, like any faceted search: with India picked, the
+  # other countries still say how many they'd give. Five small count queries.
   class DirectorySummaryQuery
     def initialize(params = {})
-      @params = params
+      @params = params.to_h.symbolize_keys
     end
 
     def call
       {
         total: people.count,
-        countries: counts(:country, "countries.code", "countries.name").map do |(code, name), count|
+        country_count: people.distinct.count(:country_id),
+        department_count: people.distinct.count(:department_id),
+        countries: counts(:country, :country, "countries.code", "countries.name").map do |(code, name), count|
           { code:, name:, count: }
         end,
-        departments: counts(:department, "departments.id", "departments.name").map do |(id, name), count|
+        departments: counts(:department_id, :department, "departments.id", "departments.name").map do |(id, name), count|
           { id:, name:, count: }
         end
       }
@@ -21,14 +24,17 @@ module Employees
 
     private
 
-    # The list's people, without its sorting or preloading, which counting doesn't need.
-    def people
-      @people ||= DirectoryQuery.new(@params).call.except(:order, :includes)
+    # The list's people, without its sorting or preloading, which counting doesn't need. `without`
+    # leaves one filter out, for that filter's own counts.
+    def people(without: nil)
+      @people ||= {}
+      @people[without] ||= DirectoryQuery.new(@params.except(without)).call.except(:order, :includes)
     end
 
     # [[key, name], count] pairs, largest first, then by name.
-    def counts(association, key, name)
-      people.joins(association).group(key, name).count.sort_by { |(_key, label), count| [ -count, label ] }
+    def counts(filter, association, key, name)
+      people(without: filter).joins(association).group(key, name).count
+                             .sort_by { |(_key, label), count| [ -count, label ] }
     end
   end
 end

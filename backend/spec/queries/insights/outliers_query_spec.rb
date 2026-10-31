@@ -23,8 +23,18 @@ RSpec.describe Insights::OutliersQuery do
     create(:employee, country: us, job_title: engineer, current_salary: "1000000")
   end
 
+  # Threshold and direction go to the list; the rest are the page's filters (Insights::Filters).
   def names(**params)
-    described_class.new(**params).call.map(&:full_name)
+    options = params.slice(:threshold, :direction)
+    filters = Insights::Filters.new(**params.except(:threshold, :direction))
+    described_class.new(**options, filters:).call.map(&:full_name)
+  end
+
+  it "lists only people matching the filters, compared with everyone in their role and country" do
+    flagged = described_class.new(filters: Insights::Filters.new(department_id: underpaid.department_id)).call
+
+    expect(flagged.map { |e| [ e.full_name, e.peer_count, e.deviation_percent.to_d.round(1) ] })
+      .to eq([ [ "Underpaid", 7, -50.0 ] ])
   end
 
   it "flags people far from their peers' median, furthest first" do

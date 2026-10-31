@@ -24,3 +24,4 @@ Salaries must be exact. Floating-point numbers can't represent many decimal valu
 
 ## Updates
 - **2026-10-30, upper limit:** `decimal(15,2)` holds amounts below 10^13. The models now reject anything larger as "is too large", so an extra-long number is a normal field error instead of a database overflow (which came back as a 500). The add form checks the same limit.
+- **2026-10-31, at most two decimals:** the column would round a third decimal away without anyone noticing (testing saved 1,200,000.999 as 1,200,001.00). Salaries, salary changes and budgets now refuse more than two decimal places ("can have at most 2 decimal places"), checking the value as sent, before Rails casts it. The forms already did.

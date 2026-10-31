@@ -1,7 +1,8 @@
 require "rails_helper"
 
-# The cards above the directory: how many people the list holds, by country and by department.
-# They follow the list's own search and filters, so the two never disagree.
+# The line above the directory and the counts in its Country and Department filters (ADR 0019).
+# The total follows the list's own search and filters. Each option's count ignores its own filter,
+# like any faceted search, so picking India still shows how many are in the other countries.
 RSpec.describe Employees::DirectorySummaryQuery do
   let(:india) { create(:country, code: "IN", name: "India") }
   let(:us) { create(:country, code: "US", name: "United States") }
@@ -20,9 +21,9 @@ RSpec.describe Employees::DirectorySummaryQuery do
     described_class.new(params).call
   end
 
-  it "counts the active employees by country and by department, largest first" do
+  it "counts the active employees, and each country and department, largest first" do
     expect(summary).to eq(
-      total: 4,
+      total: 4, country_count: 2, department_count: 2,
       countries: [ { code: "IN", name: "India", count: 3 }, { code: "US", name: "United States", count: 1 } ],
       departments: [ { id: engineering.id, name: "Engineering", count: 3 }, { id: sales.id, name: "Sales", count: 1 } ]
     )
@@ -31,18 +32,23 @@ RSpec.describe Employees::DirectorySummaryQuery do
   it "follows the list's search", :aggregate_failures do
     result = summary(q: "nair")
 
-    expect(result[:total]).to eq(2)
+    expect(result).to include(total: 2, country_count: 1)
     expect(result[:countries]).to eq([ { code: "IN", name: "India", count: 2 } ])
   end
 
-  it "follows the list's filters and status" do
+  it "counts other countries as if the country filter were off, keeping the rest", :aggregate_failures do
+    result = summary(country: "in", department_id: engineering.id)
+
+    expect(result).to include(total: 2, country_count: 1, department_count: 1)
+    expect(result[:countries]).to eq([ { code: "IN", name: "India", count: 2 },
+                                       { code: "US", name: "United States", count: 1 } ])
+    expect(result[:departments]).to eq([ { id: engineering.id, name: "Engineering", count: 2 },
+                                         { id: sales.id, name: "Sales", count: 1 } ])
+  end
+
+  it "follows the list's status, and breaks ties in count by name" do
     expect(summary(country: "us", status: "all")).to include(
       total: 2, departments: [ { id: engineering.id, name: "Engineering", count: 1 }, { id: sales.id, name: "Sales", count: 1 } ]
     )
-  end
-
-  it "breaks ties in count by name" do
-    expect(summary(country: "in", department_id: engineering.id)[:departments])
-      .to eq([ { id: engineering.id, name: "Engineering", count: 2 } ])
   end
 end

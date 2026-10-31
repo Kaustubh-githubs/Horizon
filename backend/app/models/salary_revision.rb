@@ -18,7 +18,7 @@ class SalaryRevision < ApplicationRecord
 
   normalizes :currency, with: ->(value) { value.strip.upcase }
 
-  validates :amount, presence: true, numericality: { greater_than: 0, allow_blank: true }
+  validates :amount, presence: true, numericality: { greater_than: 0, allow_blank: true }, money_precision: true
   validate :amount_fits_column
   validates :currency, presence: true
   validates :effective_from, presence: true

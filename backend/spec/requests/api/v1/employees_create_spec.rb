@@ -30,4 +30,22 @@ RSpec.describe "POST /api/v1/employees", type: :request do
 
     expect(response.parsed_body["errors"]).to include("hire_date" => [ "can't be in the future" ])
   end
+
+  # Found in testing (2026-10-31): these were saved rounded, or reported as blank.
+  it "rejects a salary with three decimals and a date that doesn't exist, saying why", :aggregate_failures do
+    expect do
+      post "/api/v1/employees", params: valid_params.merge(current_salary: "1800000.999", hire_date: "2026-02-30"),
+                                as: :json
+    end.not_to change(Employee, :count)
+
+    expect(response.parsed_body["errors"]).to include("current_salary" => [ "can have at most 2 decimal places" ],
+                                                      "hire_date" => [ "is not a valid date" ])
+  end
+
+  it "answers a body that isn't JSON with the usual error shape", :aggregate_failures do
+    post "/api/v1/employees", params: '{"full_name": "Asha', headers: { "CONTENT_TYPE" => "application/json" }
+
+    expect(response).to have_http_status(:bad_request)
+    expect(response.parsed_body).to eq("errors" => { "base" => [ "The request body isn't valid JSON" ] })
+  end
 end

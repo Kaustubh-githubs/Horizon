@@ -38,7 +38,7 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 
 **Country filter:** we filter with `country_id IN (SELECT id FROM countries WHERE code = ...)` rather than joining `countries`. A join made Rails switch the preloads to one wide `LEFT JOIN` across four tables and count with `COUNT(DISTINCT)`. The subquery keeps the small separate preload queries and a plain count, at the same speed.
 
-**Summary cards** (`GET /employees/summary`): the list's own filters, counted three ways (total, by country, by department). About 1 ms without a search and about 24 ms with one, since each count repeats the `ILIKE` search.
+**Summary line and filter counts** (`GET /employees/summary`): the list's own filters, counted five ways: the total, how many countries and departments, and each country's and department's count with its own filter left out (ADR 0019). About 2 ms without a search and 5 ms for "nair" in India (average of 10 warm runs); each count repeats the `ILIKE` search, so a broad search costs more.
 
 **N+1 guard:** a request spec checks that a page of 10 employees runs the same number of queries as a page of 2. Without preloading country, department and title, that went from 9 queries to 33. The spec fails, as it should.
 
@@ -61,6 +61,8 @@ Every figure is one SQL aggregate over the 9,194 active employees (`GROUP BY` wi
 | One employee's pay position (profile banner) | 2.7 ms |
 | Segments with every filter set (e.g. Engineering in India, 1–3 years, by job title) | 2 ms |
 | Pay changes, last 12 months (a `LAG` window over all 30,287 revisions) | 45 ms |
+
+**With the page's filters** (ADR 0019, 2026-10-31) every part runs the same queries on fewer people: for Engineering in the United States, the headline numbers take about 2.5 ms and pay changes about 6 ms (7 ms for everyone; the `LAG` window still runs over every revision, then the filter keeps the matching people's changes).
 
 **What we decided:** no caching or summary tables. The slowest call, pay changes, takes about 45 ms because the window has to see every employee's whole history to find each change's previous salary. Everything else is under 20 ms. If the data grows tenfold, the first step would be caching the overview and segments for a few minutes, since pay changes rarely.
 

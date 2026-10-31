@@ -12,23 +12,23 @@ module Insights
 
     attr_reader :threshold
 
-    def initialize(threshold: DEFAULT_THRESHOLD, direction: "all", country_code: nil)
+    # `filters` (Insights::Filters, the page's) choose whose stars are listed. Peers are still
+    # everyone in the role and country, so a filter never changes who counts as far from the median.
+    def initialize(threshold: DEFAULT_THRESHOLD, direction: "all", filters: Filters.new)
       requested = threshold.to_s.to_i
       @threshold = THRESHOLDS.cover?(requested) ? requested : DEFAULT_THRESHOLD
       @direction = DIRECTIONS.include?(direction.to_s) ? direction.to_s : "all"
-      # An unknown code is a 404, like the segment figures, rather than a misleading empty list.
-      @country = Country.find_by!(code: country_code.to_s.upcase) if country_code.present?
+      @filters = filters
     end
 
     # Active employees with a ★, furthest from their median first. Each record also has
     # `peer_median`, `peer_count` and `deviation_percent` (negative means below the median).
     def call
-      scope = self.class.with_peers(Employee.active)
+      scope = self.class.with_peers(@filters.apply(Employee.active))
                   .where("peers.peer_count >= ?", MIN_PEERS)
                   .where("#{DISTANCE} >= ?", BigDecimal(@threshold) / 100)
       scope = scope.where("employees.current_salary < peers.peer_median") if @direction == "below"
       scope = scope.where("employees.current_salary > peers.peer_median") if @direction == "above"
-      scope = scope.where(country: @country) if @country
       scope.includes(:country, :job_title).order(Arel.sql("#{DISTANCE} DESC"), :id)
     end
 

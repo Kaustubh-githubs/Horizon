@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form"
 import { Navigate, useLocation, useNavigate } from "react-router"
 import { z } from "zod"
 
+import { BrandMark } from "@/components/brand-mark"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -54,7 +55,10 @@ export function LoginPage() {
     <main className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="font-heading text-2xl">Horizon</CardTitle>
+          <CardTitle className="flex items-center gap-2 font-heading text-2xl">
+            <BrandMark className="size-7" />
+            Horizon
+          </CardTitle>
           <CardDescription>Sign in to manage salaries at ACME.</CardDescription>
         </CardHeader>
         <CardContent>

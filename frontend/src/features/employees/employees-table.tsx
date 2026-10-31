@@ -191,7 +191,7 @@ export function EmployeesTable({
                   <TableCell>
                     <Link
                       to={`/employees/${employee.id}`}
-                      className="font-medium hover:underline"
+                      className="font-medium hover:text-brand-strong hover:underline"
                     >
                       {employee.full_name}
                     </Link>

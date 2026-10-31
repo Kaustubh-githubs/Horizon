@@ -20,6 +20,9 @@
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-strong: var(--brand-strong);
   --color-positive: var(--positive);
   --color-star: var(--star);
   --color-star-fill: var(--star-fill);
@@ -64,8 +67,10 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Horizon's orange (ADR 0024): buttons and accents. Orange-700 here, because white text on the
+     brighter orange of the loading bar doesn't reach 4.5:1. */
+  --primary: #c2410c;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -75,7 +80,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: #ea580c;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -91,6 +96,11 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   color-scheme: light;
+  /* The brand orange: `brand` for marks with no text on them, `brand-soft` behind a picked item,
+     `brand-strong` for orange text (4.9:1 on brand-soft). */
+  --brand: #ea580c;
+  --brand-soft: #fff7ed;
+  --brand-strong: #c2410c;
   /* Pay going up (red for down is --destructive). */
   --positive: #047857;
   /* The ★ for outliers. */
@@ -104,9 +114,10 @@
   --status-good: #0a7a0a;
   --status-warning: #a86b00;
   --status-critical: #d03b3b;
-  /* Pay by segment: one hue, a light bar for the middle half and a dark dot for the median. */
-  --chart-range: #86b6ef;
-  --chart-median: #1c5cab;
+  /* Pay by segment: the brand orange, a light bar for the middle half and a dark dot for the
+     median. Checked with the dataviz palette validator against the white card. */
+  --chart-range: #fb923c;
+  --chart-median: #9a3412;
   --chart-grid: #e1e0d9;
   --chart-axis: #c3c2b7;
   --chart-muted: #898781;
@@ -125,8 +136,9 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  /* The loading bar's own orange, with dark text (6.4:1). */
+  --primary: #f97316;
+  --primary-foreground: #1c1917;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -136,7 +148,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: #fb923c;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -151,6 +163,9 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
   color-scheme: dark;
+  --brand: #f97316;
+  --brand-soft: rgb(249 115 22 / 14%);
+  --brand-strong: #fb923c;
   --positive: #34d399;
   --star: #f59e0b;
   --star-fill: #fbbf24;
@@ -162,8 +177,8 @@
   --status-critical: #f87171;
   /* On the dark card: the bar steps back and the median dot is the bright one, so the median
      still reads first. Checked with the dataviz palette validator against #171717. */
-  --chart-range: #2f5f99;
-  --chart-median: #8fc1ff;
+  --chart-range: #9a3412;
+  --chart-median: #fdba74;
   --chart-grid: #2a2a29;
   --chart-axis: #3f3f3d;
   --chart-muted: #9a9993;
@@ -181,6 +196,9 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  ::selection {
+    @apply bg-brand-soft text-brand-strong;
   }
   html {
     @apply font-sans;
@@ -230,4 +248,24 @@
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+/* A thin line of the brand gradient along the top of a headline card (ADR 0024). The card's
+   rounded corners clip it. */
+@utility brand-edge {
+  position: relative;
+  overflow: hidden;
+  &::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--progress-from),
+      var(--progress-via),
+      var(--progress-to)
+    );
+  }
 }

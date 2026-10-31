@@ -73,9 +73,9 @@ erDiagram
 
 All tables also have `created_at` and `updated_at`.
 
-### Login ✅ and audit trail ✅ (budgets) ⏳ (employees, salaries)
+### Login ✅ and audit trail ✅
 
-Login tables (personas, users, sessions) are built. The `audits` table is built and department budgets use it (ADR 0020). Employees and salary revisions join it in the audit-trail add-on. Users link to the domain only through `audits`, which records which user changed which record.
+Login tables (personas, users, sessions) are built. The `audits` table records changes to department budgets (ADR 0020), employees and salary revisions (ADR 0012). Users link to the domain only through `audits`, which records which user changed which record.
 
 ```mermaid
 erDiagram
@@ -108,7 +108,7 @@ erDiagram
     }
     audits {
         bigint id PK
-        string auditable_type "polymorphic: DepartmentBudget, later Employee and SalaryRevision"
+        string auditable_type "polymorphic: Employee, SalaryRevision or DepartmentBudget"
         bigint auditable_id
         string associated_type "Employee, for salary revisions"
         bigint associated_id
@@ -146,7 +146,7 @@ erDiagram
 | `users` | ✅ | People who log in, each with a persona | ADR 0009, 0010 |
 | `sessions` | ✅ | One row per login | ADR 0009 |
 | `department_budgets` | ✅ | Each department's yearly budget, in INR | ADR 0020 |
-| `audits` | ✅ budgets, ⏳ employees and salaries | Who changed what, and when (`audited` gem) | ADR 0012, 0020 |
+| `audits` | ✅ | Who changed what, and when (`audited` gem): employees, salary revisions, budgets | ADR 0012, 0020 |
 
 ## Rules the database enforces
 

@@ -28,5 +28,6 @@ Short notes on the decisions that shape Horizon: what we chose, what else we con
 | [0022](0022-ui-feedback-and-navigation.md) | UI feedback and navigation | Accepted |
 | [0023](0023-dark-mode.md) | Dark mode | Accepted |
 | [0024](0024-brand-colour.md) | Brand colour | Accepted |
+| [0025](0025-deploying-to-railway.md) | Deploying to Railway | Accepted |
 
 Each note has the same parts: **Context** (why we had to decide), **Decision**, **Options considered** and **Consequences** (good and bad).

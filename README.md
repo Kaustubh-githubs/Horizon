@@ -5,7 +5,8 @@ A modern salary management system for ACME's HR Manager, designed to replace com
 ## Current Status
 - **Feature-complete in development:** the seed script creates 10,000 employees. The HR Manager can add, edit and terminate employees, change salaries, explore pay insights, set department budgets, and see a timeline and full audit log for every employee.
 - **Add-on audit trail working:** every change to an employee, a salary or a budget is recorded (who, what, when) and viewable in the UI.
-- **Not done yet:** deployment, and a GitHub CI workflow (the same checks run locally with `bin/ci` and `pnpm test`).
+- **Deploys to Railway** as one service (the React app served by Rails) and a Postgres; see [Deploying](#deploying).
+- **Not done yet:** a GitHub CI workflow (the same checks run locally with `bin/ci` and `pnpm test`).
 
 ## Quick Start (Development)
 
@@ -43,7 +44,7 @@ It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
 
 - **Developer Experience First:** Follows [CONVENTIONS.md](CONVENTIONS.md) for consistent AI-assisted development.
 - **One Source of Truth:** All decisions, architecture and rationale are documented in [docs/](docs/).
-- **Incremental Development:** Every decision is an ADR (Architecture Decision Record) in [docs/adr/](docs/adr/README.md), 24 so far.
+- **Incremental Development:** Every decision is an ADR (Architecture Decision Record) in [docs/adr/](docs/adr/README.md), 25 so far.
 
 ## Core Features
 
@@ -152,9 +153,23 @@ cd backend && bin/ci
 cd frontend && pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 
+## Deploying
+
+Horizon deploys to [Railway](https://railway.com) as one service built from the root `Dockerfile` (the React app is built and served by Rails, with the API, on one origin), plus a Railway Postgres (ADR 0025). `railway.toml` holds the build and health-check settings.
+
+1. In Railway, create a project from this GitHub repository (it builds the root `Dockerfile`).
+2. Add a **PostgreSQL** database to the project.
+3. On the Horizon service, set these variables:
+   - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (a reference to the database's own variable)
+   - `RAILS_MASTER_KEY` = the contents of `backend/config/master.key`
+   - `SEED_ON_BOOT` = `true`, to load the demo data on the first boot
+   - `DEMO_USER_PASSWORD` (optional) to use a different demo password than the README's
+4. Under the service's **Networking**, generate a domain, then open it and sign in as the demo HR Manager.
+
+Each push to master deploys again. Every boot runs the migrations; the seed skips employees once they exist.
+
 ## What's Next
 
-- [ ] **Deployment:** Azure VM with a domain and HTTPS.
 - [ ] **CI on GitHub:** run `bin/ci` and the frontend checks on every pull request.
 - [ ] **More Frontend Tests:** the first suite covers formatting, the API client, signing out on a 401, URL filters and the unsaved-changes guard; the forms and dialogs are next.
 - [ ] **Mobile Responsive Design:** Below tablet width the sidebar should become a top bar with a menu.

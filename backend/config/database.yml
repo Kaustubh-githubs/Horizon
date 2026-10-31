@@ -78,8 +78,7 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
+# Production connects with DATABASE_URL, which the host provides (Railway's Postgres, ADR 0025).
 production:
   <<: *default
-  database: horizon_production
-  username: horizon
-  password: <%= ENV["BACKEND_DATABASE_PASSWORD"] %>
+  url: <%= ENV["DATABASE_URL"] %>

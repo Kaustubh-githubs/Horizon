@@ -7,12 +7,17 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEmployee } from "@/features/employees/api"
+import { AuditLogSheet } from "@/features/employees/audit-log-sheet"
 import { EmployeeLoadState } from "@/features/employees/employee-load-state"
 import { EndEmploymentDialog } from "@/features/employees/end-employment-dialog"
 import { PayPositionBanner } from "@/features/employees/pay-position-banner"
 import { SalaryCard } from "@/features/employees/salary-card"
 import { STATUS_LABELS } from "@/features/employees/status"
+import { TimelineCard } from "@/features/employees/timeline-card"
 import { formatDate } from "@/lib/format"
+
+// Every employee is in ACME's single business unit. A label only, not data (ADR 0021).
+const BUSINESS_UNIT = "ACME"
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -50,17 +55,20 @@ export function EmployeePage() {
           </div>
         </div>
 
-        {active && (
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link to={`/employees/${employee.id}/edit`}>
-                <PencilIcon data-icon="inline-start" />
-                Edit
-              </Link>
-            </Button>
-            <EndEmploymentDialog employee={employee} />
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <AuditLogSheet employee={employee} />
+          {active && (
+            <>
+              <Button variant="outline" asChild>
+                <Link to={`/employees/${employee.id}/edit`}>
+                  <PencilIcon data-icon="inline-start" />
+                  Edit
+                </Link>
+              </Button>
+              <EndEmploymentDialog employee={employee} />
+            </>
+          )}
+        </div>
       </div>
 
       {!active && employee.terminated_on && (
@@ -80,6 +88,7 @@ export function EmployeePage() {
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
             <Detail label="Work email">{employee.email}</Detail>
+            <Detail label="Business unit">{BUSINESS_UNIT}</Detail>
             <Detail label="Country">{employee.country.name}</Detail>
             <Detail label="Department">{employee.department.name}</Detail>
             <Detail label="Job title">{employee.job_title.name}</Detail>
@@ -89,6 +98,7 @@ export function EmployeePage() {
       </Card>
 
       <SalaryCard employee={employee} />
+      <TimelineCard employee={employee} />
     </section>
   )
 }

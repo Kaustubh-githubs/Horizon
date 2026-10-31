@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import { LoadError } from "@/components/load-error"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -76,16 +77,7 @@ function History({
     return <p className="text-sm text-muted-foreground">No budget set yet.</p>
   if (audits.isError)
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        Couldn&apos;t load the history.
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void audits.refetch()}
-        >
-          Try again
-        </Button>
-      </div>
+      <LoadError what="the history" onRetry={() => void audits.refetch()} />
     )
   if (!audits.data) return <Skeleton className="h-24 w-full" />
   if (audits.data.length === 0)

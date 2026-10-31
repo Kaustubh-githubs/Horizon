@@ -1,7 +1,7 @@
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react"
 
 import { TableSkeleton, TextLine } from "@/components/skeletons"
-import { Button } from "@/components/ui/button"
+import { LoadError } from "@/components/load-error"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -43,16 +43,10 @@ export function PayChangesCard({ filters }: { filters: InsightFilters }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {changes.isError ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            Couldn&apos;t load the pay changes.
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void changes.refetch()}
-            >
-              Try again
-            </Button>
-          </div>
+          <LoadError
+            what="the pay changes"
+            onRetry={() => void changes.refetch()}
+          />
         ) : !data ? (
           <div className="flex flex-col gap-4">
             <TextLine className="w-3/4" />

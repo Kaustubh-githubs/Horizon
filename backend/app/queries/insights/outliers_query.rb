@@ -60,7 +60,7 @@ module Insights
         enough_peers:,
         direction: (exact.negative? ? "below" : "above" if exact&.nonzero?),
         deviation_percent: exact&.round(1)&.to_f,
-        peer_median: Insights.money(found&.peer_median),
+        peer_median: MoneyString.from(found&.peer_median),
         peer_count: found&.peer_count || 0,
         threshold:,
         currency: employee.current_currency,

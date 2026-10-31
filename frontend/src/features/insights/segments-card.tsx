@@ -21,7 +21,7 @@ import {
   type SegmentRow,
   type SegmentStats,
 } from "@/features/insights/api"
-import { LoadError } from "@/features/insights/load-error"
+import { LoadError } from "@/components/load-error"
 import { SegmentChart } from "@/features/insights/segment-chart"
 import {
   describeScope,

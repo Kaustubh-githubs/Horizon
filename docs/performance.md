@@ -46,7 +46,7 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 
 **Peer pay** (`GET /employees/:id/pay_comparison`): one aggregate query (`COUNT`, `AVG`, `PERCENTILE_CONT`) over active employees with the same country and job title. The largest group in the seed, India × Software Engineer with 846 peers, runs in about 1.4 ms, with a bitmap scan on the existing `(country_id, job_title_id)` index. No new index needed.
 
-**History** (`GET /employees/:id/salary_revisions`): an employee has a handful of revisions (at most 5 in the seed), read in one query on the `(employee_id, effective_from)` index and not paged.
+**History** (the timeline, `GET /employees/:id/timeline`, since the separate history endpoint was removed): an employee has a handful of revisions (at most 5 in the seed), read in one query on the `(employee_id, effective_from)` index and not paged.
 
 ## Insights (ADR 0019)
 

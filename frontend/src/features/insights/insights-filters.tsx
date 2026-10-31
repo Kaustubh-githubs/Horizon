@@ -1,73 +1,13 @@
-import { Combobox } from "@/components/combobox"
+import { FilterSelect } from "@/components/filter-select"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { useLookups } from "@/features/employees/api"
+import { useLookups } from "@/features/lookups/api"
 import {
   departmentChange,
   titlesForDepartment,
-} from "@/features/employees/job-titles"
+} from "@/features/lookups/job-titles"
 import type { InsightFilters } from "@/features/insights/api"
 import { TENURE_BANDS } from "@/features/insights/segments"
 import { NO_FILTERS } from "@/features/insights/use-insights-params"
-
-// Radix Select can't hold an empty value, so "all" stands for "no filter".
-const ALL = "all"
-type Option = { value: string; label: string }
-
-// A Select, or with `searchable`, a Combobox you can type into (for the long lists).
-function FilterSelect({
-  label,
-  allLabel,
-  value,
-  options,
-  searchable = false,
-  onChange,
-}: {
-  label: string
-  allLabel: string
-  value: string | undefined
-  options: Option[]
-  searchable?: boolean
-  onChange: (value: string | undefined) => void
-}) {
-  if (searchable)
-    return (
-      <Combobox
-        aria-label={label}
-        value={value}
-        onChange={onChange}
-        options={options}
-        allLabel={allLabel}
-        searchPlaceholder={`Search ${label.toLowerCase()}s`}
-        className="w-48"
-      />
-    )
-
-  return (
-    <Select
-      value={value ?? ALL}
-      onValueChange={(next) => onChange(next === ALL ? undefined : next)}
-    >
-      <SelectTrigger aria-label={label} className="w-48">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value={ALL}>{allLabel}</SelectItem>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-}
 
 /**
  * The page's filters (ADR 0019): country, department, job title and tenure, in any combination.
@@ -89,6 +29,7 @@ export function InsightsFilters({
       <FilterSelect
         label="Country"
         allLabel="All countries"
+        className="w-48"
         value={filters.country}
         options={(lookups.data?.countries ?? []).map((c) => ({
           value: c.code,
@@ -99,7 +40,8 @@ export function InsightsFilters({
       <FilterSelect
         label="Department"
         allLabel="All departments"
-        searchable
+        searchPlaceholder="Search departments"
+        className="w-48"
         value={filters.department_id}
         options={(lookups.data?.departments ?? []).map((d) => ({
           value: String(d.id),
@@ -114,7 +56,8 @@ export function InsightsFilters({
       <FilterSelect
         label="Job title"
         allLabel="All job titles"
-        searchable
+        searchPlaceholder="Search job titles"
+        className="w-48"
         value={filters.job_title_id}
         options={titlesForDepartment(lookups.data, filters.department_id).map(
           (t) => ({
@@ -127,6 +70,7 @@ export function InsightsFilters({
       <FilterSelect
         label="Tenure"
         allLabel="Any tenure"
+        className="w-48"
         value={filters.tenure}
         options={TENURE_BANDS.map((band) => ({
           value: band.key,

@@ -12,15 +12,15 @@ const KEYS = [
   "page",
 ] as const
 
+// A filter change replaces the history entry and keeps the scroll position: it's the same page
+// showing other rows, not a new page to start at the top of.
+const SAME_PAGE = { replace: true, preventScrollReset: true }
+
 /**
  * Directory filters live in the URL, so a refresh or a shared link shows the same view
  * (docs/requirements.md). Changing any filter except the page goes back to page 1.
  * Clearing filters keeps the sort, since the sort isn't a filter.
  */
-// A filter change replaces the history entry and keeps the scroll position: it's the same page
-// showing other rows, not a new page to start at the top of.
-const SAME_PAGE = { replace: true, preventScrollReset: true }
-
 export function useDirectoryFilters() {
   const [searchParams, setSearchParams] = useSearchParams()
 

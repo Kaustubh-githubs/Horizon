@@ -24,7 +24,7 @@ module Insights
         currency: currency,
         converted: converted?,
         rates_as_of: Insights.rates_as_of,
-        excluded_currencies: converted? || by_country? ? Insights.excluded_currencies(scope) : [],
+        excluded_currencies: (converted? || by_country?) ? Insights.excluded_currencies(scope) : [],
         rows: @by == "tenure" ? with_every_band(rows) : rows
       }
     end
@@ -75,7 +75,7 @@ module Insights
              converted = in_reporting[id]
              row(code, name, currency_code, stats).merge(
                converted: converted && { currency: REPORTING_CURRENCY }.merge(
-                 converted.slice(:p25, :median, :p75, :payroll).transform_values { |value| Insights.money(value) }
+                 converted.slice(:p25, :median, :p75, :payroll).transform_values { |value| MoneyString.from(value) }
                )
              )
            end
@@ -84,7 +84,7 @@ module Insights
     def row(key, label, currency, stats)
       figures = STATS.zip(stats).to_h
       { key:, label:, currency:, headcount: figures[:headcount] }
-        .merge(figures.except(:headcount).transform_values { |value| Insights.money(value) })
+        .merge(figures.except(:headcount).transform_values { |value| MoneyString.from(value) })
     end
 
     # [group key, label] SQL for each segment.

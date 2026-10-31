@@ -40,10 +40,5 @@ module Insights
       [ "COUNT(*)", "MIN(#{value})", percentile.(0.25), percentile.(0.5), percentile.(0.75), "AVG(#{value})",
         "MAX(#{value})", "SUM(#{value})" ].map { |sql| Arel.sql(sql) }
     end
-
-    # Money as a string rounded to 2 decimals (ADR 0006). AVG gives a decimal, PERCENTILE_CONT a float.
-    def money(value)
-      value&.to_d&.round(2)&.to_s("F")
-    end
   end
 end

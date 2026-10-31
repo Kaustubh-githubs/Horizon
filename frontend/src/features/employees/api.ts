@@ -115,12 +115,17 @@ export type EmployeeChanges = Pick<
 
 export type Termination = { terminated_on: string; lock_version: number }
 
-// After any change: store the fresh employee, and refetch directory pages so they show it too.
+// After any change: store the fresh employee, and refetch directory pages and the employee's
+// timeline and audit log so they show it too.
 function useEmployeeSaved() {
   const queryClient = useQueryClient()
   return (employee: Employee) => {
     queryClient.setQueryData(employeeKey(employee.id), employee)
     void queryClient.invalidateQueries({ queryKey: ["employees"] })
+    for (const part of ["timeline", "audits"])
+      void queryClient.invalidateQueries({
+        queryKey: [...employeeKey(employee.id), part],
+      })
   }
 }
 
@@ -191,13 +196,72 @@ export type SalaryChange = {
   lock_version: number
 }
 
-export function useSalaryHistory(employeeId: number) {
+/** One value that changed. `from` is null when it was first set. Ids arrive as names. */
+export type FieldChange = {
+  field: string
+  from: string | null
+  to: string | null
+}
+
+/** One event in an employee's story (ADR 0021). */
+export type TimelineEvent = {
+  kind:
+    | "joined"
+    | "salary_change"
+    | "promotion"
+    | "department"
+    | "job_title"
+    | "anniversary"
+    | "ended"
+  date: string
+  /** Salary, department or job title changes; salary amounts are in the timeline's currency. */
+  changes: FieldChange[]
+  /** For salary changes and promotions. */
+  reason?: SalaryReason
+  change_percent?: number | null
+  /** For salary changes and promotions: when the revision was entered. */
+  recorded_at?: string
+  /** For anniversaries. */
+  years?: number
+}
+
+/** Joining, salary changes, moves, anniversaries and leaving, newest first. */
+export function useEmployeeTimeline(employeeId: number) {
   return useQuery({
-    queryKey: [...employeeKey(employeeId), "salary_revisions"],
+    queryKey: [...employeeKey(employeeId), "timeline"],
     queryFn: () =>
-      apiRequest<{ data: SalaryRevision[] }>(
-        `/employees/${employeeId}/salary_revisions`,
+      apiRequest<{ currency: string; events: TimelineEvent[] }>(
+        `/employees/${employeeId}/timeline`,
       ),
+  })
+}
+
+/** One saved change to the employee or one of their salary revisions (ADR 0012, 0021). */
+export type AuditLogRow = {
+  id: number
+  /** "employee" or "salary_revision" today; any model audited later shows with a plain label. */
+  model: string
+  /** "create", "update" or "destroy". */
+  action: string
+  version: number
+  /** Null for changes made outside the app, such as the console. */
+  changed_by: string | null
+  created_at: string
+  /** A salary change's reason. */
+  reason: SalaryReason | null
+  /** A note given with the change, if any. */
+  comment: string | null
+  /** The employee's currency, for money columns. */
+  currency: string
+  changes: FieldChange[]
+}
+
+/** Every saved change, newest first. Loaded only while the audit log is open. */
+export function useEmployeeAuditLog(employeeId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: [...employeeKey(employeeId), "audits"],
+    queryFn: () => apiRequest<AuditLogRow[]>(`/employees/${employeeId}/audits`),
+    enabled,
   })
 }
 

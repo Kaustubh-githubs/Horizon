@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 
+import { lookupsKey } from "@/features/lookups/api"
 import { apiRequest, toQueryString } from "@/lib/api"
 
 export type EmployeeStatus = "active" | "terminated"
@@ -32,13 +33,6 @@ export type PageMeta = {
   per_page: number
   total_count: number
   total_pages: number
-}
-
-export type Lookups = {
-  countries: { id: number; code: string; name: string; currency_code: string }[]
-  /** `job_title_ids`: the titles people in the department hold, current or former (ADR 0019). */
-  departments: { id: number; name: string; job_title_ids: number[] }[]
-  job_titles: { id: number; name: string }[]
 }
 
 /** Directory filters, exactly as the API accepts them. Empty values are left out. */
@@ -151,7 +145,7 @@ function useEmployeeSaved() {
   return (employee: Employee) => {
     queryClient.setQueryData(employeeKey(employee.id), employee)
     void queryClient.invalidateQueries({ queryKey: ["employees"] })
-    void queryClient.invalidateQueries({ queryKey: ["lookups"] })
+    void queryClient.invalidateQueries({ queryKey: lookupsKey })
     for (const part of ["timeline", "audits"])
       void queryClient.invalidateQueries({
         queryKey: [...employeeKey(employee.id), part],
@@ -328,15 +322,34 @@ export function useChangeSalary(employeeId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: employeeKey(employeeId) })
       void queryClient.invalidateQueries({ queryKey: ["employees"] })
-      void queryClient.invalidateQueries({ queryKey: ["lookups"] })
+      void queryClient.invalidateQueries({ queryKey: lookupsKey })
     },
   })
 }
 
-export function useLookups() {
+/**
+ * How an employee's pay compares with their peers' (the ★ rule, ADR 0019), for the banner on
+ * their profile.
+ */
+export type PayPosition = {
+  flagged: boolean
+  enough_peers: boolean
+  direction: "below" | "above" | null
+  deviation_percent: number | null
+  peer_median: string | null
+  peer_count: number
+  threshold: number
+  currency: string
+  job_title: string
+  country: string
+}
+
+/** Whether an employee is a ★ outlier, for their profile. Refreshed with the employee. */
+export function usePayPosition(employeeId: number, enabled: boolean) {
   return useQuery({
-    queryKey: ["lookups"],
-    queryFn: () => apiRequest<Lookups>("/lookups"),
-    staleTime: Infinity, // countries, departments and titles rarely change
+    queryKey: [...employeeKey(employeeId), "pay_position"],
+    queryFn: () =>
+      apiRequest<PayPosition>(`/employees/${employeeId}/pay_position`),
+    enabled,
   })
 }

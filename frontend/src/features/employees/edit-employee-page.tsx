@@ -6,11 +6,10 @@ import { BackLink } from "@/components/back-link"
 import { Button } from "@/components/ui/button"
 import {
   useEmployee,
-  useLookups,
   useUpdateEmployee,
   type Employee,
-  type Lookups,
 } from "@/features/employees/api"
+import { useLookups, type Lookups } from "@/features/lookups/api"
 import { EmployeeForm } from "@/features/employees/employee-form"
 import type { EmployeeFormValues } from "@/features/employees/employee-form-schema"
 import { EmployeeLoadState } from "@/features/employees/employee-load-state"

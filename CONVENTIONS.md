@@ -21,11 +21,12 @@ backend/    Rails 8.1 API-only app (Ruby 3.4, PostgreSQL)
 frontend/   React + TypeScript (Vite, shadcn/ui, Tailwind)
 docs/       requirements, ADRs, database schema, performance notes
 ```
-Setup and test commands will be added here once the project skeleton exists.
+Setup, seeding and the commands for the checks are in the [README](README.md).
 
 ## Backend
 - **Controllers stay thin.** Business logic goes in service objects (`app/services`), and reporting queries go in query objects (`app/queries`).
-- **Money:** `decimal(15,2)` and `BigDecimal`, always stored with an ISO currency code. Never use floats (ADR 0006). JSON returns amounts as strings.
+- **JSON shapes live in serializers** (`app/serializers`), one class per resource with `as_json`. Controllers don't build hashes. Query objects that answer a whole endpoint (insights, budgets, timeline) return their hash directly.
+- **Money:** `decimal(15,2)` and `BigDecimal`, always stored with an ISO currency code. Never use floats (ADR 0006). JSON returns amounts as strings, through `MoneyString.from` (`lib/money_string.rb`).
 - **Salary writes only go through `SalaryRevisions::Create`.** It saves the revision and updates `employees.current_salary` in one transaction. The effective date is always today (ADR 0004, 0005).
 - **Employees are terminated, never deleted** (ADR 0008). No `default_scope`. Use explicit scopes like `Employee.active`.
 - **Reference data** (countries, departments, job titles) lives in lookup tables with foreign keys (ADR 0003).
@@ -34,14 +35,15 @@ Setup and test commands will be added here once the project skeleton exists.
 - **Insights are computed in SQL** (grouping, `percentile_cont`). Don't load rows into Ruby to aggregate them.
 - **Avoid N+1 queries.** Preload associations in lists.
 - **API:** routes under `/api/v1`, JSON only, errors shaped as `{ "errors": { "field": ["message"] } }`.
-- **Auditing:** models opt in with `include Auditable` (wraps the `audited` gem, ADR 0012).
+- **Auditing:** models opt in with `auditable` (the `Auditable` concern wraps the `audited` gem, ADR 0012).
 - **Style:** RuboCop (`rubocop-rails-omakase`) must pass.
 
 ## Frontend
 - **TypeScript strict mode.** No `any` without a comment explaining why.
 - **Server data goes through TanStack Query.** Don't copy API data into local state.
 - **Directory filters, sorting and paging live in the URL.**
-- **Use shadcn/ui components** before writing custom ones.
+- **Use shadcn/ui components** before writing custom ones. Shared building blocks live in `src/components` (`FilterSelect`, `LoadError`, `StickyBar`, …): reuse them instead of copying markup.
+- **Features don't depend on each other in a cycle.** Reference data used everywhere (countries, departments, job titles) is its own feature, `features/lookups`. A hook for an `/employees/:id/…` endpoint lives in `features/employees`.
 - **Format money with `Intl.NumberFormat` and its currency.** Never show an amount without its currency.
 - **Every data view handles** loading, empty and error states.
 - **Style:** ESLint and `tsc --noEmit` must pass.

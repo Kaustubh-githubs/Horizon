@@ -1,6 +1,7 @@
 import { ScrollTextIcon } from "lucide-react"
 import { Fragment, useState } from "react"
 
+import { LoadError } from "@/components/load-error"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -67,16 +68,10 @@ export function AuditLogSheet({ employee }: { employee: Employee }) {
           {log.isPending ? (
             <Skeleton className="h-40 w-full" />
           ) : log.isError ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              Couldn&apos;t load the audit log.
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void log.refetch()}
-              >
-                Try again
-              </Button>
-            </div>
+            <LoadError
+              what="the audit log"
+              onRetry={() => void log.refetch()}
+            />
           ) : log.data.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No changes recorded since this employee was loaded into Horizon.

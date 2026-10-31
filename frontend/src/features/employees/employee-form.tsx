@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { Lookups } from "@/features/employees/api"
+import type { Lookups } from "@/features/lookups/api"
 import {
   employeeFormSchema,
   type EmployeeFormValues,

@@ -1,8 +1,7 @@
 import { StarIcon } from "lucide-react"
 import { Link } from "react-router"
 
-import type { Employee } from "@/features/employees/api"
-import { usePayPosition } from "@/features/insights/api"
+import { usePayPosition, type Employee } from "@/features/employees/api"
 import { formatMoneyWhole } from "@/lib/format"
 
 /**

@@ -2,9 +2,9 @@ import { Button } from "@/components/ui/button"
 import { ApiError } from "@/lib/api"
 
 /**
- * What a dashboard card shows when its figures fail to load. A 404 means a filter value from
- * the link doesn't exist (an old or edited link), so it offers to drop the filters instead of a
- * retry that can't help. Each card says which filters that means.
+ * What a part of a page shows when its data fails to load: what's missing and a retry. With
+ * `notFound`, a 404 (on the insights page: a filter value from an old or edited link) offers that
+ * action instead, because retrying can't help.
  */
 export function LoadError({
   error,
@@ -12,12 +12,13 @@ export function LoadError({
   notFound,
   onRetry,
 }: {
-  error: unknown
+  error?: unknown
   what: string
-  notFound: { message: string; action: string; onAction: () => void }
+  notFound?: { message: string; action: string; onAction: () => void }
   onRetry: () => void
 }) {
-  const missing = error instanceof ApiError && error.status === 404
+  const missing =
+    notFound !== undefined && error instanceof ApiError && error.status === 404
 
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">

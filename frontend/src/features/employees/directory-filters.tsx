@@ -1,6 +1,6 @@
 import { SearchIcon } from "lucide-react"
 
-import { Combobox } from "@/components/combobox"
+import { FilterSelect } from "@/components/filter-select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -13,66 +13,14 @@ import {
 import type {
   DirectoryFilters,
   DirectorySummary,
-  Lookups,
 } from "@/features/employees/api"
+import type { Lookups } from "@/features/lookups/api"
 import {
   departmentChange,
   titlesForDepartment,
-} from "@/features/employees/job-titles"
+} from "@/features/lookups/job-titles"
 import { STATUS_LABELS } from "@/features/employees/status"
 import { formatCount } from "@/lib/format"
-
-// Radix Select can't hold an empty value, so "all" stands for "no filter".
-const ALL = "all"
-
-type Option = { value: string; label: string }
-
-// A Select, or with `searchable`, a Combobox you can type into (for the long lists).
-function FilterSelect({
-  label,
-  value,
-  options,
-  searchable = false,
-  onChange,
-}: {
-  label: string
-  value: string | undefined
-  options: Option[]
-  searchable?: boolean
-  onChange: (value: string | undefined) => void
-}) {
-  if (searchable)
-    return (
-      <Combobox
-        aria-label={label}
-        value={value}
-        onChange={onChange}
-        options={options}
-        allLabel={`All ${label.toLowerCase()}`}
-        searchPlaceholder={`Search ${label.toLowerCase()}`}
-        className="w-44"
-      />
-    )
-
-  return (
-    <Select
-      value={value ?? ALL}
-      onValueChange={(next) => onChange(next === ALL ? undefined : next)}
-    >
-      <SelectTrigger aria-label={label} className="w-44">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value={ALL}>All {label.toLowerCase()}</SelectItem>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-}
 
 // "India (3,648)": how many people the option would give with the other filters and the search.
 // Options nobody matches say 0. Before the counts load, just the name.
@@ -119,6 +67,8 @@ export function DirectoryFiltersBar({
 
       <FilterSelect
         label="Countries"
+        allLabel="All countries"
+        className="w-44"
         value={filters.country}
         options={(lookups?.countries ?? []).map((c) => ({
           value: c.code,
@@ -128,7 +78,9 @@ export function DirectoryFiltersBar({
       />
       <FilterSelect
         label="Departments"
-        searchable
+        allLabel="All departments"
+        searchPlaceholder="Search departments"
+        className="w-44"
         value={filters.department_id}
         options={(lookups?.departments ?? []).map((d) => ({
           value: String(d.id),
@@ -142,7 +94,9 @@ export function DirectoryFiltersBar({
       />
       <FilterSelect
         label="Job titles"
-        searchable
+        allLabel="All job titles"
+        searchPlaceholder="Search job titles"
+        className="w-44"
         value={filters.job_title_id}
         options={titlesForDepartment(lookups, filters.department_id).map(
           (t) => ({

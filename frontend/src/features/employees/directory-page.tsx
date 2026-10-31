@@ -7,11 +7,8 @@ import { Button } from "@/components/ui/button"
 import { DirectoryFiltersBar } from "@/features/employees/directory-filters"
 import { DirectorySummary } from "@/features/employees/directory-summary"
 import { EmployeesTable } from "@/features/employees/employees-table"
-import {
-  useDirectorySummary,
-  useEmployees,
-  useLookups,
-} from "@/features/employees/api"
+import { useDirectorySummary, useEmployees } from "@/features/employees/api"
+import { useLookups } from "@/features/lookups/api"
 import { useDirectoryFilters } from "@/features/employees/use-directory-filters"
 import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import { formatCount } from "@/lib/format"

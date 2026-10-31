@@ -1,6 +1,7 @@
 import { useState } from "react"
 
 import { AnimatedNumber } from "@/components/animated-number"
+import { LoadError } from "@/components/load-error"
 import {
   StatTileSkeleton,
   TableSkeleton,
@@ -61,16 +62,7 @@ export function BudgetsPage() {
       </div>
 
       {overview.isError ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          Couldn&apos;t load the budgets.
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void overview.refetch()}
-          >
-            Try again
-          </Button>
-        </div>
+        <LoadError what="the budgets" onRetry={() => void overview.refetch()} />
       ) : !data ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

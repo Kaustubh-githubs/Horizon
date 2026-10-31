@@ -25,11 +25,17 @@ class SalaryRevisionSerializer
     revisions.map { |revision| new(revision, previous_amount: previous).tap { previous = revision.amount } }.reverse
   end
 
+  # The % change from one amount to the next, to one decimal; none without an amount before it.
+  # Also used by the employee timeline (ADR 0021).
+  def self.change_percent(previous_amount, amount)
+    return if previous_amount.nil? || previous_amount.zero?
+
+    ((amount - previous_amount) / previous_amount * 100).round(1).to_f
+  end
+
   private
 
   def change_percent
-    return if @previous_amount.nil? || @previous_amount.zero?
-
-    ((@revision.amount - @previous_amount) / @previous_amount * 100).round(1).to_f
+    self.class.change_percent(@previous_amount, @revision.amount)
   end
 end

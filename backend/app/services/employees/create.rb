@@ -17,10 +17,13 @@ module Employees
       employee = Employee.new(@attributes)
       employee.current_currency = employee.country&.currency_code
 
-      Employee.transaction do
-        employee.save!
-        SalaryRevision.create!(employee:, amount: employee.current_salary, currency: employee.current_currency,
-                               effective_from: Date.current, reason: "hire")
+      # One change in the audit trail, wherever this runs (ADR 0021).
+      Auditable.as_one_change do
+        Employee.transaction do
+          employee.save!
+          SalaryRevision.create!(employee:, amount: employee.current_salary, currency: employee.current_currency,
+                                 effective_from: Date.current, reason: "hire")
+        end
       end
       employee
     end

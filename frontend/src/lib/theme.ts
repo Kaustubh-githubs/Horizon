@@ -61,6 +61,9 @@ export function setTheme(next: Theme) {
     return
   }
   const transition = document.startViewTransition(() => show(next))
+  // `ready` rejects when the browser skips the animation (another switch started, the tab is
+  // hidden). The theme has changed anyway; only the reveal is lost, so there's nothing to report.
+  const skipped = () => {}
   void transition.ready.then(() => {
     // From the bottom-left corner (0% 100%) to the farthest one, the top right. In percentages
     // of the snapshot, so it doesn't depend on the screen's pixel density: a circle's % radius
@@ -75,7 +78,7 @@ export function setTheme(next: Theme) {
         pseudoElement: "::view-transition-new(root)",
       },
     )
-  })
+  }, skipped)
 }
 
 // index.html has already applied it; again here, so this module doesn't depend on that script.

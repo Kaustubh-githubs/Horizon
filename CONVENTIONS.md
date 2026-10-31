@@ -49,7 +49,7 @@ Setup, seeding and the commands for the checks are in the [README](README.md).
 - **Style:** ESLint and `tsc --noEmit` must pass.
 
 ## Tests
-- **Backend:** RSpec + FactoryBot. Frontend: no automated tests for now (deferred). Strict TypeScript and type-aware ESLint are the safety net until we add Vitest + React Testing Library.
+- **Backend:** RSpec + FactoryBot. **Frontend:** Vitest + React Testing Library (jsdom), next to the code they test (`format.test.ts` beside `format.ts`). Test what a user sees and does (roles, labels, clicks), not component internals. `pnpm test` runs them.
 - **Fast and deterministic:** no real network, fixed random seeds, and frozen time (`travel_to`) wherever dates matter.
 - **Insights tests use small hand-built datasets,** so the expected numbers can be checked by hand.
 - **Test behaviour, not implementation.** One reason to fail per test, with a name that reads like a sentence.

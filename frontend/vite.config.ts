@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath, URL } from "node:url"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
@@ -16,7 +17,16 @@ export default defineConfig({
     // (X-Forwarded-Host), so Rails knows the app's origin and its check that writes come from
     // it (ADR 0009) accepts them.
     proxy: {
-      "/api": { target: "http://localhost:3000", changeOrigin: true, xfwd: true },
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        xfwd: true,
+      },
     },
+  },
+  // Unit and component tests (Vitest + React Testing Library), in a simulated browser.
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
   },
 })

@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-# Horizon in one image (ADR 0025): the React app is built first, then served by Rails together
+# Horizon in one image (ADR 0025, 0026): the React app is built first, then served by Rails together
 # with the API, so the browser sees one origin and the session cookie just works (ADR 0001).
-# Railway builds this file from the repo root. Rails' own backend/Dockerfile builds the API alone.
+# Render builds this file from the repo root (render.yaml). Rails' own backend/Dockerfile builds
+# the API alone.
 #
 #   docker build -t horizon .
 #   docker run -p 3000:3000 -e DATABASE_URL=... -e RAILS_MASTER_KEY=... horizon

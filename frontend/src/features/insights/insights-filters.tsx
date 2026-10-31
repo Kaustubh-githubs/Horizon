@@ -1,3 +1,4 @@
+import { Combobox } from "@/components/combobox"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -19,19 +20,35 @@ import { NO_FILTERS } from "@/features/insights/use-insights-params"
 const ALL = "all"
 type Option = { value: string; label: string }
 
+// A Select, or with `searchable`, a Combobox you can type into (for the long lists).
 function FilterSelect({
   label,
   allLabel,
   value,
   options,
+  searchable = false,
   onChange,
 }: {
   label: string
   allLabel: string
   value: string | undefined
   options: Option[]
+  searchable?: boolean
   onChange: (value: string | undefined) => void
 }) {
+  if (searchable)
+    return (
+      <Combobox
+        aria-label={label}
+        value={value}
+        onChange={onChange}
+        options={options}
+        allLabel={allLabel}
+        searchPlaceholder={`Search ${label.toLowerCase()}s`}
+        className="w-48"
+      />
+    )
+
   return (
     <Select
       value={value ?? ALL}
@@ -82,6 +99,7 @@ export function InsightsFilters({
       <FilterSelect
         label="Department"
         allLabel="All departments"
+        searchable
         value={filters.department_id}
         options={(lookups.data?.departments ?? []).map((d) => ({
           value: String(d.id),
@@ -96,6 +114,7 @@ export function InsightsFilters({
       <FilterSelect
         label="Job title"
         allLabel="All job titles"
+        searchable
         value={filters.job_title_id}
         options={titlesForDepartment(lookups.data, filters.department_id).map(
           (t) => ({

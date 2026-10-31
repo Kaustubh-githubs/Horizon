@@ -1,8 +1,8 @@
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react"
 
+import { TableSkeleton, TextLine } from "@/components/skeletons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -54,7 +54,10 @@ export function PayChangesCard({ filters }: { filters: InsightFilters }) {
             </Button>
           </div>
         ) : !data ? (
-          <Skeleton className="h-40 w-full" />
+          <div className="flex flex-col gap-4">
+            <TextLine className="w-3/4" />
+            <TableSkeleton columns={4} rows={5} />
+          </div>
         ) : (
           <div
             className={cn(

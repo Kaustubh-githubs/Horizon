@@ -17,6 +17,10 @@ const KEYS = [
  * (docs/requirements.md). Changing any filter except the page goes back to page 1.
  * Clearing filters keeps the sort, since the sort isn't a filter.
  */
+// A filter change replaces the history entry and keeps the scroll position: it's the same page
+// showing other rows, not a new page to start at the top of.
+const SAME_PAGE = { replace: true, preventScrollReset: true }
+
 export function useDirectoryFilters() {
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -28,30 +32,24 @@ export function useDirectoryFilters() {
   filters.country = filters.country?.toUpperCase()
 
   const setFilters = (changes: Partial<DirectoryFilters>) => {
-    setSearchParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        for (const [key, value] of Object.entries(changes)) {
-          if (value) next.set(key, value)
-          else next.delete(key)
-        }
-        if (!("page" in changes)) next.delete("page")
-        return next
-      },
-      { replace: true },
-    )
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current)
+      for (const [key, value] of Object.entries(changes)) {
+        if (value) next.set(key, value)
+        else next.delete(key)
+      }
+      if (!("page" in changes)) next.delete("page")
+      return next
+    }, SAME_PAGE)
   }
 
   const clearFilters = () =>
-    setSearchParams(
-      (current) => {
-        const next = new URLSearchParams()
-        const sort = current.get("sort")
-        if (sort) next.set("sort", sort)
-        return next
-      },
-      { replace: true },
-    )
+    setSearchParams((current) => {
+      const next = new URLSearchParams()
+      const sort = current.get("sort")
+      if (sort) next.set("sort", sort)
+      return next
+    }, SAME_PAGE)
 
   return { filters, setFilters, clearFilters }
 }

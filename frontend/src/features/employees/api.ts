@@ -1,5 +1,6 @@
 import {
   keepPreviousData,
+  queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
@@ -96,11 +97,31 @@ export function useDirectorySummary(filters: DirectoryFilters) {
 
 export const employeeKey = (id: number | string) => ["employee", String(id)]
 
-export function useEmployee(id: string) {
-  return useQuery({
+const employeeQuery = (id: number | string) =>
+  queryOptions({
     queryKey: employeeKey(id),
     queryFn: () => apiRequest<Employee>(`/employees/${id}`),
   })
+
+export function useEmployee(id: string) {
+  return useQuery(employeeQuery(id))
+}
+
+// A prefetched profile counts as fresh this long, so moving back over the same row doesn't
+// fetch it again. Opening the profile still refetches it in the background.
+const PREFETCH_FRESH_MS = 30_000
+
+/**
+ * Loads an employee's profile and timeline ahead of a likely click (the pointer resting on their
+ * row), so the profile opens without a skeleton.
+ */
+export function usePrefetchEmployee() {
+  const queryClient = useQueryClient()
+  return (id: number) => {
+    const staleTime = PREFETCH_FRESH_MS
+    void queryClient.prefetchQuery({ ...employeeQuery(id), staleTime })
+    void queryClient.prefetchQuery({ ...timelineQuery(id), staleTime })
+  }
 }
 
 /** What the add form sends. Ids and the salary are strings, as the form holds them. */
@@ -235,14 +256,17 @@ export type TimelineEvent = {
 }
 
 /** Joining, salary changes, moves, anniversaries and leaving, newest first. */
-export function useEmployeeTimeline(employeeId: number) {
-  return useQuery({
+const timelineQuery = (employeeId: number) =>
+  queryOptions({
     queryKey: [...employeeKey(employeeId), "timeline"],
     queryFn: () =>
       apiRequest<{ currency: string; events: TimelineEvent[] }>(
         `/employees/${employeeId}/timeline`,
       ),
   })
+
+export function useEmployeeTimeline(employeeId: number) {
+  return useQuery(timelineQuery(employeeId))
 }
 
 /** One saved change to the employee or one of their salary revisions (ADR 0012, 0021). */

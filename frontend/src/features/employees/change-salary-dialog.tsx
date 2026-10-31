@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
+import { Combobox } from "@/components/combobox"
 import { FormField } from "@/components/form-field"
 import { Button } from "@/components/ui/button"
 import {
@@ -47,8 +48,8 @@ import {
   type SalaryChangeOutput,
 } from "@/features/employees/salary-change-schema"
 import { ApiError } from "@/lib/api"
-import { formatCount, formatMoney } from "@/lib/format"
-import { isValidAmount } from "@/lib/money"
+import { formatCount, formatMoney, formatMoneyWhole } from "@/lib/format"
+import { isValidAmount, typedAmount } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
 const FORM_FIELDS = ["reason", "amount", "job_title_id"] as const
@@ -76,10 +77,9 @@ export function ChangeSalaryDialog({ employee }: { employee: Employee }) {
             afterwards, so a mistake is fixed with a correction.
           </DialogDescription>
         </DialogHeader>
-        {/* Mounted only while open, so each opening starts with an empty form. */}
-        {open && (
-          <ChangeSalaryForm employee={employee} onDone={() => setOpen(false)} />
-        )}
+        {/* The dialog's content mounts each time it opens, so each opening starts with an empty
+            form, and stays through the closing animation, so it doesn't vanish first. */}
+        <ChangeSalaryForm employee={employee} onDone={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   )
@@ -221,27 +221,25 @@ function ChangeSalaryForm({
             name="job_title_id"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger
-                  id="job_title_id"
-                  className="w-full"
-                  aria-invalid={errors.job_title_id ? true : undefined}
-                  aria-describedby={
-                    errors.job_title_id ? "job_title_id-error" : undefined
-                  }
-                >
-                  <SelectValue placeholder="Pick the new job title" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(lookups.data?.job_titles ?? [])
-                    .filter((title) => title.id !== employee.job_title.id)
-                    .map((title) => (
-                      <SelectItem key={title.id} value={String(title.id)}>
-                        {title.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                id="job_title_id"
+                value={field.value || undefined}
+                onChange={(value) => field.onChange(value ?? "")}
+                onBlur={field.onBlur}
+                placeholder="Pick the new job title"
+                searchPlaceholder="Search job titles"
+                options={(lookups.data?.job_titles ?? [])
+                  .filter((title) => title.id !== employee.job_title.id)
+                  .map((title) => ({
+                    value: String(title.id),
+                    label: title.name,
+                  }))}
+                className="w-full"
+                aria-invalid={errors.job_title_id ? true : undefined}
+                aria-describedby={
+                  errors.job_title_id ? "job_title_id-error" : undefined
+                }
+              />
             )}
           />
         </FormField>
@@ -256,7 +254,7 @@ function ChangeSalaryForm({
         <Input
           id="amount"
           inputMode="decimal"
-          placeholder={employee.current_salary}
+          placeholder={typedAmount(employee.current_salary)}
           aria-invalid={errors.amount ? true : undefined}
           aria-describedby={errors.amount ? "amount-error" : undefined}
           {...register("amount")}
@@ -408,8 +406,8 @@ function PeerPay({
         {job_title.name} in {country.name}
       </p>
       <p className="text-muted-foreground tabular-nums">
-        Average {formatMoney(average, currency)} · median{" "}
-        {formatMoney(median, currency)} · {formatCount(peer_count)}{" "}
+        Average {formatMoneyWhole(average, currency)} · median{" "}
+        {formatMoneyWhole(median, currency)} · {formatCount(peer_count)}{" "}
         {peer_count === 1 ? "person" : "people"}
       </p>
       {fromAverage !== undefined && (

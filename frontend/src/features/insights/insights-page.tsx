@@ -1,8 +1,10 @@
 import { StarIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { AnimatedNumber } from "@/components/animated-number"
+import { StickyBar } from "@/components/sticky-bar"
+import { StatTileSkeleton } from "@/components/skeletons"
 import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useOverview } from "@/features/insights/api"
 import { InsightsFilters } from "@/features/insights/insights-filters"
 import { LoadError } from "@/features/insights/load-error"
@@ -13,7 +15,7 @@ import {
   NO_FILTERS,
   useInsightsParams,
 } from "@/features/insights/use-insights-params"
-import { formatCount, formatMoney, formatMoneyCompact } from "@/lib/format"
+import { compactMoney, formatMoney } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 function StatTile({
@@ -22,7 +24,7 @@ function StatTile({
   detail,
 }: {
   label: ReactNode
-  value: string
+  value: ReactNode
   detail: string
 }) {
   return (
@@ -42,21 +44,21 @@ function StatTile({
  */
 export function InsightsPage() {
   const { params, update } = useInsightsParams()
-  const overview = useOverview(params.filters)
+  const overview = useOverview(params.filters, params.threshold)
   const data = overview.data
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold">Insights</h1>
-          <p className="text-sm text-muted-foreground">
-            How ACME pays its active employees. The filters apply to everything
-            on this page.
-          </p>
-        </div>
-        <InsightsFilters filters={params.filters} onChange={update} />
+      <div>
+        <h1 className="font-heading text-2xl font-semibold">Insights</h1>
+        <p className="text-sm text-muted-foreground">
+          How ACME pays its active employees. The filters apply to everything on
+          this page.
+        </p>
       </div>
+      <StickyBar>
+        <InsightsFilters filters={params.filters} onChange={update} />
+      </StickyBar>
 
       {/* A bad filter in the link (an old or edited one) fails every part the same way, so it's
           said once here instead of in each card. */}
@@ -81,21 +83,35 @@ export function InsightsPage() {
           >
             {!data ? (
               Array.from({ length: 4 }, (_, index) => (
-                <Skeleton key={index} className="h-28" />
+                <StatTileSkeleton key={index} />
               ))
             ) : (
               <>
                 <StatTile
                   label="Active employees"
-                  value={formatCount(data.headcount)}
-                  detail={`In ${data.countries} ${data.countries === 1 ? "country" : "countries"}`}
+                  value={
+                    <AnimatedNumber
+                      id="insights.headcount"
+                      value={data.headcount}
+                    />
+                  }
+                  detail={
+                    data.headcount === 0
+                      ? "No one matches these filters"
+                      : `In ${data.countries} ${data.countries === 1 ? "country" : "countries"}`
+                  }
                 />
                 <StatTile
                   label="Annual payroll"
                   value={
-                    data.payroll
-                      ? formatMoneyCompact(data.payroll, data.currency)
-                      : "—"
+                    data.payroll ? (
+                      <AnimatedNumber
+                        id="insights.payroll"
+                        {...compactMoney(data.payroll, data.currency)}
+                      />
+                    ) : (
+                      "—"
+                    )
                   }
                   detail={
                     data.converted
@@ -107,9 +123,14 @@ export function InsightsPage() {
                   label="Median salary"
                   // Compact, so the headline fits its tile; the exact figure is underneath.
                   value={
-                    data.median
-                      ? formatMoneyCompact(data.median, data.currency)
-                      : "—"
+                    data.median ? (
+                      <AnimatedNumber
+                        id="insights.median"
+                        {...compactMoney(data.median, data.currency)}
+                      />
+                    ) : (
+                      "—"
+                    )
                   }
                   detail={
                     data.median
@@ -127,7 +148,12 @@ export function InsightsPage() {
                       Outliers
                     </span>
                   }
-                  value={formatCount(data.outlier_count)}
+                  value={
+                    <AnimatedNumber
+                      id="insights.outliers"
+                      value={data.outlier_count}
+                    />
+                  }
                   detail={`Paid ±${data.outlier_threshold}% or more from their peers' median`}
                 />
               </>

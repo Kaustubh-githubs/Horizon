@@ -3,7 +3,7 @@ import { Link } from "react-router"
 
 import type { Employee } from "@/features/employees/api"
 import { usePayPosition } from "@/features/insights/api"
-import { formatMoney } from "@/lib/format"
+import { formatMoneyWhole } from "@/lib/format"
 
 /**
  * A ★ on the profile when the employee is paid far from the median for their job title in
@@ -35,7 +35,7 @@ export function PayPositionBanner({ employee }: { employee: Employee }) {
         Paid {Math.abs(data.deviation_percent)}%{" "}
         {data.direction === "below" ? "below" : "above"} the median for{" "}
         {data.job_title} in {data.country}: the median is{" "}
-        {formatMoney(data.peer_median, data.currency)} across the{" "}
+        {formatMoneyWhole(data.peer_median, data.currency)} across the{" "}
         {data.peer_count} people in this role, including them.{" "}
         <Link to="/insights" className="font-medium underline">
           See all outliers

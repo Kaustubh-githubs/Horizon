@@ -17,11 +17,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   employeeKey,
+  useEmployeeTimeline,
   useEndEmployment,
   type Employee,
+  type TimelineEvent,
 } from "@/features/employees/api"
 import { ApiError } from "@/lib/api"
 import { todayIso } from "@/lib/dates"
+import { formatDate } from "@/lib/format"
+
+const SALARY_EVENTS: TimelineEvent["kind"][] = ["salary_change", "promotion"]
 
 // API messages are fragments ("can't be in the future"); there's only one field here, so show them as sentences.
 const asSentence = (message: string) =>
@@ -37,13 +42,31 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
   const endEmployment = useEndEmployment(employee.id)
   const queryClient = useQueryClient()
 
+  // The last day can't be in the future, or before the hire date or the latest salary change
+  // (the API checks both). The timeline is already loaded on the profile; until it is, the hire
+  // date is the limit and the API still checks the rest.
+  const timeline = useEmployeeTimeline(employee.id)
+  const today = todayIso()
+  const earliest = [
+    employee.hire_date,
+    ...(timeline.data?.events ?? [])
+      .filter((event) => SALARY_EVENTS.includes(event.kind))
+      .map((event) => event.date),
+  ]
+    .sort()
+    .at(-1)!
+  // A date picker keeps to min and max, but a typed date doesn't.
+  const outOfRange = lastDay !== "" && (lastDay < earliest || lastDay > today)
+
   const error = endEmployment.error
   const conflict = error instanceof ApiError && error.status === 409
-  const message = conflict
-    ? "This employee changed since you opened the page. We've loaded the latest version, so check it and try again."
-    : error instanceof ApiError
-      ? Object.values(error.errors).flat().map(asSentence).join(" ")
-      : error && "Couldn't save. Try again."
+  const message = outOfRange
+    ? `Pick a day from ${formatDate(earliest)} to today.`
+    : conflict
+      ? "This employee changed since you opened the page. We've loaded the latest version, so check it and try again."
+      : error instanceof ApiError
+        ? Object.values(error.errors).flat().map(asSentence).join(" ")
+        : error && "Couldn't save. Try again."
 
   const onConfirm = () =>
     endEmployment.mutate(
@@ -90,8 +113,8 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
           <Input
             id="last_working_day"
             type="date"
-            min={employee.hire_date}
-            max={todayIso()}
+            min={earliest}
+            max={today}
             value={lastDay}
             onChange={(event) => {
               setLastDay(event.target.value)
@@ -115,7 +138,7 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <Button
             variant="destructive"
-            disabled={!lastDay || endEmployment.isPending}
+            disabled={!lastDay || outOfRange || endEmployment.isPending}
             onClick={onConfirm}
           >
             {endEmployment.isPending ? "Saving…" : "End employment"}

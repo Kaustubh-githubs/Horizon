@@ -1,8 +1,13 @@
 import { useState } from "react"
 
+import { AnimatedNumber } from "@/components/animated-number"
+import {
+  StatTileSkeleton,
+  TableSkeleton,
+  TextLine,
+} from "@/components/skeletons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -21,6 +26,7 @@ import { BudgetStatusLabel } from "@/features/budgets/budget-status"
 import { runwayText } from "@/features/budgets/runway"
 import { SetBudgetDialog } from "@/features/budgets/set-budget-dialog"
 import {
+  compactMoney,
   formatCount,
   formatDate,
   formatMoney,
@@ -66,7 +72,22 @@ export function BudgetsPage() {
           </Button>
         </div>
       ) : !data ? (
-        <Skeleton className="h-96 w-full" />
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }, (_, index) => (
+              <StatTileSkeleton key={index} />
+            ))}
+          </div>
+          <Card aria-hidden="true">
+            <CardHeader>
+              <TextLine className="w-28" />
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <TextLine className="w-3/4" />
+              <TableSkeleton columns={7} rows={8} />
+            </CardContent>
+          </Card>
+        </>
       ) : (
         <>
           <Summary overview={data} />
@@ -123,11 +144,15 @@ function Summary({ overview }: { overview: BudgetOverview }) {
           <p className="text-sm text-muted-foreground">Combined budget</p>
           {total.budget ? (
             <>
-              <Money
-                amount={total.budget}
-                currency={currency}
-                className="text-3xl font-semibold"
-              />
+              <span
+                title={formatMoney(total.budget, currency)}
+                className="text-3xl font-semibold tabular-nums"
+              >
+                <AnimatedNumber
+                  id="budgets.combined"
+                  {...compactMoney(total.budget, currency)}
+                />
+              </span>
               <BudgetStatusLabel
                 status={total.status}
                 percent={total.utilisation_percent}
@@ -156,7 +181,7 @@ function Summary({ overview }: { overview: BudgetOverview }) {
           <CardContent className="flex flex-col gap-1">
             <BudgetStatusLabel status={status} />
             <p className="text-3xl font-semibold tabular-nums">
-              {formatCount(count(status))}
+              <AnimatedNumber id={`budgets.${status}`} value={count(status)} />
             </p>
             <p className="text-sm text-muted-foreground">
               {count(status) === 1 ? "department" : "departments"}

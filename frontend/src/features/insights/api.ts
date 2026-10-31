@@ -110,11 +110,14 @@ export type PayPosition = {
   country: string
 }
 
-export function useOverview(filters: InsightFilters) {
+/** `threshold` is the ★ list's, so the ★ tile counts the same people the list shows. */
+export function useOverview(filters: InsightFilters, threshold: string) {
   return useQuery({
-    queryKey: ["insights", "overview", filters],
+    queryKey: ["insights", "overview", filters, threshold],
     queryFn: () =>
-      apiRequest<Overview>(`/insights/overview?${toQueryString(filters)}`),
+      apiRequest<Overview>(
+        `/insights/overview?${toQueryString({ ...filters, threshold })}`,
+      ),
     placeholderData: keepPreviousData,
   })
 }

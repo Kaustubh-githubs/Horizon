@@ -1,7 +1,8 @@
 import { PlusIcon } from "lucide-react"
-import { useEffect, useEffectEvent, useState } from "react"
+import { useEffect, useEffectEvent, useRef, useState } from "react"
 import { Link } from "react-router"
 
+import { StickyBar } from "@/components/sticky-bar"
 import { Button } from "@/components/ui/button"
 import { DirectoryFiltersBar } from "@/features/employees/directory-filters"
 import { DirectorySummary } from "@/features/employees/directory-summary"
@@ -52,6 +53,16 @@ export function DirectoryPage() {
   useEffect(() => {
     if (meta && meta.page > meta.total_pages) goToLastPage(meta.total_pages)
   }, [meta])
+
+  // A new page of results starts at its top (Next is at the bottom). Other filter changes keep
+  // the scroll position.
+  const page = filters.page
+  const shownPage = useRef(page)
+  useEffect(() => {
+    if (shownPage.current !== page) window.scrollTo({ top: 0 })
+    shownPage.current = page
+  }, [page])
+
   const sortingByPayAcrossCountries =
     filters.sort?.endsWith("current_salary") && !filters.country
 
@@ -67,24 +78,26 @@ export function DirectoryPage() {
         </Button>
       </div>
 
-      <DirectoryFiltersBar
-        filters={filters}
-        lookups={lookups.data}
-        counts={summary.data}
-        searchText={searchText}
-        onSearchTextChange={setSearchText}
-        onChange={setFilters}
-        onClear={onClear}
-      />
-
-      {/* The list's own error says it if the counts can't load either. */}
-      {!summary.isError && (
-        <DirectorySummary
-          summary={summary.data}
+      <StickyBar>
+        <DirectoryFiltersBar
           filters={filters}
-          refreshing={summary.isPlaceholderData}
+          lookups={lookups.data}
+          counts={summary.data}
+          searchText={searchText}
+          onSearchTextChange={setSearchText}
+          onChange={setFilters}
+          onClear={onClear}
         />
-      )}
+
+        {/* The list's own error says it if the counts can't load either. */}
+        {!summary.isError && (
+          <DirectorySummary
+            summary={summary.data}
+            filters={filters}
+            refreshing={summary.isPlaceholderData}
+          />
+        )}
+      </StickyBar>
 
       {sortingByPayAcrossCountries && (
         <p className="text-sm text-muted-foreground">

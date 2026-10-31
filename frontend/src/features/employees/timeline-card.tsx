@@ -12,9 +12,9 @@ import {
 } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { TimelineSkeleton } from "@/components/skeletons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   useEmployeeTimeline,
   type Employee,
@@ -82,7 +82,7 @@ export function TimelineCard({ employee }: { employee: Employee }) {
       </CardHeader>
       <CardContent>
         {timeline.isPending ? (
-          <Skeleton className="h-48 w-full" />
+          <TimelineSkeleton />
         ) : timeline.isError ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             Couldn&apos;t load the timeline.

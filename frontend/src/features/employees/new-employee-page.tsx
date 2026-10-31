@@ -13,7 +13,7 @@ export function NewEmployeePage() {
   const createEmployee = useCreateEmployee()
   const navigate = useNavigate()
 
-  const loadState = <EmployeeLoadState queries={[lookups]} />
+  const loadState = <EmployeeLoadState queries={[lookups]} shape="form" />
   if (!lookups.data) return loadState
 
   const error = createEmployee.error

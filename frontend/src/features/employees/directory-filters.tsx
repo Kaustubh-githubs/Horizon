@@ -1,5 +1,6 @@
 import { SearchIcon } from "lucide-react"
 
+import { Combobox } from "@/components/combobox"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -26,17 +27,33 @@ const ALL = "all"
 
 type Option = { value: string; label: string }
 
+// A Select, or with `searchable`, a Combobox you can type into (for the long lists).
 function FilterSelect({
   label,
   value,
   options,
+  searchable = false,
   onChange,
 }: {
   label: string
   value: string | undefined
   options: Option[]
+  searchable?: boolean
   onChange: (value: string | undefined) => void
 }) {
+  if (searchable)
+    return (
+      <Combobox
+        aria-label={label}
+        value={value}
+        onChange={onChange}
+        options={options}
+        allLabel={`All ${label.toLowerCase()}`}
+        searchPlaceholder={`Search ${label.toLowerCase()}`}
+        className="w-44"
+      />
+    )
+
   return (
     <Select
       value={value ?? ALL}
@@ -111,6 +128,7 @@ export function DirectoryFiltersBar({
       />
       <FilterSelect
         label="Departments"
+        searchable
         value={filters.department_id}
         options={(lookups?.departments ?? []).map((d) => ({
           value: String(d.id),
@@ -124,6 +142,7 @@ export function DirectoryFiltersBar({
       />
       <FilterSelect
         label="Job titles"
+        searchable
         value={filters.job_title_id}
         options={titlesForDepartment(lookups, filters.department_id).map(
           (t) => ({

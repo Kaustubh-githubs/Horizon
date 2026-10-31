@@ -3,13 +3,8 @@ import { createBrowserRouter, Navigate } from "react-router"
 import { AppShell } from "@/components/app-shell"
 import { RootLayout } from "@/components/root-layout"
 import { NotFound, RouteError } from "@/components/route-error"
-import { LoginPage } from "@/features/auth/login-page"
-import { BudgetsPage } from "@/features/budgets/budgets-page"
 import { RequireAuth } from "@/features/auth/require-auth"
 import { DirectoryPage } from "@/features/employees/directory-page"
-import { EditEmployeePage } from "@/features/employees/edit-employee-page"
-import { EmployeePage } from "@/features/employees/employee-page"
-import { NewEmployeePage } from "@/features/employees/new-employee-page"
 
 export const router = createBrowserRouter([
   {
@@ -17,8 +12,11 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       {
+        // Loaded on demand too: someone already signed in never needs it, nor its form library.
         path: "/login",
-        element: <LoginPage />,
+        lazy: async () => ({
+          Component: (await import("@/features/auth/login-page")).LoginPage,
+        }),
         errorElement: <RouteError fullPage />,
       },
       {
@@ -38,24 +36,49 @@ export const router = createBrowserRouter([
                     element: <Navigate to="/employees" replace />,
                   },
                   { path: "/employees", element: <DirectoryPage /> },
-                  { path: "/employees/new", element: <NewEmployeePage /> },
-                  { path: "/employees/:id", element: <EmployeePage /> },
+                  // Loaded when first opened, so the first visit downloads only what the
+                  // directory (the landing page) needs. The current page stays on screen,
+                  // with the top loading bar, until the next one is ready.
+                  {
+                    path: "/employees/new",
+                    lazy: async () => ({
+                      Component: (
+                        await import("@/features/employees/new-employee-page")
+                      ).NewEmployeePage,
+                    }),
+                  },
+                  {
+                    path: "/employees/:id",
+                    lazy: async () => ({
+                      Component: (
+                        await import("@/features/employees/employee-page")
+                      ).EmployeePage,
+                    }),
+                  },
                   {
                     path: "/employees/:id/edit",
-                    element: <EditEmployeePage />,
+                    lazy: async () => ({
+                      Component: (
+                        await import("@/features/employees/edit-employee-page")
+                      ).EditEmployeePage,
+                    }),
                   },
                   {
-                    // Loaded when first opened, so other pages don't download the
-                    // charting library. The current page stays on screen (with the
-                    // top loading bar) until it's ready.
                     path: "/insights",
-                    lazy: async () => {
-                      const { InsightsPage } =
+                    lazy: async () => ({
+                      Component: (
                         await import("@/features/insights/insights-page")
-                      return { Component: InsightsPage }
-                    },
+                      ).InsightsPage,
+                    }),
                   },
-                  { path: "/budgets", element: <BudgetsPage /> },
+                  {
+                    path: "/budgets",
+                    lazy: async () => ({
+                      Component: (
+                        await import("@/features/budgets/budgets-page")
+                      ).BudgetsPage,
+                    }),
+                  },
                   { path: "*", element: <NotFound /> },
                 ],
               },

@@ -3,6 +3,7 @@ import { useEffect, type ReactNode } from "react"
 import { Controller, useForm, useWatch, type Control } from "react-hook-form"
 
 import { Combobox } from "@/components/combobox"
+import { DatePicker } from "@/components/date-picker"
 import { FormField as Field } from "@/components/form-field"
 import { UnsavedChangesGuard } from "@/components/unsaved-changes-guard"
 import { Button } from "@/components/ui/button"
@@ -167,7 +168,7 @@ export function EmployeeForm({
       ? `${formatMoney(salary, currency)} a year. Salary history starts today.`
       : "Annual gross base pay, in the country's currency. Salary history starts today."
 
-  const textInput = (name: "full_name" | "email" | "hire_date") => ({
+  const textInput = (name: "full_name" | "email") => ({
     id: name,
     "aria-invalid": errors[name] ? true : undefined,
     "aria-describedby": errors[name] ? `${name}-error` : undefined,
@@ -248,11 +249,23 @@ export function EmployeeForm({
           error={errors.hire_date?.message}
           hint={fixed && "Fixed after the employee is added."}
         >
-          <Input
-            type="date"
-            max={todayIso()}
-            disabled={fixed}
-            {...textInput("hire_date")}
+          <Controller
+            name="hire_date"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                id="hire_date"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                max={todayIso()}
+                disabled={fixed}
+                aria-invalid={errors.hire_date ? true : undefined}
+                aria-describedby={
+                  errors.hire_date ? "hire_date-error" : undefined
+                }
+              />
+            )}
           />
         </Field>
 

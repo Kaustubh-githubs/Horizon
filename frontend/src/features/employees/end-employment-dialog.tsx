@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { DatePicker } from "@/components/date-picker"
 import { Label } from "@/components/ui/label"
 import {
   employeeKey,
@@ -51,7 +51,8 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
   ]
     .sort()
     .at(-1)!
-  // A date picker keeps to min and max, but a typed date doesn't.
+  // The calendar keeps to min and max, but the limit can move after a day is picked (the
+  // timeline loads a later salary change), so the day is checked again here.
   const outOfRange = lastDay !== "" && (lastDay < earliest || lastDay > today)
 
   const error = endEmployment.error
@@ -108,14 +109,13 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="last_working_day">Last working day</Label>
-          <Input
+          <DatePicker
             id="last_working_day"
-            type="date"
             min={earliest}
             max={today}
             value={lastDay}
-            onChange={(event) => {
-              setLastDay(event.target.value)
+            onChange={(day) => {
+              setLastDay(day)
               endEmployment.reset() // the old error was about the old date
             }}
             aria-invalid={message ? true : undefined}

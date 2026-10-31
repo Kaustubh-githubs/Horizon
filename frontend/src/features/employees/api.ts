@@ -97,8 +97,9 @@ const employeeQuery = (id: number | string) =>
     queryFn: () => apiRequest<Employee>(`/employees/${id}`),
   })
 
-export function useEmployee(id: string) {
-  return useQuery(employeeQuery(id))
+/** `enabled: false` waits, e.g. until a dialog that needs the employee opens. */
+export function useEmployee(id: string, { enabled = true } = {}) {
+  return useQuery({ ...employeeQuery(id), enabled })
 }
 
 // A prefetched profile counts as fresh this long, so moving back over the same row doesn't
@@ -319,10 +320,13 @@ export function useChangeSalary(employeeId: number) {
       }),
     // The employee (current salary, title, lock_version), their history and peer figures all
     // changed, and so may directory pages and, after a promotion, the titles a department holds.
+    // So did the insights (pay figures, who has a ★) and every department's payroll.
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: employeeKey(employeeId) })
       void queryClient.invalidateQueries({ queryKey: ["employees"] })
       void queryClient.invalidateQueries({ queryKey: lookupsKey })
+      void queryClient.invalidateQueries({ queryKey: ["insights"] })
+      void queryClient.invalidateQueries({ queryKey: ["budgets"] })
     },
   })
 }

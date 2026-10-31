@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ChangeSalaryFromList } from "@/features/employees/change-salary-dialog"
 import { useOutliers, type InsightFilters } from "@/features/insights/api"
 import { LoadError } from "@/components/load-error"
 import { NO_FILTERS, THRESHOLDS } from "@/features/insights/use-insights-params"
@@ -137,6 +138,9 @@ export function OutliersCard({
                 <TableHead className="text-right">Peers&apos; median</TableHead>
                 <TableHead className="text-right">Difference</TableHead>
                 <TableHead className="text-right">Peers</TableHead>
+                <TableHead>
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -187,6 +191,12 @@ export function OutliersCard({
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {row.peer_count}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <ChangeSalaryFromList
+                        employeeId={row.employee.id}
+                        name={row.employee.full_name}
+                      />
                     </TableCell>
                   </TableRow>
                 )

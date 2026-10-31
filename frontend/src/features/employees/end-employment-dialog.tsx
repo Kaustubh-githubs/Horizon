@@ -22,15 +22,11 @@ import {
   type Employee,
   type TimelineEvent,
 } from "@/features/employees/api"
-import { ApiError } from "@/lib/api"
+import { ApiError, errorSentences } from "@/lib/api"
 import { todayIso } from "@/lib/dates"
 import { formatDate } from "@/lib/format"
 
 const SALARY_EVENTS: TimelineEvent["kind"][] = ["salary_change", "promotion"]
-
-// API messages are fragments ("can't be in the future"); there's only one field here, so show them as sentences.
-const asSentence = (message: string) =>
-  `${message.charAt(0).toUpperCase()}${message.slice(1)}.`
 
 /**
  * Ending someone's employment asks for confirmation and their last working day
@@ -65,7 +61,9 @@ export function EndEmploymentDialog({ employee }: { employee: Employee }) {
     : conflict
       ? "This employee changed since you opened the page. We've loaded the latest version, so check it and try again."
       : error instanceof ApiError
-        ? Object.values(error.errors).flat().map(asSentence).join(" ")
+        ? errorSentences(error.errors, {
+            terminated_on: "The last working day",
+          }).join(" ")
         : error && "Couldn't save. Try again."
 
   const onConfirm = () =>

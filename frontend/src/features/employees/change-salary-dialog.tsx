@@ -47,7 +47,7 @@ import {
   type SalaryChangeInput,
   type SalaryChangeOutput,
 } from "@/features/employees/salary-change-schema"
-import { ApiError } from "@/lib/api"
+import { ApiError, errorSentences } from "@/lib/api"
 import { formatCount, formatMoney, formatMoneyWhole } from "@/lib/format"
 import { isValidAmount, typedAmount } from "@/lib/money"
 import { cn } from "@/lib/utils"
@@ -139,9 +139,13 @@ function ChangeSalaryForm({
   }, [error, conflict, setError])
   const otherErrors =
     error instanceof ApiError && !conflict
-      ? Object.entries(error.errors)
-          .filter(([field]) => !isFormField(field))
-          .flatMap(([, messages]) => messages)
+      ? errorSentences(
+          Object.fromEntries(
+            Object.entries(error.errors).filter(
+              ([field]) => !isFormField(field),
+            ),
+          ),
+        )
       : []
 
   const currency = employee.current_currency

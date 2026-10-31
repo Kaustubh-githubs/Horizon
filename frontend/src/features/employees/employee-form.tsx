@@ -19,7 +19,7 @@ import {
   employeeFormSchema,
   type EmployeeFormValues,
 } from "@/features/employees/employee-form-schema"
-import type { ApiErrors } from "@/lib/api"
+import { errorSentences, type ApiErrors } from "@/lib/api"
 import { todayIso } from "@/lib/dates"
 import { formatMoney } from "@/lib/format"
 
@@ -147,9 +147,11 @@ export function EmployeeForm({
     }
   }, [serverErrors, setError])
 
-  const otherErrors = Object.entries(serverErrors ?? {})
-    .filter(([field]) => !isField(field))
-    .flatMap(([, messages]) => messages)
+  const otherErrors = errorSentences(
+    Object.fromEntries(
+      Object.entries(serverErrors ?? {}).filter(([field]) => !isField(field)),
+    ),
+  )
 
   const fixed = mode === "edit"
   const [countryId, salary] = useWatch({

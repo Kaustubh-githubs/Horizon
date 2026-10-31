@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { ApiError, apiRequest, toQueryString } from "@/lib/api"
+import { ApiError, apiRequest, errorSentences, toQueryString } from "@/lib/api"
 
 const respond = (
   status: number,
@@ -88,5 +88,30 @@ describe("toQueryString", () => {
     expect(toQueryString({ q: "rao", country: undefined, page: "" })).toBe(
       "q=rao",
     )
+  })
+})
+
+describe("errorSentences", () => {
+  it("names the field and ends each message as a sentence", () => {
+    expect(
+      errorSentences({
+        lock_version: ["is required"],
+        department_id: ["must exist"],
+        base: ["Employment has already ended."],
+      }),
+    ).toEqual([
+      "Lock version is required.",
+      "Department must exist.",
+      "Employment has already ended.",
+    ])
+  })
+
+  it("words a field the way the page does, when told", () => {
+    expect(
+      errorSentences(
+        { terminated_on: ["can't be before the hire date"] },
+        { terminated_on: "The last working day" },
+      ),
+    ).toEqual(["The last working day can't be before the hire date."])
   })
 })

@@ -24,7 +24,7 @@ import {
 } from "@/features/budgets/api"
 import { BudgetStatusLabel } from "@/features/budgets/budget-status"
 import { runwayText, statusFor } from "@/features/budgets/runway"
-import { ApiError } from "@/lib/api"
+import { ApiError, errorSentences } from "@/lib/api"
 import { formatCount, formatMoney } from "@/lib/format"
 import { isValidAmount, moneyAmount } from "@/lib/money"
 
@@ -101,17 +101,18 @@ function SetBudgetForm({
     if (message)
       setError("amount", { type: "server", message: message.join(", ") })
   }, [error, setError])
+  // The amount's errors show under its field. Only a change can fail on the year: its year
+  // ended while the page was open.
   const formErrors =
     error instanceof ApiError && !conflict
       ? Object.entries(error.errors).flatMap(([field, messages]) =>
           field === "amount"
             ? []
-            : // Only a change can fail on the year: its year ended while the page was open.
-              field === "year"
+            : field === "year"
               ? [
                   `The ${year} budget can't be changed now that the year has ended. Reload the page for this year's budgets.`,
                 ]
-              : messages,
+              : errorSentences({ [field]: messages }),
         )
       : []
 

@@ -5,7 +5,7 @@ A modern salary management system for ACME's HR Manager, designed to replace com
 ## Current Status
 - **Feature-complete in development:** the seed script creates 10,000 employees. The HR Manager can add, edit and terminate employees, change salaries, explore pay insights, set department budgets, and see a timeline and full audit log for every employee.
 - **Add-on audit trail working:** every change to an employee, a salary or a budget is recorded (who, what, when) and viewable in the UI.
-- **Deploys to Railway** as one service (the React app served by Rails) and a Postgres; see [Deploying](#deploying).
+- **Deploys to Render** as one service (the React app served by Rails) and a Postgres, from `render.yaml`; see [Deploying](#deploying).
 - **Not done yet:** a GitHub CI workflow (the same checks run locally with `bin/ci` and `pnpm test`).
 
 ## Quick Start (Development)
@@ -44,7 +44,7 @@ It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
 
 - **Developer Experience First:** Follows [CONVENTIONS.md](CONVENTIONS.md) for consistent AI-assisted development.
 - **One Source of Truth:** All decisions, architecture and rationale are documented in [docs/](docs/).
-- **Incremental Development:** Every decision is an ADR (Architecture Decision Record) in [docs/adr/](docs/adr/README.md), 25 so far.
+- **Incremental Development:** Every decision is an ADR (Architecture Decision Record) in [docs/adr/](docs/adr/README.md), 26 so far.
 
 ## Core Features
 
@@ -155,18 +155,15 @@ cd frontend && pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 ## Deploying
 
-Horizon deploys to [Railway](https://railway.com) as one service built from the root `Dockerfile` (the React app is built and served by Rails, with the API, on one origin), plus a Railway Postgres (ADR 0025). `railway.toml` holds the build and health-check settings.
+Horizon deploys to [Render](https://render.com) from the Blueprint in `render.yaml` (ADR 0026): one web service built from the root `Dockerfile` (the React app is built and served by Rails, with the API, on one origin), and a Postgres, both in Singapore.
 
-1. In Railway, create a project from this GitHub repository (it builds the root `Dockerfile`).
-2. Add a **PostgreSQL** database to the project.
-3. On the Horizon service, set these variables:
-   - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (a reference to the database's own variable)
-   - `RAILS_MASTER_KEY` = the contents of `backend/config/master.key`
-   - `SEED_ON_BOOT` = `true`, to load the demo data on the first boot
-   - `DEMO_USER_PASSWORD` (optional) to use a different demo password than the README's
-4. Under the service's **Networking**, generate a domain, then open it and sign in as the demo HR Manager.
+1. In Render, choose **New → Blueprint** and pick this GitHub repository. Render reads `render.yaml`.
+2. When it asks for `RAILS_MASTER_KEY`, paste the contents of `backend/config/master.key`. `DATABASE_URL` comes from the Blueprint's Postgres, and `SEED_ON_BOOT=true` loads the demo data on the first boot.
+3. Apply. The first deploy builds the image, creates the schema and seeds 10,000 employees. Then open the service's `onrender.com` URL and sign in as the demo HR Manager.
 
-Each push to master deploys again. Every boot runs the migrations; the seed skips employees once they exist.
+Each push to master deploys again; every boot runs the migrations, and the seed skips employees once they exist.
+
+**Free plan limits:** the web service sleeps after 15 minutes without traffic and takes about a minute to wake, so open it a couple of minutes before a demo (or move it to a paid instance that week). The free Postgres expires after 30 days.
 
 ## What's Next
 

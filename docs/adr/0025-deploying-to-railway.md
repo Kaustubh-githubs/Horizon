@@ -1,6 +1,6 @@
 # 0025. Deploying to Railway
 
-Status: Accepted · 2026-11-01
+Status: Superseded by [0026](0026-deploying-to-render.md) · 2026-11-01
 
 ## Context
 Horizon needs a public deployment for the interview and the demo video, for a few weeks at most. The plan had an Azure VM (ADR 0001 kept the app same-origin so any single host works). For a short demo, the simpler the better, but it must not fall asleep in front of the interviewer. The data is small: the seeded database is about 18 MB.

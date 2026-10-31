@@ -1,6 +1,9 @@
 class SalaryRevision < ApplicationRecord
   belongs_to :employee
 
+  # On the audit trail (ADR 0012), linked to the employee so it shows in their change history.
+  auditable associated_with: :employee
+
   enum :reason, {
     hire: "hire",
     annual_raise: "annual_raise",

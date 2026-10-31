@@ -9,25 +9,18 @@ module Insights
   # its own currency, plus its figures in INR, so countries can be compared on one chart.
   class SegmentStatsQuery
     SEGMENTS = %w[country department job_title tenure].freeze
-    # [key, label, from years, to years]: tenure is worked out from the hire date.
-    TENURE_BANDS = [
-      [ "under_1", "Under 1 year", 0, 1 ], [ "1_3", "1–3 years", 1, 3 ], [ "3_5", "3–5 years", 3, 5 ],
-      [ "5_10", "5–10 years", 5, 10 ], [ "10_plus", "10+ years", 10, nil ]
-    ].freeze
 
-    # Unknown filter values raise ActiveRecord::RecordNotFound (a 404), like an unknown country.
-    def initialize(by: "country", country_code: nil, department_id: nil, job_title_id: nil, tenure: nil)
+    # `filters` (Insights::Filters) are the page's, shared with every other part of it.
+    def initialize(by: "country", filters: Filters.new)
       @by = SEGMENTS.include?(by.to_s) ? by.to_s : "country"
-      @country = Country.find_by!(code: country_code.to_s.upcase) if country_code.present?
-      @department = Department.find(department_id) if department_id.present?
-      @job_title = JobTitle.find(job_title_id) if job_title_id.present?
-      @tenure = tenure_band!(tenure) if tenure.present?
+      @filters = filters
+      @country = filters.country
     end
 
     def call
       {
         by: @by,
-        filters: filters,
+        filters: @filters.to_h,
         currency: currency,
         converted: converted?,
         rates_as_of: Insights.rates_as_of,
@@ -53,22 +46,8 @@ module Insights
       end
     end
 
-    def filters
-      {
-        country: @country && { code: @country.code, name: @country.name },
-        department: @department && { id: @department.id, name: @department.name },
-        job_title: @job_title && { id: @job_title.id, name: @job_title.name },
-        tenure: @tenure && { key: @tenure[0], label: @tenure[1] }
-      }
-    end
-
     def scope
-      employees = Employee.active
-      employees = employees.where(country: @country) if @country
-      employees = employees.where(department: @department) if @department
-      employees = employees.where(job_title: @job_title) if @job_title
-      employees = employees.where(hire_date: hired_range(@tenure)) if @tenure
-      employees
+      @filters.apply(Employee.active)
     end
 
     def rows
@@ -121,33 +100,21 @@ module Insights
       { "department" => :department, "job_title" => :job_title }.fetch(@by, [])
     end
 
-    def tenure_band!(key)
-      TENURE_BANDS.find { |band| band[0] == key.to_s } ||
-        raise(ActiveRecord::RecordNotFound.new("Couldn't find tenure band #{key}", "Tenure band"))
-    end
-
-    # Hire dates in a band, matching `tenure_sql` exactly: "1–3 years" is hired at least 1 year ago
-    # and less than 3 years ago (today is UTC, ADR 0017).
-    def hired_range(band)
-      _key, _label, from, to = band
-      latest = Date.current - from.years
-      to ? (Date.current - to.years + 1.day)..latest : ..latest
-    end
-
-    # The band key for each hire date: "under_1" for under a year ago, and so on.
+    # The band key for each hire date: "under_1" for under a year ago, and so on. It matches
+    # Filters.hired_range exactly, so grouping by tenure and filtering by it agree.
     def tenure_sql
       @tenure_sql ||= begin
-        branches = TENURE_BANDS.filter_map do |key, _label, _from, to|
+        branches = Filters::TENURE_BANDS.filter_map do |key, _label, _from, to|
           Employee.sanitize_sql_array([ "WHEN employees.hire_date > ? THEN ?", Date.current - to.years, key ]) if to
         end
-        "CASE #{branches.join(' ')} ELSE '#{TENURE_BANDS.last.first}' END"
+        "CASE #{branches.join(' ')} ELSE '#{Filters::TENURE_BANDS.last.first}' END"
       end
     end
 
     # Every band in order, including empty ones, so the chart's axis never changes shape.
     def with_every_band(found)
       by_key = found.index_by { |r| r[:key] }
-      TENURE_BANDS.map do |key, label, _from, _to|
+      Filters::TENURE_BANDS.map do |key, label, _from, _to|
         by_key[key]&.merge(label:) || row(key, label, currency, [ 0 ])
       end
     end

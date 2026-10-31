@@ -39,7 +39,7 @@ module Employees
       return if value.nil?
       return @names[column].fetch(value, value.to_s) if NAMED.key?(column)
 
-      MONEY.include?(column) ? Insights.money(value) : value
+      MONEY.include?(column) ? MoneyString.from(value) : value
     end
   end
 end

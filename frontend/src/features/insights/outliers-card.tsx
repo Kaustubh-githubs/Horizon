@@ -2,6 +2,7 @@ import { ArrowDownIcon, ArrowUpIcon, StarIcon } from "lucide-react"
 import { Link } from "react-router"
 
 import { TableSkeleton } from "@/components/skeletons"
+import { FilterSelect } from "@/components/filter-select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -20,12 +21,15 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useOutliers, type InsightFilters } from "@/features/insights/api"
-import { LoadError } from "@/features/insights/load-error"
+import { LoadError } from "@/components/load-error"
 import { NO_FILTERS, THRESHOLDS } from "@/features/insights/use-insights-params"
 import { formatCount, formatMoney, formatMoneyWhole } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
-const ALL = "all"
+const DIRECTION_OPTIONS = [
+  { value: "below", label: "Paid below peers" },
+  { value: "above", label: "Paid above peers" },
+]
 
 /**
  * The ★ list (ADR 0019): people paid far from the median for their job title in their
@@ -72,21 +76,14 @@ export function OutliersCard({
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <Select
-            value={direction}
-            onValueChange={(next) =>
-              onChange({ direction: next === ALL ? undefined : next })
-            }
-          >
-            <SelectTrigger aria-label="Paid below or above" className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Below and above</SelectItem>
-              <SelectItem value="below">Paid below peers</SelectItem>
-              <SelectItem value="above">Paid above peers</SelectItem>
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            label="Paid below or above"
+            allLabel="Below and above"
+            className="w-48"
+            value={direction === "all" ? undefined : direction}
+            options={DIRECTION_OPTIONS}
+            onChange={(next) => onChange({ direction: next })}
+          />
           <Select
             value={threshold}
             onValueChange={(next) => onChange({ threshold: next })}

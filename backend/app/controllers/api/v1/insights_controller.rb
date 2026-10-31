@@ -23,7 +23,7 @@ module Api
         pagy, employees = pagy(:offset, query.call, limit: per_page)
 
         render json: {
-          data: employees.map { |employee| outlier_json(employee) },
+          data: employees.map { |employee| OutlierSerializer.new(employee).as_json },
           meta: { page: pagy.page, per_page: pagy.limit, total_count: pagy.count, total_pages: pagy.last,
                   threshold: query.threshold }
         }
@@ -37,19 +37,6 @@ module Api
           country_code: scalar_param(:country), department_id: scalar_param(:department_id),
           job_title_id: scalar_param(:job_title_id), tenure: scalar_param(:tenure)
         )
-      end
-
-      def outlier_json(employee)
-        {
-          employee: { id: employee.id, employee_code: employee.employee_code, full_name: employee.full_name },
-          country: { code: employee.country.code, name: employee.country.name },
-          job_title: { id: employee.job_title_id, name: employee.job_title.name },
-          salary: employee.current_salary.to_s("F"),
-          currency: employee.current_currency,
-          peer_median: ::Insights.money(employee.peer_median),
-          peer_count: employee.peer_count,
-          deviation_percent: employee.deviation_percent.to_d.round(1).to_f
-        }
       end
     end
   end

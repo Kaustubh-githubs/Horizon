@@ -30,11 +30,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 import {
   employeeKey,
   useChangeSalary,
-  useLookups,
   usePayComparison,
   type Employee,
   type PayComparison,
 } from "@/features/employees/api"
+import { useLookups } from "@/features/lookups/api"
 import {
   BIG_CHANGE_PERCENT,
   CHANGE_REASONS,

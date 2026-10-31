@@ -13,7 +13,7 @@ import {
 import type { ReactNode } from "react"
 
 import { TimelineSkeleton } from "@/components/skeletons"
-import { Button } from "@/components/ui/button"
+import { LoadError } from "@/components/load-error"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   useEmployeeTimeline,
@@ -84,16 +84,10 @@ export function TimelineCard({ employee }: { employee: Employee }) {
         {timeline.isPending ? (
           <TimelineSkeleton />
         ) : timeline.isError ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            Couldn&apos;t load the timeline.
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void timeline.refetch()}
-            >
-              Try again
-            </Button>
-          </div>
+          <LoadError
+            what="the timeline"
+            onRetry={() => void timeline.refetch()}
+          />
         ) : (
           <ol className="relative flex flex-col gap-2">
             {/* The line the events hang from, through the middle of the icons. */}

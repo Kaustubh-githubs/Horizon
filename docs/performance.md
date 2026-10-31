@@ -31,10 +31,12 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 |---|---|---|
 | Default page: active, sorted by name | 1.0 ms | Sequential scan + top-N heapsort |
 | Total count for paging | 0.4 ms | Index-only scan on `status` |
-| Search `q=nair` (name, email or code contains) | 3.2 ms | Sequential scan |
+| Search `q=nair` (name, email or code contains) | 3.2 ms, now 0.6 ms | Sequential scan; since 2026-11-01, bitmap scans on the trigram indexes |
 | India, highest salary first | 2.5 ms | Country id from a subquery, then bitmap scan via `(country_id, job_title_id)` + top-N heapsort |
 
 **What we decided:** no extra indexes for now. Even the search, a sequential scan over every row with `ILIKE '%term%'`, takes about 3 ms. A trigram index (`pg_trgm`) would only pay off at roughly 10× the data, and every index slows inserts and takes space. We'll revisit at that point.
+
+**Revisited (2026-11-01, code review):** we added trigram GIN indexes on `full_name`, `email` and `employee_code` after all. Each search runs six times per keystroke: once for the page, and five times for the summary line and the filter counts. The README talks about growing past 50,000 employees, where six sequential scans per keystroke would be felt. The search above now takes about 0.6 ms (median of 3 warm runs), and Postgres picks the indexes on its own. The cost is 2.3 MB of indexes and slightly slower inserts, which add one employee at a time.
 
 **Country filter:** we filter with `country_id IN (SELECT id FROM countries WHERE code = ...)` rather than joining `countries`. A join made Rails switch the preloads to one wide `LEFT JOIN` across four tables and count with `COUNT(DISTINCT)`. The subquery keeps the small separate preload queries and a plain count, at the same speed.
 
@@ -46,7 +48,7 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 
 **Peer pay** (`GET /employees/:id/pay_comparison`): one aggregate query (`COUNT`, `AVG`, `PERCENTILE_CONT`) over active employees with the same country and job title. The largest group in the seed, India × Software Engineer with 846 peers, runs in about 1.4 ms, with a bitmap scan on the existing `(country_id, job_title_id)` index. No new index needed.
 
-**History** (`GET /employees/:id/salary_revisions`): an employee has a handful of revisions (at most 5 in the seed), read in one query on the `(employee_id, effective_from)` index and not paged.
+**History** (the timeline, `GET /employees/:id/timeline`, since the separate history endpoint was removed): an employee has a handful of revisions (at most 5 in the seed), read in one query on the `(employee_id, effective_from)` index and not paged.
 
 ## Insights (ADR 0019)
 

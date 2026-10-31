@@ -11,7 +11,7 @@ module Api
         budget = DepartmentBudget.create!(department_id: scalar_param(:department_id),
                                           year: DepartmentBudget.current_year, amount: scalar_param(:amount))
 
-        render json: budget_json(budget), status: :created
+        render json: DepartmentBudgetSerializer.new(budget), status: :created
       end
 
       # Only the amount changes. The client sends the lock_version it loaded, so a conflicting
@@ -20,16 +20,7 @@ module Api
         budget = DepartmentBudget.find(params[:id])
         budget.update!(amount: scalar_param(:amount), lock_version: params.require(:lock_version))
 
-        render json: budget_json(budget)
-      end
-
-      private
-
-      def budget_json(budget)
-        {
-          id: budget.id, department_id: budget.department_id, year: budget.year,
-          amount: budget.amount.to_s("F"), currency: DepartmentBudget::CURRENCY, lock_version: budget.lock_version
-        }
+        render json: DepartmentBudgetSerializer.new(budget)
       end
     end
   end

@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
-import { employeeKey, type SalaryReason } from "@/features/employees/api"
+import type { SalaryReason } from "@/features/employees/api"
 import { apiRequest, toQueryString } from "@/lib/api"
 
 // Pay insights (ADR 0019). Amounts are decimal strings, like everywhere (ADR 0006).
@@ -97,19 +97,6 @@ export type OutlierFilters = InsightFilters & {
   page?: string
 }
 
-export type PayPosition = {
-  flagged: boolean
-  enough_peers: boolean
-  direction: "below" | "above" | null
-  deviation_percent: number | null
-  peer_median: string | null
-  peer_count: number
-  threshold: number
-  currency: string
-  job_title: string
-  country: string
-}
-
 /** `threshold` is the ★ list's, so the ★ tile counts the same people the list shows. */
 export function useOverview(filters: InsightFilters, threshold: string) {
   return useQuery({
@@ -175,15 +162,5 @@ export function useOutliers(filters: OutlierFilters) {
         }
       }>(`/insights/outliers?${toQueryString(filters)}`),
     placeholderData: keepPreviousData,
-  })
-}
-
-/** Whether an employee is a ★ outlier, for their profile. Refreshed with the employee. */
-export function usePayPosition(employeeId: number, enabled: boolean) {
-  return useQuery({
-    queryKey: [...employeeKey(employeeId), "pay_position"],
-    queryFn: () =>
-      apiRequest<PayPosition>(`/employees/${employeeId}/pay_position`),
-    enabled,
   })
 }

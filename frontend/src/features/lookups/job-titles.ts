@@ -1,4 +1,4 @@
-import type { Lookups } from "@/features/employees/api"
+import type { Lookups } from "@/features/lookups/api"
 
 // The Job title filter follows the Department filter (ADR 0019): with a department picked, it
 // offers only the titles people there hold. Used by the directory and the insights page.

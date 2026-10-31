@@ -2,10 +2,15 @@
 
 A modern salary management system for ACME's HR Manager, designed to replace complex spreadsheets with a clean, reliable single source of truth.
 
+**Live demo: [horizon-0owa.onrender.com](https://horizon-0owa.onrender.com)**
+
+- **Sign in:** as the demo HR Manager, `hr@acme.test`, with the password under [Quick Start](#quick-start-development).
+- **First load:** it runs on Render's free plan, which sleeps after 15 minutes without visitors, so the first page can take about a minute to wake.
+
 ## Current Status
-- **Feature-complete in development:** the seed script creates 10,000 employees. The HR Manager can add, edit and terminate employees, change salaries, explore pay insights, set department budgets, and see a timeline and full audit log for every employee.
+- **Feature-complete:** the seed script creates 10,000 employees. The HR Manager can add, edit and terminate employees, change salaries, explore pay insights, set department budgets, and see a timeline and full audit log for every employee.
 - **Add-on audit trail working:** every change to an employee, a salary or a budget is recorded (who, what, when) and viewable in the UI.
-- **Deploys to Render** as one service (the React app served by Rails) and a Postgres, from `render.yaml`; see [Deploying](#deploying).
+- **Live on Render** as one service (the React app served by Rails) and a Postgres, seeded with the demo data, from `render.yaml`; see [Deploying](#deploying).
 - **Not done yet:** a GitHub CI workflow (the same checks run locally with `bin/ci` and `pnpm test`).
 
 ## Quick Start (Development)

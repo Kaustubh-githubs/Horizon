@@ -246,4 +246,14 @@ RSpec.describe Employee, type: :model do
         .to raise_error(ActiveRecord::StatementInvalid, /employees_status_valid/)
     end
   end
+
+  # Employees are on the audit trail (ADR 0012).
+  it "records each change, without the generated employee code", :aggregate_failures do
+    saved = create(:employee, full_name: "Asha Rao")
+    saved.update!(full_name: "Asha R. Rao")
+
+    expect(saved.audits.pluck(:action)).to eq(%w[create update])
+    expect(saved.audits.first.audited_changes).not_to have_key("employee_code")
+    expect(saved.audits.last.audited_changes).to eq("full_name" => [ "Asha Rao", "Asha R. Rao" ])
+  end
 end

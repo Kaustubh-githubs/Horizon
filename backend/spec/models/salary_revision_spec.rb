@@ -142,4 +142,11 @@ RSpec.describe SalaryRevision, type: :model do
         .to raise_error(ActiveRecord::StatementInvalid, /salary_revisions_reason_valid/)
     end
   end
+
+  # Salary changes show in the employee's change history (ADR 0012).
+  it "records each new revision against its employee" do
+    saved = create(:salary_revision)
+
+    expect(saved.audits.sole).to have_attributes(action: "create", associated: saved.employee)
+  end
 end

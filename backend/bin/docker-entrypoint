@@ -3,6 +3,12 @@
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
+
+  # A demo deploy (ADR 0025) loads the seed data: 10,000 employees on the first boot. The seed
+  # skips employees once there are any, so later boots only refresh the reference data.
+  if [ "${SEED_ON_BOOT}" == "true" ]; then
+    ./bin/rails db:seed
+  fi
 fi
 
 exec "${@}"

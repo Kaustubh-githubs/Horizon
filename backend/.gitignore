@@ -27,3 +27,8 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+
+# The production image copies the built React app here (root Dockerfile, ADR 0025).
+/public/assets/
+/public/spa.html
+/public/favicon.svg

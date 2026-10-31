@@ -41,4 +41,9 @@ Rails.application.routes.draw do
       get "insights/pay_changes" => "insights#pay_changes"
     end
   end
+
+  # The React app (ADR 0025): the root, and any other page the browser opens directly. Never
+  # /api, so an unknown API path still answers the API's 404.
+  root "spa#show"
+  get "*path", to: "spa#show", constraints: ->(request) { request.format.html? && !request.path.start_with?("/api/") }
 end

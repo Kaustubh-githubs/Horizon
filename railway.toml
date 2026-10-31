@@ -1,0 +1,14 @@
+# Railway (ADR 0025): one service built from the root Dockerfile, plus a Railway Postgres.
+# Set on the service: DATABASE_URL (a reference to the Postgres service's), RAILS_MASTER_KEY,
+# and SEED_ON_BOOT=true for the demo data. See the README's "Deploying" section.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/up"
+# The first boot creates the schema and seeds 10,000 employees before the server answers.
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

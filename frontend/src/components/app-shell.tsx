@@ -2,6 +2,7 @@ import { BarChart3Icon, LogOutIcon, UsersIcon, WalletIcon } from "lucide-react"
 import { NavLink, Outlet, ScrollRestoration, useNavigate } from "react-router"
 import { toast } from "sonner"
 
+import { ThemeSwitcher } from "@/components/theme-switcher"
 import { Button } from "@/components/ui/button"
 import { useCurrentUser, useLogout } from "@/features/auth/session"
 import { cn } from "@/lib/utils"
@@ -54,6 +55,10 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="border-t px-4 py-3">
+          <ThemeSwitcher />
+        </div>
 
         <div className="flex items-center justify-between gap-2 border-t px-4 py-3">
           <div className="min-w-0">

@@ -263,7 +263,7 @@ function SalaryChange({
         <span
           className={cn(
             "inline-flex items-center gap-0.5 tabular-nums",
-            up ? "text-emerald-700" : "text-destructive",
+            up ? "text-positive" : "text-destructive",
           )}
         >
           <Icon className="size-3.5" aria-hidden="true" />

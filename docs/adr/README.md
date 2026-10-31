@@ -26,5 +26,6 @@ Short notes on the decisions that shape Horizon: what we chose, what else we con
 | [0020](0020-department-budgets.md) | Department budgets | Accepted |
 | [0021](0021-employee-timeline-and-audit-log.md) | Employee timeline and audit log | Accepted |
 | [0022](0022-ui-feedback-and-navigation.md) | UI feedback and navigation | Accepted |
+| [0023](0023-dark-mode.md) | Dark mode | Accepted |
 
 Each note has the same parts: **Context** (why we had to decide), **Decision**, **Options considered** and **Consequences** (good and bad).

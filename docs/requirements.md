@@ -46,7 +46,7 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 - **Transfers between countries.** An employee's country is set when they're created and can't be changed. A move would change their currency and split their salary history across two currencies.
 - **Future hire dates, and changing a hire date.** Employees are added on or after their start date, so their first salary record is never in the future. The hire date is fixed once saved, because salary history starts there.
 - **Approvals and notifications.** Not needed with one user.
-- **Phone layout, dark mode, other languages.** Nice extras that don't help the core job yet.
+- **Phone layout and other languages.** Nice extras that don't help the core job yet. (Dark mode was added on 2026-10-31, before the first deploy; ADR 0023.)
 
 ## Add-on: audit trail
 Every change to an employee or salary records who made it, what changed (old and new values) and when. Records can't be edited or deleted from the app and are saved together with the change. An "Audit log" panel on the employee's profile lists every saved change, column by column, and answers "who changed this salary, and when?". The profile's timeline tells the person's story by date: joining, salary revisions, promotions, department and title moves, work anniversaries and leaving (ADR 0021). Department budgets keep the same kind of history (ADR 0020). Employees loaded by the seed start with an empty audit log.

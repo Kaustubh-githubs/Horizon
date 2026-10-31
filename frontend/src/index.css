@@ -20,6 +20,15 @@
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
+  --color-positive: var(--positive);
+  --color-star: var(--star);
+  --color-star-fill: var(--star-fill);
+  --color-warning: var(--warning);
+  --color-warning-border: var(--warning-border);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-status-good: var(--status-good);
+  --color-status-warning: var(--status-warning);
+  --color-status-critical: var(--status-critical);
   --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -81,6 +90,28 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  color-scheme: light;
+  /* Pay going up (red for down is --destructive). */
+  --positive: #047857;
+  /* The ★ for outliers. */
+  --star: #f59e0b;
+  --star-fill: #fbbf24;
+  /* Boxes that ask for a second look (a big salary change, pay far from peers). */
+  --warning: #fffbeb;
+  --warning-border: #fcd34d;
+  --warning-foreground: #78350f;
+  /* Budget status, always with an icon and a label, never colour alone. */
+  --status-good: #0a7a0a;
+  --status-warning: #a86b00;
+  --status-critical: #d03b3b;
+  /* Pay by segment: one hue, a light bar for the middle half and a dark dot for the median. */
+  --chart-range: #86b6ef;
+  --chart-median: #1c5cab;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+  --chart-muted: #898781;
+  --chart-ink: #52514e;
+  --chart-hover: rgb(11 11 11 / 4%);
   /* The top loading bar: amber to deep orange, with an orange glow at its leading edge. */
   --progress-from: #fbbf24;
   --progress-via: #f97316;
@@ -119,6 +150,29 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  color-scheme: dark;
+  --positive: #34d399;
+  --star: #f59e0b;
+  --star-fill: #fbbf24;
+  --warning: rgb(120 53 15 / 35%);
+  --warning-border: #92400e;
+  --warning-foreground: #fde68a;
+  --status-good: #4ade80;
+  --status-warning: #fbbf24;
+  --status-critical: #f87171;
+  /* On the dark card: the bar steps back and the median dot is the bright one, so the median
+     still reads first. Checked with the dataviz palette validator against #171717. */
+  --chart-range: #2f5f99;
+  --chart-median: #8fc1ff;
+  --chart-grid: #2a2a29;
+  --chart-axis: #3f3f3d;
+  --chart-muted: #9a9993;
+  --chart-ink: #c9c8c2;
+  --chart-hover: rgb(255 255 255 / 5%);
+  /* A little brighter, so the bar and its glow stand out on a dark page. */
+  --progress-from: #fcd34d;
+  --progress-via: #fb923c;
+  --progress-to: #f97316;
 }
 
 @layer base {
@@ -168,4 +222,12 @@
     0 0 10px var(--progress-via),
     0 0 5px var(--progress-to);
   opacity: 1;
+}
+
+/* The theme switch (src/lib/theme.ts): the new theme is clipped open as a circle from the
+   bottom-left corner over a snapshot of the old one, instead of the browser's default cross-fade. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }

@@ -154,7 +154,7 @@ export function OutliersCard({
                         className="inline-flex items-center gap-1.5 font-medium hover:underline"
                       >
                         <StarIcon
-                          className="size-3.5 fill-amber-400 text-amber-500"
+                          className="size-3.5 fill-star-fill text-star"
                           aria-label="Outlier"
                         />
                         {row.employee.full_name}
@@ -180,7 +180,7 @@ export function OutliersCard({
                         <Icon
                           className={cn(
                             "size-3.5",
-                            below ? "text-destructive" : "text-emerald-700",
+                            below ? "text-destructive" : "text-positive",
                           )}
                           aria-hidden="true"
                         />

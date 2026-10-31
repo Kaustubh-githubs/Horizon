@@ -43,7 +43,7 @@ It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
 
 - **Developer Experience First:** Follows [CONVENTIONS.md](CONVENTIONS.md) for consistent AI-assisted development.
 - **One Source of Truth:** All decisions, architecture and rationale are documented in [docs/](docs/).
-- **Incremental Development:** Every decision is an ADR (Architecture Decision Record) in [docs/adr/](docs/adr/README.md), 22 so far.
+- **Incremental Development:** Every decision is an ADR (Architecture Decision Record) in [docs/adr/](docs/adr/README.md), 23 so far.
 
 ## Core Features
 
@@ -81,6 +81,7 @@ It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
 - **Loading and numbers:** an orange loading bar shows whenever something loads, and headline numbers roll in when the app first loads.
 - **Navigation:** the filters stay at the top while you scroll, and Back returns you to where you were.
 - **Forms:** the app asks before throwing away unsaved changes.
+- **Dark Mode:** Light or Dark from the sidebar, starting from the device's theme and remembered per browser. The new theme spreads from the bottom-left corner towards the top right, with no white flash on load (ADR 0023).
 - **Loading placeholders:** shaped like the real content, so nothing jumps when data arrives (ADR 0022).
 
 ## Technology Stack
@@ -156,7 +157,6 @@ cd frontend && pnpm typecheck && pnpm lint && pnpm build
 - [ ] **Frontend Tests:** Vitest and React Testing Library for the riskiest flows.
 - [ ] **Mobile Responsive Design:** Below tablet width the sidebar should become a top bar with a menu.
 - [ ] **Performance:** Review query performance for 50k+ employees, and load more pages on demand to shrink the main bundle.
-- [ ] **Dark Mode:** Comprehensive dark mode across the app, charts included.
 - [ ] **Advanced Analytics:** Trends over time, compa-ratios, and CSV export.
 
 More UI ideas are tracked in [docs/ui-todo.md](docs/ui-todo.md).

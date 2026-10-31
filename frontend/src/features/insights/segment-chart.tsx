@@ -15,15 +15,16 @@ import { formatCount, formatMoney, formatMoneyCompact } from "@/lib/format"
 
 // One series in one hue, two shades: a light bar for the middle half of salaries and a dark dot
 // for the median (charting guidance: "before → after per item" style, 1 hue, 2 shades). Hairline
-// grid and quiet axes, so the marks carry the meaning.
+// grid and quiet axes, so the marks carry the meaning. The colours are tokens in index.css, with
+// their own values in dark mode (ADR 0023).
 const CHART = {
-  range: "#86b6ef",
-  median: "#1c5cab",
-  grid: "#e1e0d9",
-  axis: "#c3c2b7",
-  muted: "#898781",
-  ink: "#52514e",
-  hover: "rgba(11, 11, 11, 0.04)",
+  range: "var(--chart-range)",
+  median: "var(--chart-median)",
+  grid: "var(--chart-grid)",
+  axis: "var(--chart-axis)",
+  muted: "var(--chart-muted)",
+  ink: "var(--chart-ink)",
+  hover: "var(--chart-hover)",
 }
 const BAR_ROW = 28
 

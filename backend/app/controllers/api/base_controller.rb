@@ -41,6 +41,11 @@ module Api
       render_errors({ error.param => [ "is required" ] }, :bad_request)
     end
 
+    # A body that claims to be JSON but isn't: the usual error shape instead of Rails' own page.
+    rescue_from ActionDispatch::Http::Parameters::ParseError do
+      render_errors({ base: [ "The request body isn't valid JSON" ] }, :bad_request)
+    end
+
     private
 
     # The audited gem asks the controller who is making a change, when it writes the audit row (ADR 0012).

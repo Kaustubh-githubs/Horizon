@@ -23,13 +23,17 @@ class Employee < ApplicationRecord
   normalizes :current_currency, with: ->(value) { value.strip.upcase }
 
   validates :full_name, :hire_date, presence: true
-  validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
-  validates :current_salary, presence: true, numericality: { greater_than: 0, allow_blank: true }
+  # Room for long names, but not for pasted paragraphs; 254 is the longest valid email address.
+  validates :full_name, length: { maximum: 120 }
+  validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true },
+                    length: { maximum: 254 }
+  validates :current_salary, presence: true, numericality: { greater_than: 0, allow_blank: true }, money_precision: true
   validate :current_salary_fits_column
   # The currency follows the country, so without a country the country error is enough.
   validates :current_currency, presence: true, if: :country
   validates :terminated_on, presence: true, if: :terminated?
   validates :terminated_on, absence: true, unless: :terminated?
+  validates :hire_date, :terminated_on, real_date: true
   validate :hire_date_not_in_future
   validate :terminated_on_not_in_future
   validate :terminated_on_not_before_hire_date

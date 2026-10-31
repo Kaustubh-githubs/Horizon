@@ -10,8 +10,11 @@ module Api
         render json: { user: user_json(Current.user) }
       end
 
+      # Both are always passed, as text: authenticate_by raises when the password key is missing,
+      # so a request without one would answer 500 instead of the usual 401.
       def create
-        if (user = User.authenticate_by(params.permit(:email_address, :password)))
+        if (user = User.authenticate_by(email_address: scalar_param(:email_address).to_s,
+                                        password: scalar_param(:password).to_s))
           start_new_session_for(user)
           render json: { user: user_json(user) }, status: :created
         else

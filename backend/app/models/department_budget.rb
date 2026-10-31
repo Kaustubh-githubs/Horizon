@@ -5,7 +5,7 @@ class DepartmentBudget < ApplicationRecord
   auditable
   belongs_to :department
 
-  validates :amount, presence: true, numericality: { greater_than: 0, allow_blank: true }
+  validates :amount, presence: true, numericality: { greater_than: 0, allow_blank: true }, money_precision: true
   validate :amount_fits_column
   validates :year, presence: true, numericality: { only_integer: true, allow_blank: true }
   validate :year_is_this_year

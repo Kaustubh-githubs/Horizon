@@ -1,5 +1,5 @@
-# The JSON shape of a salary revision (ADR 0016, 0018). Money is a string (ADR 0006). The
-# previous amount and % change let the UI show each step without doing the maths itself.
+# The JSON shape of a salary revision just recorded (ADR 0016, 0018). Money is a string
+# (ADR 0006). The previous amount and % change let the UI confirm the step without doing the maths.
 class SalaryRevisionSerializer
   def initialize(revision, previous_amount: nil)
     @revision = revision
@@ -17,12 +17,6 @@ class SalaryRevisionSerializer
       previous_amount: @previous_amount&.to_s("F"),
       change_percent:
     }
-  end
-
-  # Every revision in order, each with the amount before it, newest first for display.
-  def self.history(revisions)
-    previous = nil
-    revisions.map { |revision| new(revision, previous_amount: previous).tap { previous = revision.amount } }.reverse
   end
 
   # The % change from one amount to the next, to one decimal; none without an amount before it.

@@ -25,9 +25,9 @@ module Insights
         excluded_currencies: converted ? Insights.excluded_currencies(active) : [],
         headcount: active.count,
         countries: active.distinct.count(:country_id),
-        payroll: Insights.money(payroll),
-        median: Insights.money(median),
-        mean: Insights.money(mean),
+        payroll: MoneyString.from(payroll),
+        median: MoneyString.from(median),
+        mean: MoneyString.from(mean),
         # count(:all): the outliers query selects extra columns, which a plain count would try to count.
         outlier_count: @outliers.call.count(:all),
         outlier_threshold: @outliers.threshold

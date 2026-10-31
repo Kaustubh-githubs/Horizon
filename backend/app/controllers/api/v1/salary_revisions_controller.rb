@@ -1,13 +1,7 @@
 module Api
   module V1
-    # An employee's salary history, and recording a change to it (ADR 0018).
+    # Recording a salary change (ADR 0018). The history is read through the timeline (ADR 0021).
     class SalaryRevisionsController < Api::BaseController
-      def index
-        revisions = Employee.find(params[:employee_id]).salary_revisions.order(:effective_from, :id)
-
-        render json: { data: SalaryRevisionSerializer.history(revisions) }
-      end
-
       def create
         employee = Employee.find(params[:employee_id])
         previous_amount = employee.current_salary

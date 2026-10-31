@@ -18,8 +18,8 @@ Rails.application.routes.draw do
         get :summary, on: :collection
         # POST to terminate. Employees are never deleted (ADR 0008).
         resource :termination, only: :create
-        # Salary history, and recording a change (ADR 0018).
-        resources :salary_revisions, only: %i[index create]
+        # Recording a salary change (ADR 0018). The history is read through the timeline (ADR 0021).
+        resources :salary_revisions, only: :create
         # What peers in the same country and job title earn, for the change-salary dialog.
         resource :pay_comparison, only: :show
         # Whether the employee is a ★ outlier, for the profile banner (ADR 0019).

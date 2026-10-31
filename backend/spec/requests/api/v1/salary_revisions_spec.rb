@@ -60,27 +60,4 @@ RSpec.describe "Salary revisions API", type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
-
-  describe "GET /api/v1/employees/:id/salary_revisions" do
-    before do
-      create(:salary_revision, employee:, amount: "1000000", reason: "hire", effective_from: Date.new(2024, 1, 15))
-      create(:salary_revision, employee:, amount: "1200000", reason: "annual_raise", effective_from: Date.new(2025, 4, 1))
-    end
-
-    it "lists the history newest first, with the change from the previous amount" do
-      get "/api/v1/employees/#{employee.id}/salary_revisions"
-
-      expect(response.parsed_body["data"]).to match([
-        hash_including("amount" => "1200000.0", "reason" => "annual_raise", "previous_amount" => "1000000.0",
-                       "change_percent" => 20.0),
-        hash_including("amount" => "1000000.0", "reason" => "hire", "previous_amount" => nil, "change_percent" => nil)
-      ])
-    end
-
-    it "answers 404 for an unknown employee" do
-      get "/api/v1/employees/0/salary_revisions"
-
-      expect(response).to have_http_status(:not_found)
-    end
-  end
 end

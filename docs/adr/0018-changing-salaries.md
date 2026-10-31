@@ -16,7 +16,7 @@ HR records raises, promotions, market adjustments and corrections. Each one adds
   - Former employees can't get changes (ADR 0017), and amounts must fit the money column (ADR 0006).
   - Several changes on the same day are allowed, for example a raise and then a correction. They're ordered by when they were recorded.
   - A change can never be dated before the employee's latest one (checked in `SalaryRevision`), so the latest revision is always the current salary.
-- **History** (`GET /employees/:id/salary_revisions`) lists every change newest first, with the previous amount and the % change. It isn't paged: an employee has a handful of rows.
+- **History** (`GET /employees/:id/salary_revisions`) listed every change newest first, with the previous amount and the % change. It isn't paged: an employee has a handful of rows. (Removed on 2026-11-01: the timeline, ADR 0021, shows the history, and nothing called this any more.)
 - **Help against mistakes, in the change dialog:**
   - It shows the current salary, the new one and the % change.
   - It shows the **average and median salary for the same job title in the same country** (active employees, excluding the person themself) with the head count, from `GET /employees/:id/pay_comparison`. For a promotion, the figures are for the new title, and appear once it's picked.

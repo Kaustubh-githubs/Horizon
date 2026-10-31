@@ -21,8 +21,8 @@ module Employees
         job_title: { id: @job_title.id, name: @job_title.name },
         currency: @employee.current_currency,
         peer_count: count,
-        average: money(average),
-        median: money(median)
+        average: MoneyString.from(average),
+        median: MoneyString.from(median)
       }
     end
 
@@ -30,11 +30,6 @@ module Employees
 
     def peers
       Employee.active.where(country_id: @employee.country_id, job_title_id: @job_title.id).where.not(id: @employee.id)
-    end
-
-    # AVG comes back as a decimal and PERCENTILE_CONT as a float; both become money strings (ADR 0006).
-    def money(value)
-      value&.to_d&.round(2)&.to_s("F")
     end
   end
 end

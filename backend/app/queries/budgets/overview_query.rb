@@ -8,9 +8,7 @@ module Budgets
     NEAR_FROM = 90
 
     def call
-      rows = Department.order(:name).map { |department| Row.new(department:, budget: budgets[department.id],
-                                                                headcount: headcounts.fetch(department.id, 0),
-                                                                payroll: payrolls.fetch(department.id, 0).to_d) }
+      rows = Department.order(:name).map { |department| row_for(department) }
       {
         year: DepartmentBudget.current_year,
         currency: DepartmentBudget::CURRENCY,
@@ -25,6 +23,11 @@ module Budgets
 
     # One department: its budget for this year, if any, and its active staff.
     Row = Struct.new(:department, :budget, :headcount, :payroll, keyword_init: true)
+
+    def row_for(department)
+      Row.new(department:, budget: budgets[department.id], headcount: headcounts.fetch(department.id, 0),
+              payroll: payrolls.fetch(department.id, 0).to_d)
+    end
 
     def budgets
       @budgets ||= DepartmentBudget.where(year: DepartmentBudget.current_year).index_by(&:department_id)
@@ -47,8 +50,8 @@ module Budgets
         id: row.department.id,
         name: row.department.name,
         headcount: row.headcount,
-        payroll: Insights.money(row.payroll),
-        budget: budget && { id: budget.id, amount: Insights.money(budget.amount), lock_version: budget.lock_version },
+        payroll: MoneyString.from(row.payroll),
+        budget: budget && { id: budget.id, amount: MoneyString.from(budget.amount), lock_version: budget.lock_version },
         **comparison(row.payroll, budget&.amount)
       }
     end
@@ -58,8 +61,8 @@ module Budgets
       budget = budgeted.sum { |row| row.budget.amount }
       {
         unbudgeted_departments: unbudgeted,
-        payroll: Insights.money(payroll),
-        budget: budgeted.any? ? Insights.money(budget) : nil,
+        payroll: MoneyString.from(payroll),
+        budget: budgeted.any? ? MoneyString.from(budget) : nil,
         **comparison(payroll, budgeted.any? ? budget : nil)
       }
     end

@@ -27,8 +27,20 @@ module Authentication
     Current.session ||= find_session_by_cookie
   end
 
+  # The cookie's session, unless it has expired (Session::IDLE_TIMEOUT, MAX_AGE): then it's
+  # deleted, and the request counts as signed out.
   def find_session_by_cookie
-    Session.find_by(id: cookies.signed[:session_id]) if cookies.signed[:session_id]
+    session = Session.find_by(id: cookies.signed[:session_id]) if cookies.signed[:session_id]
+    return unless session
+
+    if session.expired?
+      session.destroy
+      cookies.delete(:session_id)
+      return
+    end
+
+    session.record_activity
+    session
   end
 
   def request_authentication
@@ -36,12 +48,15 @@ module Authentication
   end
 
   # Signed so it can't be forged, HTTP-only so JavaScript can't read it, SameSite=Lax so other
-  # sites can't send it on POST/PATCH/DELETE, and HTTPS-only in production.
+  # sites can't send it on POST/PATCH/DELETE, HTTPS-only in production, and gone when the session
+  # would expire anyway. Signing in also clears out everyone's expired sessions.
   def start_new_session_for(user)
+    Session.expired.delete_all
     user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session|
       Current.session = session
-      cookies.signed.permanent[:session_id] = {
-        value: session.id, httponly: true, same_site: :lax, secure: Rails.env.production?
+      cookies.signed[:session_id] = {
+        value: session.id, httponly: true, same_site: :lax, secure: Rails.env.production?,
+        expires: Session::MAX_AGE.from_now
       }
     end
   end

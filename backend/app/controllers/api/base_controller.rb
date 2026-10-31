@@ -7,6 +7,12 @@ module Api
     # Every endpoint requires a signed-in user unless it opts out with allow_unauthenticated_access.
     include Authentication
 
+    # Writes must come from the app's own pages (ADR 0009). Browsers send an Origin header with
+    # every cross-site POST, PATCH or DELETE, so a form or script on another site is refused here,
+    # on top of the SameSite=Lax cookie. Signing in is covered too (login CSRF). A request with no
+    # Origin (curl, server to server) can't carry a victim's cookie, so there's nothing to forge.
+    prepend_before_action :refuse_cross_site_writes, unless: -> { request.get? || request.head? }
+
     # Field for each unique index, so a duplicate that slips past the model's check (two saves
     # racing) still gets the usual field error instead of a 500.
     UNIQUE_INDEX_FIELDS = {
@@ -47,6 +53,13 @@ module Api
     end
 
     private
+
+    def refuse_cross_site_writes
+      origin = request.origin
+      return if origin.nil? || origin == request.base_url
+
+      render_errors({ base: [ "This request came from another site" ] }, :forbidden)
+    end
 
     # The audited gem asks the controller who is making a change, when it writes the audit row (ADR 0012).
     def current_user

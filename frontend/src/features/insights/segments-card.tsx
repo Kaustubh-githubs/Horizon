@@ -29,7 +29,7 @@ import {
   SEGMENT_NAMES,
 } from "@/features/insights/segments"
 import { NO_FILTERS } from "@/features/insights/use-insights-params"
-import { formatCount, formatDate, formatMoney } from "@/lib/format"
+import { formatCount, formatDate, formatMoneyWhole } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 type SegmentChanges = Partial<Record<keyof SegmentQuery, string | undefined>>
@@ -143,6 +143,17 @@ function Description({ stats }: { stats: SegmentStats }) {
   )
 }
 
+// The table needs about 1,050 px for every column, more than a laptop gives it beside the sidebar.
+// So columns give way as the card narrows (a container query: the card's width, not the window's,
+// so the sidebar and a phone are handled alike). First the lowest and highest, which a single
+// outlier sets, then the 25th and 75th percentiles, then the average. The group, people, median
+// and payroll always show; on a phone the table still scrolls sideways a little.
+const SHOWN_FROM = {
+  range: "hidden @min-[66rem]:table-cell",
+  quartiles: "hidden @min-[54rem]:table-cell",
+  average: "hidden @min-[42rem]:table-cell",
+}
+
 function SegmentTable({
   stats,
   onCountry,
@@ -154,78 +165,105 @@ function SegmentTable({
   const money = (row: SegmentRow, amount: string | null) =>
     amount === null || row.currency === null
       ? "—"
-      : formatMoney(amount, row.currency)
+      : formatMoneyWhole(amount, row.currency)
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="capitalize">
-            {SEGMENT_NAMES[stats.by]}
-          </TableHead>
-          <TableHead className="text-right">People</TableHead>
-          <TableHead className="text-right">Lowest</TableHead>
-          <TableHead className="text-right">25th %ile</TableHead>
-          <TableHead className="text-right">Median</TableHead>
-          <TableHead className="text-right">75th %ile</TableHead>
-          <TableHead className="text-right">Average</TableHead>
-          <TableHead className="text-right">Highest</TableHead>
-          <TableHead className="text-right">Payroll</TableHead>
-          {groupedByCountry && (
-            <TableHead className="text-right">Median (INR)</TableHead>
-          )}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {stats.rows.map((row) => (
-          <TableRow key={row.key}>
-            <TableCell className="font-medium">
-              {groupedByCountry ? (
-                <button
-                  type="button"
-                  className="text-left hover:underline"
-                  onClick={() => onCountry(String(row.key))}
-                >
-                  {row.label}
-                </button>
-              ) : (
-                row.label
-              )}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
-              {formatCount(row.headcount)}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
-              {money(row, row.min)}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
-              {money(row, row.p25)}
-            </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
-              {money(row, row.median)}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
-              {money(row, row.p75)}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
-              {money(row, row.mean)}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
-              {money(row, row.max)}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
-              {money(row, row.payroll)}
-            </TableCell>
+    // Whole units: these sum up many salaries, where the cents are noise (like the peer figures in
+    // the salary dialog). They're narrower too.
+    <div className="@container">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="capitalize">
+              {SEGMENT_NAMES[stats.by]}
+            </TableHead>
+            <TableHead className="text-right">People</TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.range)}>
+              Lowest
+            </TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.quartiles)}>
+              25th %ile
+            </TableHead>
+            <TableHead className="text-right">Median</TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.quartiles)}>
+              75th %ile
+            </TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.average)}>
+              Average
+            </TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.range)}>
+              Highest
+            </TableHead>
+            <TableHead className="text-right">Payroll</TableHead>
             {groupedByCountry && (
-              <TableCell className="text-right text-muted-foreground tabular-nums">
-                {row.converted?.median
-                  ? formatMoney(row.converted.median, row.converted.currency)
-                  : "—"}
-              </TableCell>
+              <TableHead className="text-right">Median (INR)</TableHead>
             )}
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {stats.rows.map((row) => (
+            <TableRow key={row.key}>
+              <TableCell className="font-medium">
+                {groupedByCountry ? (
+                  <button
+                    type="button"
+                    className="text-left hover:underline"
+                    onClick={() => onCountry(String(row.key))}
+                  >
+                    {row.label}
+                  </button>
+                ) : (
+                  row.label
+                )}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {formatCount(row.headcount)}
+              </TableCell>
+              <TableCell
+                className={cn("text-right tabular-nums", SHOWN_FROM.range)}
+              >
+                {money(row, row.min)}
+              </TableCell>
+              <TableCell
+                className={cn("text-right tabular-nums", SHOWN_FROM.quartiles)}
+              >
+                {money(row, row.p25)}
+              </TableCell>
+              <TableCell className="text-right font-medium tabular-nums">
+                {money(row, row.median)}
+              </TableCell>
+              <TableCell
+                className={cn("text-right tabular-nums", SHOWN_FROM.quartiles)}
+              >
+                {money(row, row.p75)}
+              </TableCell>
+              <TableCell
+                className={cn("text-right tabular-nums", SHOWN_FROM.average)}
+              >
+                {money(row, row.mean)}
+              </TableCell>
+              <TableCell
+                className={cn("text-right tabular-nums", SHOWN_FROM.range)}
+              >
+                {money(row, row.max)}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {money(row, row.payroll)}
+              </TableCell>
+              {groupedByCountry && (
+                <TableCell className="text-right text-muted-foreground tabular-nums">
+                  {row.converted?.median
+                    ? formatMoneyWhole(
+                        row.converted.median,
+                        row.converted.currency,
+                      )
+                    : "—"}
+                </TableCell>
+              )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

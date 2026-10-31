@@ -195,7 +195,7 @@ RSpec.describe Employee, type: :model do
       create(:salary_revision, employee: saved, effective_from: Date.new(2026, 7, 1), reason: "annual_raise")
 
       expect { saved.terminate!(on: Date.new(2026, 6, 30)) }
-        .to raise_error(ActiveRecord::RecordInvalid, /can't be before the latest salary change/)
+        .to raise_error(ActiveRecord::RecordInvalid, /can't be before the latest salary change \(1 Jul 2026\)/)
     end
 
     it "refuses to terminate someone who is already terminated" do

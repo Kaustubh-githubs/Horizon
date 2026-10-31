@@ -6,7 +6,7 @@ module Api
       include Pagy::Method
 
       def overview
-        render json: ::Insights::OverviewQuery.new(filters: insight_filters).call
+        render json: ::Insights::OverviewQuery.new(filters: insight_filters, threshold: scalar_param(:threshold)).call
       end
 
       def segments

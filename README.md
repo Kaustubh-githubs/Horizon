@@ -5,7 +5,7 @@ A modern salary management system for ACME's HR Manager, designed to replace com
 ## Current Status
 - **Feature-complete in development:** the seed script creates 10,000 employees. The HR Manager can add, edit and terminate employees, change salaries, explore pay insights, set department budgets, and see a timeline and full audit log for every employee.
 - **Add-on audit trail working:** every change to an employee, a salary or a budget is recorded (who, what, when) and viewable in the UI.
-- **Not done yet:** deployment, a GitHub CI workflow (the same checks run locally with `bin/ci`), and frontend tests.
+- **Not done yet:** deployment, and a GitHub CI workflow (the same checks run locally with `bin/ci` and `pnpm test`).
 
 ## Quick Start (Development)
 
@@ -103,6 +103,7 @@ It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
 - **shadcn/ui** (Radix) and **Tailwind CSS:** components and styling
 - **Recharts:** charts
 - **NProgress, NumberFlow and cmdk:** the loading bar, rolling numbers and searchable pickers
+- **Vitest + React Testing Library:** unit and component tests, in jsdom
 
 ## Architecture
 
@@ -146,15 +147,15 @@ cd backend && bin/ci
 ```
 
 ```bash
-# Frontend: types, lint and a production build
-cd frontend && pnpm typecheck && pnpm lint && pnpm build
+# Frontend: types, lint, tests and a production build
+cd frontend && pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 
 ## What's Next
 
 - [ ] **Deployment:** Azure VM with a domain and HTTPS.
 - [ ] **CI on GitHub:** run `bin/ci` and the frontend checks on every pull request.
-- [ ] **Frontend Tests:** Vitest and React Testing Library for the riskiest flows.
+- [ ] **More Frontend Tests:** the first suite covers formatting, the API client, signing out on a 401, URL filters and the unsaved-changes guard; the forms and dialogs are next.
 - [ ] **Mobile Responsive Design:** Below tablet width the sidebar should become a top bar with a menu.
 - [ ] **Performance:** Review query performance for 50k+ employees, and load more pages on demand to shrink the main bundle.
 - [ ] **Advanced Analytics:** Trends over time, compa-ratios, and CSV export.

@@ -28,7 +28,7 @@ function StatTile({
   detail: string
 }) {
   return (
-    <Card>
+    <Card className="brand-edge">
       <CardContent className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">{label}</p>
         <p className="text-3xl font-semibold tabular-nums">{value}</p>

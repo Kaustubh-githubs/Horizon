@@ -43,7 +43,7 @@ It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
 
 - **Developer Experience First:** Follows [CONVENTIONS.md](CONVENTIONS.md) for consistent AI-assisted development.
 - **One Source of Truth:** All decisions, architecture and rationale are documented in [docs/](docs/).
-- **Incremental Development:** Every decision is an ADR (Architecture Decision Record) in [docs/adr/](docs/adr/README.md), 23 so far.
+- **Incremental Development:** Every decision is an ADR (Architecture Decision Record) in [docs/adr/](docs/adr/README.md), 24 so far.
 
 ## Core Features
 
@@ -81,6 +81,7 @@ It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
 - **Loading and numbers:** an orange loading bar shows whenever something loads, and headline numbers roll in when the app first loads.
 - **Navigation:** the filters stay at the top while you scroll, and Back returns you to where you were.
 - **Forms:** the app asks before throwing away unsaved changes.
+- **Brand Colour:** the loading bar's orange runs through the app: the brand mark, the current page, buttons, the filters that are on, the headline tiles and the charts, at readable contrast in both themes (ADR 0024).
 - **Dark Mode:** Light or Dark from the sidebar, starting from the device's theme and remembered per browser. The new theme spreads from the bottom-left corner towards the top right, with no white flash on load (ADR 0023).
 - **Loading placeholders:** shaped like the real content, so nothing jumps when data arrives (ADR 0022).
 

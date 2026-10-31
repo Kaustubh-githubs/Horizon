@@ -131,7 +131,7 @@ function Summary({ overview }: { overview: BudgetOverview }) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Card>
+      <Card className="brand-edge">
         <CardContent className="flex flex-col gap-1">
           <p className="text-sm text-muted-foreground">Combined budget</p>
           {total.budget ? (
@@ -169,7 +169,7 @@ function Summary({ overview }: { overview: BudgetOverview }) {
         </CardContent>
       </Card>
       {(["over", "near", "under"] as const).map((status) => (
-        <Card key={status}>
+        <Card key={status} className="brand-edge">
           <CardContent className="flex flex-col gap-1">
             <BudgetStatusLabel status={status} />
             <p className="text-3xl font-semibold tabular-nums">

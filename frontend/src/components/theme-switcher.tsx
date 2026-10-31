@@ -30,7 +30,7 @@ export function ThemeSwitcher() {
             onClick={() => setTheme(theme)}
             className={cn(
               "flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
-              current === theme && "bg-background text-foreground shadow-sm",
+              current === theme && "bg-background text-brand-strong shadow-sm",
             )}
           >
             <Icon className="size-3.5" aria-hidden="true" />

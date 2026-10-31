@@ -6,9 +6,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
 // Radix Select can't hold an empty value, so "all" stands for "no filter".
 const ALL = "all"
+// A filter that's narrowing the page is tinted, so you can see at a glance which ones are on.
+const APPLIED = "border-brand/50 bg-brand-soft"
 
 export type FilterOption = { value: string; label: string }
 
@@ -44,7 +47,7 @@ export function FilterSelect({
         options={options}
         allLabel={allLabel}
         searchPlaceholder={searchPlaceholder}
-        className={className}
+        className={cn(className, value && APPLIED)}
       />
     )
 
@@ -53,7 +56,10 @@ export function FilterSelect({
       value={value ?? ALL}
       onValueChange={(next) => onChange(next === ALL ? undefined : next)}
     >
-      <SelectTrigger aria-label={label} className={className}>
+      <SelectTrigger
+        aria-label={label}
+        className={cn(className, value && APPLIED)}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

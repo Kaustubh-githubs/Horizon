@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Horizon</title>
+    <!-- The theme, before the first paint, so dark mode never flashes white while the app loads.
+         src/lib/theme.ts keeps it up to date after that, with the same storage key. -->
+    <script>
+      try {
+        var theme = localStorage.getItem("horizon-theme")
+        var dark =
+          theme === "dark" ||
+          (theme !== "light" &&
+            matchMedia("(prefers-color-scheme: dark)").matches)
+        document.documentElement.classList.toggle("dark", dark)
+        document.documentElement.style.colorScheme = dark ? "dark" : "light"
+      } catch (error) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

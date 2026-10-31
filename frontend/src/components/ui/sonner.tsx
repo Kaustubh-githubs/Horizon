@@ -7,11 +7,14 @@ import {
   Loader2Icon,
 } from "lucide-react"
 
+import { useTheme } from "@/lib/theme"
+
 const Toaster = ({ ...props }: ToasterProps) => {
+  const theme = useTheme()
   return (
     <Sonner
-      // Light only: dark mode is out of scope (docs/requirements.md).
-      theme="light"
+      // Light or dark, as picked (ADR 0023).
+      theme={theme}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,

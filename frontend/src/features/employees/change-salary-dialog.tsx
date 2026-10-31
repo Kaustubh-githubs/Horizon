@@ -283,7 +283,7 @@ function ChangeSalaryForm({
       {warnings.length > 0 && (
         <div
           role="status"
-          className="flex flex-col gap-1 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+          className="flex flex-col gap-1 rounded-lg border border-warning-border bg-warning p-3 text-sm text-warning-foreground"
         >
           {warnings.map((warning) => (
             <p key={warning} className="flex gap-2">
@@ -364,7 +364,7 @@ function ChangeSummary({
       <span
         className={cn(
           "inline-flex items-center gap-0.5 text-sm",
-          up ? "text-emerald-700" : "text-destructive",
+          up ? "text-positive" : "text-destructive",
         )}
       >
         <Icon className="size-3.5" aria-hidden="true" />

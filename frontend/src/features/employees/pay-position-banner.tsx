@@ -25,10 +25,10 @@ export function PayPositionBanner({ employee }: { employee: Employee }) {
   return (
     <div
       role="note"
-      className="flex flex-wrap items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
+      className="flex flex-wrap items-start gap-2 rounded-lg border border-warning-border bg-warning p-4 text-sm text-warning-foreground"
     >
       <StarIcon
-        className="mt-0.5 size-4 shrink-0 fill-amber-400 text-amber-500"
+        className="mt-0.5 size-4 shrink-0 fill-star-fill text-star"
         aria-label="Outlier"
       />
       <p className="flex-1">

@@ -152,7 +152,7 @@ function FiguresRow({
             <Icon
               className={cn(
                 "size-3.5",
-                average < 0 ? "text-destructive" : "text-emerald-700",
+                average < 0 ? "text-destructive" : "text-positive",
               )}
               aria-hidden="true"
             />

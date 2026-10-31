@@ -22,7 +22,7 @@ UI and UX polish we've noticed but are leaving until every flow works end to end
 ## Insights
 - [ ] **Wide tables scroll sideways on narrow screens.** The segment table has eight columns. Fix: hide lowest/highest below a breakpoint, or a compact card per row.
 - [x] **Recharts makes the main bundle large** (Vite warns about chunk size). Fix: load the Insights page lazily (`React.lazy` on the route), so other pages don't download the charting library. Done in the UI pass (ADR 0022).
-- [ ] **Charts have no dark-mode palette** (dark mode is out of scope, but the chart colours are hard-coded light values). Fix: move them to CSS tokens if dark mode is added.
+- [x] **Charts have no dark-mode palette** (dark mode is out of scope, but the chart colours are hard-coded light values). Fix: move them to CSS tokens if dark mode is added. Done (ADR 0023): the chart colours are tokens with dark values.
 - [ ] **The ★ list only links to profiles.** Fix: also offer "Change salary" straight from the row for HR acting on an underpaid case.
 - [x] **"In 0 countries"** on the headcount tile when nobody matches the filters. Fix: "No one matches" instead. Done in the UI pass (ADR 0022).
 - [x] **The ★ tile stays at ±40%** while the list's threshold can be changed (e.g. ±30% lists 80 people in Germany, the tile still counts ±40%). It says so, but it reads as a mismatch. Fix: let the tile follow the list's threshold. Done in the UI pass (ADR 0022).
@@ -36,11 +36,6 @@ UI and UX polish we've noticed but are leaving until every flow works end to end
 - [x] **Loading skeletons don't match the final layout,** so the page jumps when data arrives. Fix: skeletons shaped like the real card and table. Done in the UI pass (ADR 0022).
 - [ ] **Toasts and banners use slightly different wording styles.** Fix: one pass over all copy once the flows are done.
 - [ ] **Breadcrumbs** instead of a single back link on nested pages (Employees › Asha Rao › Edit).
-- [ ] **Dark mode** (asked for on 2026-10-31, for later). The shadcn tokens already have `.dark` values. What's left:
-  - a theme toggle in the sidebar footer: light, dark or system, remembered per browser
-  - the hard-coded colours (about 19 uses: amber warnings, emerald increases, the ★ star, the chart's hex values) moved to tokens with dark values
-  - dark values for the loading bar's gradient
-  - a check of every page in both themes
-  - a short ADR
+- [x] **Dark mode.** Done (ADR 0023): Light and Dark in the sidebar footer, a circle reveal from the bottom-left corner, every colour a token with a dark value, no flash on load.
 - [ ] **The main bundle is still over Vite's 500 KB warning** (about 770 KB after Insights became a lazy route). Fix: load more routes on demand (budgets, the employee pages), or split vendor code.
 - [ ] **September is "Sept" in the browser and "Sep" from the API** (Intl's en-GB vs Ruby's `%b`). Fix: pick one, e.g. format dates in API messages on the client.

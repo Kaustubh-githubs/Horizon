@@ -142,7 +142,7 @@ export function InsightsPage() {
                   label={
                     <span className="inline-flex items-center gap-1">
                       <StarIcon
-                        className="size-3.5 fill-amber-400 text-amber-500"
+                        className="size-3.5 fill-star-fill text-star"
                         aria-hidden="true"
                       />
                       Outliers

@@ -18,17 +18,17 @@ const STATUSES: Record<
   under: {
     label: "Under budget",
     icon: CircleCheckIcon,
-    className: "text-[#0a7a0a]",
+    className: "text-status-good",
   },
   near: {
     label: "Near the limit",
     icon: CircleAlertIcon,
-    className: "text-[#a86b00]",
+    className: "text-status-warning",
   },
   over: {
     label: "Over budget",
     icon: CircleXIcon,
-    className: "text-[#d03b3b]",
+    className: "text-status-critical",
   },
   no_budget: {
     label: "No budget",

@@ -187,6 +187,7 @@ More UI ideas are tracked in [docs/ui-todo.md](docs/ui-todo.md).
 - [Schema](docs/schema.md): Tables, constraints and indexes.
 - [Performance Notes](docs/performance.md): Seeding, query plans and optimisation.
 - [Conventions](CONVENTIONS.md): Guidelines for anyone (or any AI tool) working in this repo.
+- [How AI was used](docs/ai-usage.md): What the AI did, what the developer decided, how its work was checked, and where it was wrong.
 - [UI to-do](docs/ui-todo.md): UI and UX polish, done and open.
 
 ## License

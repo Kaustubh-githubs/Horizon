@@ -38,6 +38,12 @@ RSpec.describe SalaryRevision, type: :model do
       expect(revision.tap(&:valid?).errors[:amount]).to eq([ "is too large" ])
     end
 
+    it "rejects more than two decimal places instead of rounding them (ADR 0006)" do
+      revision.amount = "1300000.555"
+
+      expect(revision.tap(&:valid?).errors[:amount]).to eq([ "can have at most 2 decimal places" ])
+    end
+
     it "trims and uppercases the currency" do
       expect(described_class.new(currency: " inr ").currency).to eq("INR")
     end

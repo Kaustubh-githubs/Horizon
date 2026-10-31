@@ -33,6 +33,16 @@ RSpec.describe "/api/v1/session", type: :request do
       expect(response).to have_http_status(:unauthorized)
       expect(response.parsed_body).to eq("errors" => { "base" => [ "Wrong email address or password" ] })
     end
+
+    # These used to raise inside authenticate_by and answer 500.
+    it "answers a missing or non-text password like a wrong one", :aggregate_failures do
+      [ { email_address: "asha@acme.test" }, {}, { email_address: "asha@acme.test", password: [ "x" ] } ].each do |body|
+        post "/api/v1/session", params: body, as: :json
+
+        expect(response).to have_http_status(:unauthorized), "for #{body}"
+        expect(response.parsed_body).to eq("errors" => { "base" => [ "Wrong email address or password" ] })
+      end
+    end
   end
 
   describe "GET (who is logged in)" do

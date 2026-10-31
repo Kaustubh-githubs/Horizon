@@ -28,6 +28,12 @@ RSpec.describe DepartmentBudget, type: :model do
 
       expect(budget.tap(&:valid?).errors[:amount]).to eq([ "is too large" ])
     end
+
+    it "rejects more than two decimal places instead of rounding them (ADR 0006)" do
+      budget.amount = "32817642000.555"
+
+      expect(budget.tap(&:valid?).errors[:amount]).to eq([ "can have at most 2 decimal places" ])
+    end
   end
 
   # Comparisons use today's payroll, so only this year's budget can be set or changed (ADR 0020).

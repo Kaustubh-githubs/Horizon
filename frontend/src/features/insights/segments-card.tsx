@@ -146,12 +146,15 @@ function Description({ stats }: { stats: SegmentStats }) {
 // The table needs about 1,050 px for every column, more than a laptop gives it beside the sidebar.
 // So columns give way as the card narrows (a container query: the card's width, not the window's,
 // so the sidebar and a phone are handled alike). First the lowest and highest, which a single
-// outlier sets, then the 25th and 75th percentiles, then the average. The group, people, median
-// and payroll always show; on a phone the table still scrolls sideways a little.
+// outlier sets, then the 25th and 75th percentiles, the average, the INR median, the payroll and
+// the headcount. The group and its median always show.
 const SHOWN_FROM = {
   range: "hidden @min-[66rem]:table-cell",
   quartiles: "hidden @min-[54rem]:table-cell",
   average: "hidden @min-[42rem]:table-cell",
+  converted: "hidden @min-[36rem]:table-cell",
+  payroll: "hidden @min-[29rem]:table-cell",
+  people: "hidden @min-[21rem]:table-cell",
 }
 
 function SegmentTable({
@@ -177,7 +180,9 @@ function SegmentTable({
             <TableHead className="capitalize">
               {SEGMENT_NAMES[stats.by]}
             </TableHead>
-            <TableHead className="text-right">People</TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.people)}>
+              People
+            </TableHead>
             <TableHead className={cn("text-right", SHOWN_FROM.range)}>
               Lowest
             </TableHead>
@@ -194,16 +199,21 @@ function SegmentTable({
             <TableHead className={cn("text-right", SHOWN_FROM.range)}>
               Highest
             </TableHead>
-            <TableHead className="text-right">Payroll</TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.payroll)}>
+              Payroll
+            </TableHead>
             {groupedByCountry && (
-              <TableHead className="text-right">Median (INR)</TableHead>
+              <TableHead className={cn("text-right", SHOWN_FROM.converted)}>
+                Median (INR)
+              </TableHead>
             )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {stats.rows.map((row) => (
             <TableRow key={row.key}>
-              <TableCell className="font-medium">
+              {/* Long job titles wrap on a narrow screen rather than push the median off it. */}
+              <TableCell className="font-medium whitespace-normal">
                 {groupedByCountry ? (
                   <button
                     type="button"
@@ -216,7 +226,9 @@ function SegmentTable({
                   row.label
                 )}
               </TableCell>
-              <TableCell className="text-right tabular-nums">
+              <TableCell
+                className={cn("text-right tabular-nums", SHOWN_FROM.people)}
+              >
                 {formatCount(row.headcount)}
               </TableCell>
               <TableCell
@@ -247,11 +259,18 @@ function SegmentTable({
               >
                 {money(row, row.max)}
               </TableCell>
-              <TableCell className="text-right tabular-nums">
+              <TableCell
+                className={cn("text-right tabular-nums", SHOWN_FROM.payroll)}
+              >
                 {money(row, row.payroll)}
               </TableCell>
               {groupedByCountry && (
-                <TableCell className="text-right text-muted-foreground tabular-nums">
+                <TableCell
+                  className={cn(
+                    "text-right text-muted-foreground tabular-nums",
+                    SHOWN_FROM.converted,
+                  )}
+                >
                   {row.converted?.median
                     ? formatMoneyWhole(
                         row.converted.median,

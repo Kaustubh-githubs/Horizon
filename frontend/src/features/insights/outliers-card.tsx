@@ -37,6 +37,17 @@ const DIRECTION_OPTIONS = [
  * country, furthest first. The page's filters choose whose stars are listed; each person is
  * still compared with everyone in their role and country. Each name opens the profile.
  */
+// Columns give way as the table narrows (container queries, as in the segment table): first the
+// number of peers, then the salary and the peers' median, the role and the Change salary button.
+// Who and how far from the median always show. On a phone the name opens the profile, which has
+// Change salary too.
+const SHOWN_FROM = {
+  action: "hidden @min-[28rem]:table-cell",
+  role: "hidden @min-[43rem]:table-cell",
+  pay: "hidden @min-[56rem]:table-cell",
+  peers: "hidden @min-[60rem]:table-cell",
+}
+
 export function OutliersCard({
   filters,
   threshold,
@@ -124,85 +135,110 @@ export function OutliersCard({
             median with these filters.
           </p>
         ) : (
-          <Table
-            className={cn(
-              "transition-opacity",
-              outliers.isPlaceholderData && "opacity-60",
-            )}
-          >
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-right">Salary</TableHead>
-                <TableHead className="text-right">Peers&apos; median</TableHead>
-                <TableHead className="text-right">Difference</TableHead>
-                <TableHead className="text-right">Peers</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => {
-                const below = row.deviation_percent < 0
-                const Icon = below ? ArrowDownIcon : ArrowUpIcon
-                return (
-                  <TableRow key={row.employee.id}>
-                    <TableCell>
-                      <Link
-                        to={`/employees/${row.employee.id}`}
-                        className="inline-flex items-center gap-1.5 font-medium hover:underline"
+          <div className="@container">
+            <Table
+              className={cn(
+                "transition-opacity",
+                outliers.isPlaceholderData && "opacity-60",
+              )}
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employee</TableHead>
+                  <TableHead className={SHOWN_FROM.role}>Role</TableHead>
+                  <TableHead className={cn("text-right", SHOWN_FROM.pay)}>
+                    Salary
+                  </TableHead>
+                  <TableHead className={cn("text-right", SHOWN_FROM.pay)}>
+                    Peers&apos; median
+                  </TableHead>
+                  <TableHead className="text-right">Difference</TableHead>
+                  <TableHead className={cn("text-right", SHOWN_FROM.peers)}>
+                    Peers
+                  </TableHead>
+                  <TableHead className={SHOWN_FROM.action}>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => {
+                  const below = row.deviation_percent < 0
+                  const Icon = below ? ArrowDownIcon : ArrowUpIcon
+                  return (
+                    <TableRow key={row.employee.id}>
+                      <TableCell>
+                        <Link
+                          to={`/employees/${row.employee.id}`}
+                          className="inline-flex items-center gap-1.5 font-medium hover:underline"
+                        >
+                          <StarIcon
+                            className="size-3.5 fill-star-fill text-star"
+                            aria-label="Outlier"
+                          />
+                          {row.employee.full_name}
+                        </Link>
+                        <div className="font-mono text-xs text-muted-foreground">
+                          {row.employee.employee_code}
+                        </div>
+                      </TableCell>
+                      <TableCell className={SHOWN_FROM.role}>
+                        <div>{row.job_title.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {row.country.name}
+                        </div>
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "text-right tabular-nums",
+                          SHOWN_FROM.pay,
+                        )}
                       >
-                        <StarIcon
-                          className="size-3.5 fill-star-fill text-star"
-                          aria-label="Outlier"
+                        {formatMoney(row.salary, row.currency)}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "text-right text-muted-foreground tabular-nums",
+                          SHOWN_FROM.pay,
+                        )}
+                      >
+                        {formatMoneyWhole(row.peer_median, row.currency)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        <span className="inline-flex items-center gap-0.5">
+                          <Icon
+                            className={cn(
+                              "size-3.5",
+                              below ? "text-destructive" : "text-positive",
+                            )}
+                            aria-hidden="true"
+                          />
+                          {Math.abs(row.deviation_percent)}%{" "}
+                          {below ? "below" : "above"}
+                        </span>
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "text-right tabular-nums",
+                          SHOWN_FROM.peers,
+                        )}
+                      >
+                        {row.peer_count}
+                      </TableCell>
+                      <TableCell
+                        className={cn("text-right", SHOWN_FROM.action)}
+                      >
+                        <ChangeSalaryFromList
+                          employeeId={row.employee.id}
+                          name={row.employee.full_name}
                         />
-                        {row.employee.full_name}
-                      </Link>
-                      <div className="font-mono text-xs text-muted-foreground">
-                        {row.employee.employee_code}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>{row.job_title.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {row.country.name}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatMoney(row.salary, row.currency)}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground tabular-nums">
-                      {formatMoneyWhole(row.peer_median, row.currency)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      <span className="inline-flex items-center gap-0.5">
-                        <Icon
-                          className={cn(
-                            "size-3.5",
-                            below ? "text-destructive" : "text-positive",
-                          )}
-                          aria-hidden="true"
-                        />
-                        {Math.abs(row.deviation_percent)}%{" "}
-                        {below ? "below" : "above"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {row.peer_count}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <ChangeSalaryFromList
-                        employeeId={row.employee.id}
-                        name={row.employee.full_name}
-                      />
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
 
         {meta && meta.total_pages > 1 && (

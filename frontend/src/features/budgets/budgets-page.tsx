@@ -130,8 +130,10 @@ function Summary({ overview }: { overview: BudgetOverview }) {
     overview.departments.filter((d) => d.status === status).length
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Card className="brand-edge">
+    // The three counts share a row below laptop width, with tighter padding on a phone, instead
+    // of taking a screen's height one under another.
+    <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:grid-cols-4">
+      <Card className="col-span-3 brand-edge lg:col-span-1">
         <CardContent className="flex flex-col gap-1">
           <p className="text-sm text-muted-foreground">Combined budget</p>
           {total.budget ? (
@@ -169,7 +171,10 @@ function Summary({ overview }: { overview: BudgetOverview }) {
         </CardContent>
       </Card>
       {(["over", "near", "under"] as const).map((status) => (
-        <Card key={status} className="brand-edge">
+        <Card
+          key={status}
+          className="brand-edge [--card-spacing:--spacing(3)] sm:[--card-spacing:--spacing(4)]"
+        >
           <CardContent className="flex flex-col gap-1">
             <BudgetStatusLabel status={status} />
             <p className="text-3xl font-semibold tabular-nums">
@@ -185,6 +190,16 @@ function Summary({ overview }: { overview: BudgetOverview }) {
   )
 }
 
+// Columns give way as the table narrows (container queries, as on Insights): first the headcount,
+// then the runway, the payroll and the budget. The department, how much of its budget is used and
+// its buttons always show; on a phone the buttons stack and the status wraps.
+const SHOWN_FROM = {
+  budget: "hidden @min-[33rem]:table-cell",
+  payroll: "hidden @min-[39rem]:table-cell",
+  runway: "hidden @min-[49rem]:table-cell",
+  people: "hidden @min-[53rem]:table-cell",
+}
+
 function DepartmentsTable({
   overview,
   onOpen,
@@ -195,76 +210,95 @@ function DepartmentsTable({
   const { currency } = overview
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Department</TableHead>
-          <TableHead className="text-right">People</TableHead>
-          <TableHead className="text-right">Payroll</TableHead>
-          <TableHead className="text-right">Budget</TableHead>
-          <TableHead>Used</TableHead>
-          <TableHead>Runway</TableHead>
-          <TableHead>
-            <span className="sr-only">Actions</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {overview.departments.map((department) => (
-          <TableRow key={department.id}>
-            <TableCell className="font-medium">{department.name}</TableCell>
-            <TableCell className="text-right tabular-nums">
-              {formatCount(department.headcount)}
-            </TableCell>
-            <TableCell className="text-right">
-              <Money amount={department.payroll} currency={currency} />
-            </TableCell>
-            <TableCell className="text-right">
-              {department.budget ? (
-                <Money amount={department.budget.amount} currency={currency} />
-              ) : (
-                <span className="text-muted-foreground">—</span>
-              )}
-            </TableCell>
-            <TableCell>
-              <BudgetStatusLabel
-                status={department.status}
-                percent={department.utilisation_percent}
-              />
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {department.budget ? runwayText(department.runway_months) : "—"}
-            </TableCell>
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                {department.budget && (
+    <div className="@container">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Department</TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.people)}>
+              People
+            </TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.payroll)}>
+              Payroll
+            </TableHead>
+            <TableHead className={cn("text-right", SHOWN_FROM.budget)}>
+              Budget
+            </TableHead>
+            <TableHead>Used</TableHead>
+            <TableHead className={SHOWN_FROM.runway}>Runway</TableHead>
+            <TableHead>
+              <span className="sr-only">Actions</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {overview.departments.map((department) => (
+            <TableRow key={department.id}>
+              <TableCell className="font-medium">{department.name}</TableCell>
+              <TableCell
+                className={cn("text-right tabular-nums", SHOWN_FROM.people)}
+              >
+                {formatCount(department.headcount)}
+              </TableCell>
+              <TableCell className={cn("text-right", SHOWN_FROM.payroll)}>
+                <Money amount={department.payroll} currency={currency} />
+              </TableCell>
+              <TableCell className={cn("text-right", SHOWN_FROM.budget)}>
+                {department.budget ? (
+                  <Money
+                    amount={department.budget.amount}
+                    currency={currency}
+                  />
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
+              </TableCell>
+              <TableCell className="whitespace-normal">
+                <BudgetStatusLabel
+                  status={department.status}
+                  percent={department.utilisation_percent}
+                  className="flex-wrap"
+                />
+              </TableCell>
+              <TableCell
+                className={cn("text-muted-foreground", SHOWN_FROM.runway)}
+              >
+                {department.budget ? runwayText(department.runway_months) : "—"}
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-col items-end gap-1 @min-[33rem]:flex-row @min-[33rem]:justify-end @min-[33rem]:gap-2">
+                  {department.budget && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`${department.name}'s budget history`}
+                      onClick={() =>
+                        onOpen({
+                          departmentId: department.id,
+                          dialog: "history",
+                        })
+                      }
+                    >
+                      History
+                    </Button>
+                  )}
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    aria-label={`${department.name}'s budget history`}
+                    aria-label={`${department.budget ? "Change" : "Set"} ${department.name}'s budget`}
                     onClick={() =>
-                      onOpen({ departmentId: department.id, dialog: "history" })
+                      onOpen({ departmentId: department.id, dialog: "edit" })
                     }
                   >
-                    History
+                    {department.budget ? "Change" : "Set budget"}
                   </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={`${department.budget ? "Change" : "Set"} ${department.name}'s budget`}
-                  onClick={() =>
-                    onOpen({ departmentId: department.id, dialog: "edit" })
-                  }
-                >
-                  {department.budget ? "Change" : "Set budget"}
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 

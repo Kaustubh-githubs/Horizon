@@ -27,6 +27,14 @@ RSpec.describe "/api/v1/session", type: :request do
       expect(response.headers["Set-Cookie"]).to match(/session_id=.+; .*httponly.*samesite=lax/i)
     end
 
+    it "answers 429 after 10 attempts in 3 minutes from one address", :aggregate_failures do
+      10.times { log_in(password: "not-the-password") }
+      log_in
+
+      expect(response).to have_http_status(:too_many_requests)
+      expect(response.parsed_body).to eq("errors" => { "base" => [ "Too many attempts. Try again in a few minutes." ] })
+    end
+
     it "rejects a wrong password without saying which part was wrong", :aggregate_failures do
       log_in(password: "not-the-password")
 

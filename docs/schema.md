@@ -189,6 +189,7 @@ Models also validate uniqueness with `case_sensitive: false`, so HR gets a frien
 | `employees (country_id, job_title_id)` | Insights: pay per country, and per title within a country |
 | `employees (department_id)` | Directory filter and payroll per department |
 | `employees (status)` | Active-only lists and insights |
+| `employees (full_name)`, `(email)`, `(employee_code)`, trigram GIN (`pg_trgm`) | The directory's "contains" search (`ILIKE '%term%'`), which a B-tree can't serve (docs/performance.md) |
 | `salary_revisions (employee_id, effective_from)` | An employee's salary history, newest first |
 
 Deliberately left out: a trigram index for name search. At 10,000 rows a plain scan takes milliseconds. We'll add one only if query plans in the performance phase show it's needed.

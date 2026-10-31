@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_30_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
 
   create_table "audits", force: :cascade do |t|
     t.bigint "auditable_id"
@@ -85,7 +86,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_30_120001) do
     t.index ["country_id", "job_title_id"], name: "index_employees_on_country_id_and_job_title_id"
     t.index ["department_id"], name: "index_employees_on_department_id"
     t.index ["email"], name: "index_employees_on_email", unique: true
+    t.index ["email"], name: "index_employees_on_email_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["employee_code"], name: "index_employees_on_employee_code", unique: true
+    t.index ["employee_code"], name: "index_employees_on_employee_code_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["full_name"], name: "index_employees_on_full_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["status"], name: "index_employees_on_status"
     t.check_constraint "(status::text = 'terminated'::text) = (terminated_on IS NOT NULL)", name: "employees_termination_consistent"
     t.check_constraint "current_currency::text ~ '^[A-Z]{3}$'::text", name: "employees_current_currency_format"

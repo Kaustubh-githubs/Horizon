@@ -2,7 +2,7 @@ import { PencilIcon } from "lucide-react"
 import type { ReactNode } from "react"
 import { Link, useParams } from "react-router"
 
-import { BackLink } from "@/components/back-link"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -40,7 +40,12 @@ export function EmployeePage() {
 
   return (
     <section className="flex max-w-3xl flex-col gap-4">
-      <BackLink to="/employees">Employees</BackLink>
+      <Breadcrumbs
+        items={[
+          { label: "Employees", to: "/employees" },
+          { label: employee.full_name },
+        ]}
+      />
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">

@@ -1,6 +1,6 @@
 import type { UseQueryResult } from "@tanstack/react-query"
 
-import { BackLink } from "@/components/back-link"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 import {
   DetailsCardSkeleton,
   TextLine,
@@ -33,7 +33,12 @@ export function EmployeeLoadState({
       failed.error instanceof ApiError && failed.error.status === 404
     return (
       <section className="flex flex-col items-start gap-3">
-        <BackLink to="/employees">Employees</BackLink>
+        <Breadcrumbs
+          items={[
+            { label: "Employees", to: "/employees" },
+            { label: notFound ? "Not found" : "Couldn't load" },
+          ]}
+        />
         <h1 className="font-heading text-2xl font-semibold">
           {notFound ? "Employee not found" : "Couldn't load this page"}
         </h1>

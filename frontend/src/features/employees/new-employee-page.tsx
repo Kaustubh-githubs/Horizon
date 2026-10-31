@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router"
 import { toast } from "sonner"
 
-import { BackLink } from "@/components/back-link"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 import { useCreateEmployee } from "@/features/employees/api"
 import { useLookups } from "@/features/lookups/api"
 import { EmployeeForm } from "@/features/employees/employee-form"
@@ -21,7 +21,12 @@ export function NewEmployeePage() {
 
   return (
     <section className="flex max-w-3xl flex-col gap-4">
-      <BackLink to="/employees">Employees</BackLink>
+      <Breadcrumbs
+        items={[
+          { label: "Employees", to: "/employees" },
+          { label: "Add employee" },
+        ]}
+      />
       <h1 className="font-heading text-2xl font-semibold">Add employee</h1>
 
       <EmployeeForm

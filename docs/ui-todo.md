@@ -36,5 +36,11 @@ UI and UX polish we've noticed but are leaving until every flow works end to end
 - [x] **Loading skeletons don't match the final layout,** so the page jumps when data arrives. Fix: skeletons shaped like the real card and table. Done in the UI pass (ADR 0022).
 - [ ] **Toasts and banners use slightly different wording styles.** Fix: one pass over all copy once the flows are done.
 - [ ] **Breadcrumbs** instead of a single back link on nested pages (Employees › Asha Rao › Edit).
+- [ ] **Dark mode** (asked for on 2026-10-31, for later). The shadcn tokens already have `.dark` values. What's left:
+  - a theme toggle in the sidebar footer: light, dark or system, remembered per browser
+  - the hard-coded colours (about 19 uses: amber warnings, emerald increases, the ★ star, the chart's hex values) moved to tokens with dark values
+  - dark values for the loading bar's gradient
+  - a check of every page in both themes
+  - a short ADR
 - [ ] **The main bundle is still over Vite's 500 KB warning** (about 770 KB after Insights became a lazy route). Fix: load more routes on demand (budgets, the employee pages), or split vendor code.
 - [ ] **September is "Sept" in the browser and "Sep" from the API** (Intl's en-GB vs Ruby's `%b`). Fix: pick one, e.g. format dates in API messages on the client.

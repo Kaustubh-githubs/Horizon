@@ -7,12 +7,6 @@ A modern salary management system for ACME's HR Manager, designed to replace com
 - **Sign in:** as the demo HR Manager, `hr@acme.test`, with the password under [Quick Start](#quick-start-development).
 - **First load:** it runs on Render's free plan, which sleeps after 15 minutes without visitors, so the first page can take about a minute to wake.
 
-## Current Status
-- **Feature-complete:** the seed script creates 10,000 employees. The HR Manager can add, edit and terminate employees, change salaries, explore pay insights, set department budgets, and see a timeline and full audit log for every employee.
-- **Add-on audit trail working:** every change to an employee, a salary or a budget is recorded (who, what, when) and viewable in the UI.
-- **Live on Render** as one service (the React app served by Rails) and a Postgres, seeded with the demo data, from `render.yaml`; see [Deploying](#deploying).
-- **Not done yet:** a GitHub CI workflow (the same checks run locally with `bin/ci` and `pnpm test`).
-
 ## Quick Start (Development)
 
 **You need:** Ruby 3.4.9, Node 24 (`.nvmrc`), pnpm, and PostgreSQL 14 or later running locally.
@@ -33,23 +27,6 @@ Open `http://localhost:5173` and sign in as the demo HR Manager:
 - **Password:** `horizon-demo-2026` (set `DEMO_USER_PASSWORD` before seeding to use your own)
 
 In development the browser only talks to Vite, which forwards `/api` to Rails, so there's no CORS setup (ADR 0001).
-
-**Re-seeding:** `bin/rails db:reset` starts again from scratch. `SEED_EMPLOYEES=500 bin/rails db:seed` seeds a smaller set.
-
-The seed script loads (the same data on every run):
-- 10,000 employees across 8 countries: India, the United States, the United Kingdom, Germany, Singapore, the UAE, Brazil and Japan, each paid in its own currency
-- 8 departments and 28 job titles, with pay bands by title and country
-- 30,287 salary revisions: each employee's starting salary plus raises, promotions and adjustments over the years, with effective dates
-- about 8% former employees and about 3% deliberately underpaid people, so the insights have something to find
-- exchange rates as of 1 Oct 2026, and the demo HR Manager
-
-It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
-
-## Design Principles
-
-- **Developer Experience First:** Follows [CONVENTIONS.md](CONVENTIONS.md) for consistent AI-assisted development.
-- **One Source of Truth:** All decisions, architecture and rationale are documented in [docs/](docs/).
-- **Incremental Development:** Every decision is an ADR (Architecture Decision Record) in [docs/adr/](docs/adr/README.md), 26 so far.
 
 ## Core Features
 
@@ -83,14 +60,6 @@ It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
 - **Timeline:** Each employee's profile tells their story by date: joining, salary changes, promotions, department and title moves, work anniversaries, and leaving.
 - **Audit Log:** A panel on the profile lists every saved change, column by column.
 
-### Feel of the App
-- **Loading and numbers:** an orange loading bar shows whenever something loads, and headline numbers roll in when the app first loads.
-- **Navigation:** the filters stay at the top while you scroll, and Back returns you to where you were.
-- **Forms:** the app asks before throwing away unsaved changes.
-- **Brand Colour:** the loading bar's orange runs through the app: the brand mark, the current page, buttons, the filters that are on, the headline tiles and the charts, at readable contrast in both themes (ADR 0024).
-- **Dark Mode:** Light or Dark from the sidebar, starting from the device's theme and remembered per browser. The new theme spreads from the bottom-left corner towards the top right, with no white flash on load (ADR 0023).
-- **Loading placeholders:** shaped like the real content, so nothing jumps when data arrives (ADR 0022).
-
 ## Technology Stack
 
 ### Backend
@@ -112,40 +81,6 @@ It takes about 2.3 seconds, using bulk inserts (ADR 0015, docs/performance.md).
 - **NProgress, NumberFlow and cmdk:** the loading bar, rolling numbers and searchable pickers
 - **Vitest + React Testing Library:** unit and component tests, in jsdom
 
-## Architecture
-
-### Backend
-- **Thin Controllers:** Business logic lives in service objects (`app/services`) and query objects (`app/queries`).
-- **Money Handling:** `decimal(15,2)` in the database and `BigDecimal` in Ruby. The API sends amounts as strings, so JavaScript never turns them into floats (ADR 0006).
-- **SQL-based Analytics:** Insights are computed in SQL (aggregates, percentiles, window functions), not in Ruby loops, and checked against hand-built datasets.
-- **Constraint Layer:** Database constraints (foreign keys, checks and unique indexes) enforce integrity beyond model validations ([docs/schema.md](docs/schema.md)).
-
-### Frontend
-- **Server-Side State:** TanStack Query for fetching, caching and refreshing.
-- **URL-Driven State:** Directory and insights filters, sorting and pagination live in the URL, for shareable links and browser history.
-- **Type Safety:** Strict TypeScript and type-aware ESLint.
-- **Component Library:** Consistent UI through shadcn/ui components.
-
-## Key Differentiators
-
-1. **Data Integrity**
-   - Database constraints back up every model validation, so even bulk inserts can't store bad rows (ADR 0002, 0015)
-   - Employees are terminated, never deleted, and salary history is never edited (ADR 0004, 0008)
-   - ISO currency codes on every amount, and money never touches a float (ADR 0006)
-
-2. **Responsiveness**
-   - Filters update instantly, with the previous results shown dimmed until the new ones arrive
-   - A salary change updates the profile, the directory and the insights without a page reload
-   - Profiles are loaded in advance when you rest the pointer on a directory row
-
-3. **Built for Scale**
-   - 10,000 employees seeded in seconds; the directory query checked with `EXPLAIN ANALYZE`, and every insights query timed at under 50 ms ([docs/performance.md](docs/performance.md))
-   - Users belong to a persona, so roles and permissions can grow without a schema change (ADR 0010)
-
-4. **Auditability by Design**
-   - A complete, immutable change history for employees, salaries and budgets (ADR 0012, 0021)
-   - Every product and technical decision recorded as an ADR, with the options that were considered
-
 ## Running the Checks
 
 ```bash
@@ -158,27 +93,6 @@ cd backend && bin/ci
 cd frontend && pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 
-## Deploying
-
-Horizon deploys to [Render](https://render.com) from the Blueprint in `render.yaml` (ADR 0026): one web service built from the root `Dockerfile` (the React app is built and served by Rails, with the API, on one origin), and a Postgres, both in Singapore.
-
-1. In Render, choose **New → Blueprint** and pick this GitHub repository. Render reads `render.yaml`.
-2. When it asks for `RAILS_MASTER_KEY`, paste the contents of `backend/config/master.key`. `DATABASE_URL` comes from the Blueprint's Postgres, and `SEED_ON_BOOT=true` loads the demo data on the first boot.
-3. Apply. The first deploy builds the image, creates the schema and seeds 10,000 employees. Then open the service's `onrender.com` URL and sign in as the demo HR Manager.
-
-Each push to master deploys again; every boot runs the migrations, and the seed skips employees once they exist.
-
-**Free plan limits:** the web service sleeps after 15 minutes without traffic and takes about a minute to wake, so open it a couple of minutes before a demo (or move it to a paid instance that week). The free Postgres expires after 30 days.
-
-## What's Next
-
-- [ ] **CI on GitHub:** run `bin/ci` and the frontend checks on every pull request.
-- [ ] **More Frontend Tests:** the first suite covers formatting, the API client, signing out on a 401, URL filters and the unsaved-changes guard; the forms and dialogs are next.
-- [ ] **Performance:** Review query performance for 50k+ employees.
-- [ ] **Advanced Analytics:** Trends over time, compa-ratios, and CSV export.
-
-The UI polish list, now worked through, is in [docs/ui-todo.md](docs/ui-todo.md).
-
 ## Documentation
 
 - [Requirements](docs/requirements.md): What we're building and what we're leaving out.
@@ -187,8 +101,3 @@ The UI polish list, now worked through, is in [docs/ui-todo.md](docs/ui-todo.md)
 - [Performance Notes](docs/performance.md): Seeding, query plans and optimisation.
 - [Conventions](CONVENTIONS.md): Guidelines for anyone (or any AI tool) working in this repo.
 - [How AI was used](docs/ai-usage.md): What the AI did, what the developer decided, how its work was checked, and where it was wrong.
-- [UI to-do](docs/ui-todo.md): UI and UX polish, done and open.
-
-## License
-
-Internal tooling for ACME only. Unauthorized distribution is strictly prohibited.

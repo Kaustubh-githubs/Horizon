@@ -3,8 +3,8 @@
 Horizon was built from 27 October to 2 November 2026 by one developer working with **Claude Code** (Anthropic's coding agent, in the Claude desktop app). This document says what the AI did, what the developer decided, how its output was checked, and where it was wrong.
 
 **At a glance:**
-- 46 pull requests and 102 commits (not counting merges), in the history as they happened (merged without squashing).
-- 413 backend specs and 48 frontend tests.
+- 47 pull requests and 107 commits (not counting merges), in the history as they happened (merged without squashing).
+- 415 backend specs and 50 frontend tests.
 - 26 decision records ([docs/adr/](adr/README.md)), two of them superseded when a decision changed.
 - Live at [horizon-0owa.onrender.com](https://horizon-0owa.onrender.com).
 

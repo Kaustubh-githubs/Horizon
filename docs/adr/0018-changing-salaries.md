@@ -34,3 +34,8 @@ HR records raises, promotions, market adjustments and corrections. Each one adds
 - Good: the dialog puts the number in context (the old salary, the % change, what peers earn), which is where an extra zero gets noticed.
 - Cost: the peer average is a live query on every dialog open. It uses the `(country_id, job_title_id)` index and covers at most a few hundred rows, so it's cheap at this scale.
 - Cost: warnings can be clicked past. If that proves risky, we add a required confirmation.
+
+## Updates
+- **2026-11-02, corrections:**
+  - **Seeded promotions keep their title.** The rule that a promotion changes the job title holds for every change made in the app. The seed's promotions only raise pay: the generator never created earlier titles. The timeline shows them as promotions without title names (ADR 0021).
+  - **Peer groups** go up to 846 people (India × Software Engineer), not a few hundred. The query still takes about 1.4 ms (docs/performance.md).

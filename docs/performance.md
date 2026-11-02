@@ -19,7 +19,7 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 - `spec/lib/seeds/runner_spec.rb` checks that seeded rows also pass every model validation.
 - `normalizes` still applies inside `insert_all`, because it works at the attribute-type level.
 
-**How to reproduce:** `bin/rails db:reset` then `bin/rails db:seed` prints the timing. The `create!` comparison ran 500 employees inside a transaction that was rolled back afterwards.
+**How to reproduce:** `bin/rails db:reset` recreates the database and runs the seed, which prints the timing. (A second `db:seed` only says the employees are already there.) The `create!` comparison ran 500 employees inside a transaction that was rolled back afterwards.
 
 **What the seed produces** (seed 42): 10,000 employees, 30,287 revisions, 285 planted underpaid (2.9%), 806 terminated (8.1%). India has 3,959 employees (40%).
 
@@ -36,7 +36,7 @@ Machine: Apple Silicon laptop, PostgreSQL 14 running locally, Ruby 3.4, Rails 8.
 
 **What we decided:** no extra indexes for now. Even the search, a sequential scan over every row with `ILIKE '%term%'`, takes about 3 ms. A trigram index (`pg_trgm`) would only pay off at roughly 10× the data, and every index slows inserts and takes space. We'll revisit at that point.
 
-**Revisited (2026-11-01, code review):** we added trigram GIN indexes on `full_name`, `email` and `employee_code` after all. Each search runs six times per keystroke: once for the page, and five times for the summary line and the filter counts. The README talks about growing past 50,000 employees, where six sequential scans per keystroke would be felt. The search above now takes about 0.6 ms (median of 3 warm runs), and Postgres picks the indexes on its own. The cost is 2.3 MB of indexes and slightly slower inserts, which add one employee at a time.
+**Revisited (2026-11-01, code review):** we added trigram GIN indexes on `full_name`, `email` and `employee_code` after all. Each search runs six queries: one for the page, and five for the summary line and the filter counts (the search box waits 300 ms after typing stops). At ten times the data, the point named above, six sequential scans per search would be felt, and the indexes cost little now. The search above now takes about 0.6 ms (median of 3 warm runs), and Postgres picks the indexes on its own. The cost is 2.3 MB of indexes and slightly slower inserts, which add one employee at a time.
 
 **Country filter:** we filter with `country_id IN (SELECT id FROM countries WHERE code = ...)` rather than joining `countries`. A join made Rails switch the preloads to one wide `LEFT JOIN` across four tables and count with `COUNT(DISTINCT)`. The subquery keeps the small separate preload queries and a plain count, at the same speed.
 
@@ -64,13 +64,13 @@ Every figure is one SQL aggregate over the 9,194 active employees (`GROUP BY` wi
 | Segments with every filter set (e.g. Engineering in India, 1–3 years, by job title) | 2 ms |
 | Pay changes, last 12 months (a `LAG` window over all 30,287 revisions) | 45 ms |
 
-**With the page's filters** (ADR 0019, 2026-10-31) every part runs the same queries on fewer people: for Engineering in the United States, the headline numbers take about 2.5 ms and pay changes about 6 ms (7 ms for everyone; the `LAG` window still runs over every revision, then the filter keeps the matching people's changes).
+**With the page's filters** (ADR 0019, 2026-10-31) every part runs the same queries on fewer people: for Engineering in the United States, the headline numbers take about 2.5 ms. Pay changes take about 22 ms, against 43 ms for everyone (re-measured 2026-11-02, the whole call, median of 7 warm runs): the `LAG` window still runs over every revision, then the filter keeps the matching people's changes.
 
 **What we decided:** no caching or summary tables. The slowest call, pay changes, takes about 45 ms because the window has to see every employee's whole history to find each change's previous salary. Everything else is under 20 ms. If the data grows tenfold, the first step would be caching the overview and segments for a few minutes, since pay changes rarely.
 
 ## Department budgets (ADR 0020)
 
-**Overview** (`GET /budgets`): three small queries over the 9,193 active employees (headcount per department, payroll in INR per department with a `GROUP BY` and the exchange-rate joins, and this year's 8 budgets), then the % used, status and runway per department in Ruby. About 2 ms on the seeded database (average of 5 warm runs).
+**Overview** (`GET /budgets`): eight small queries over the 9,194 active employees: the departments, this year's 8 budgets, headcount per department, payroll in INR per department (a `GROUP BY` with the exchange-rate joins), the rates' date, and three that find currencies with no exchange rate. Then the % used, status and runway per department, and the combined total, are worked out in Ruby over those eight rows. About 8 ms for the whole call (re-measured 2026-11-02, median of 7 warm runs).
 
 **History** (`GET /budgets/:id/audits`): a budget has a handful of audit rows, read in one query on the gem's `(auditable_type, auditable_id, version)` index, with the users in a second query.
 

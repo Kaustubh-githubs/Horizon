@@ -11,7 +11,7 @@ After dark mode (ADR 0023) the app was all greys, apart from data colours (statu
   - `brand`: marks with no text on them.
   - `brand-soft`: the background of something picked.
   - `brand-strong`: orange text.
-- **Readable first.** White text on the bar's bright orange (`#ea580c`) is only 3.6:1, below the 4.5:1 that normal text needs. So in light mode, buttons and orange text use orange-700 (`#c2410c`, 5.2:1 with white). In dark mode they use the bar's own `#f97316` with dark text (6.4:1). The bright gradient goes only where nothing has to be read: the mark, the bar, the tiles' top edge, the active nav item's marker.
+- **Readable first.** White text on the bar's bright orange (`#ea580c`) is only 3.6:1, below the 4.5:1 that normal text needs. So in light mode, buttons and orange text use orange-700 (`#c2410c`, 5.2:1 with white). In dark mode they use the bar's own `#f97316` with dark text (6.2:1). The bright gradient goes only where nothing has to be read: the mark, the bar, the tiles' top edge, the active nav item's marker.
 - **Where it shows:**
   - a brand mark (a sun rising over the horizon, in the bar's gradient) in the sidebar, on the sign-in card and as the favicon, replacing Vite's default logo
   - the current page in the sidebar: tinted, with an orange marker

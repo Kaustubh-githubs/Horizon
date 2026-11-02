@@ -10,7 +10,7 @@ Horizon is a salary management app for ACME's HR Manager: about 10,000 employees
 - **Discuss before building.** For anything beyond a small fix, lay out 2–3 options with pros and cons and let the developer choose.
 - **Small steps.** Make one focused change, then stop and suggest a commit message. The developer reviews and commits. AI tools don't commit, push or open PRs unless asked.
 - **One branch and PR per phase** (`docs/...`, `feat/...`), merged into `master` without squashing.
-- **Test first.** Write a failing test, make it pass, then tidy up. The commit history should show this.
+- **Test first for business rules.** Commit the failing spec, make it pass, then tidy up, so the history shows it. (The frontend's tests came late: they were deferred until 2026-11-01, ADR 0011. New frontend work follows the rule.)
 - **Ask, don't assume.** If the requirements don't cover something, ask, or write the assumption down.
 - **No new dependencies** (gems or npm packages) without asking first.
 - **Commit messages** follow Conventional Commits: `feat:`, `fix:`, `test:`, `refactor:`, `docs:`, `chore:`.
@@ -26,13 +26,13 @@ Setup, seeding and the commands for the checks are in the [README](README.md).
 ## Backend
 - **Controllers stay thin.** Business logic goes in service objects (`app/services`), and reporting queries go in query objects (`app/queries`).
 - **JSON shapes live in serializers** (`app/serializers`), one class per resource with `as_json`. Controllers don't build hashes. Query objects that answer a whole endpoint (insights, budgets, timeline) return their hash directly.
-- **Money:** `decimal(15,2)` and `BigDecimal`, always stored with an ISO currency code. Never use floats (ADR 0006). JSON returns amounts as strings, through `MoneyString.from` (`lib/money_string.rb`).
-- **Salary writes only go through `SalaryRevisions::Create`.** It saves the revision and updates `employees.current_salary` in one transaction. The effective date is always today (ADR 0004, 0005).
+- **Money:** `decimal(15,2)` and `BigDecimal`, always stored with an ISO currency code. Never use floats (ADR 0006). JSON returns amounts as strings, never numbers: `to_s("F")` on a stored decimal, and `MoneyString.from` (`lib/money_string.rb`) for SQL aggregates, which can come back as floats.
+- **Salary changes go through `SalaryRevisions::Create`.** It saves the revision and updates `employees.current_salary` in one transaction. The effective date is always today (ADR 0004, 0005). The only other writers are `Employees::Create` (the `hire` revision, in the same transaction as the new employee) and the seed's bulk insert.
 - **Employees are terminated, never deleted** (ADR 0008). No `default_scope`. Use explicit scopes like `Employee.active`.
 - **Reference data** (countries, departments, job titles) lives in lookup tables with foreign keys (ADR 0003).
 - **Constraints at both levels:** model validations plus database constraints (NOT NULL, foreign keys, unique indexes, check constraints).
 - **Schema doc:** any migration that changes the schema also updates [docs/schema.md](docs/schema.md), in the same commit.
-- **Insights are computed in SQL** (grouping, `percentile_cont`). Don't load rows into Ruby to aggregate them.
+- **Insights are computed in SQL** (grouping, `percentile_cont`). Don't load employee rows into Ruby to aggregate them. Finishing a small result in Ruby is fine (the budgets page adds up its eight department rows).
 - **Avoid N+1 queries.** Preload associations in lists.
 - **API:** routes under `/api/v1`, JSON only, errors shaped as `{ "errors": { "field": ["message"] } }`.
 - **Auditing:** models opt in with `auditable` (the `Auditable` concern wraps the `audited` gem, ADR 0012).
@@ -50,7 +50,7 @@ Setup, seeding and the commands for the checks are in the [README](README.md).
 
 ## Tests
 - **Backend:** RSpec + FactoryBot. **Frontend:** Vitest + React Testing Library (jsdom), next to the code they test (`format.test.ts` beside `format.ts`). Test what a user sees and does (roles, labels, clicks), not component internals. `pnpm test` runs them.
-- **Fast and deterministic:** no real network, fixed random seeds, and frozen time (`travel_to`) wherever dates matter.
+- **Fast and deterministic:** no real network, fixed seeds for generated data (the seed's `Random` and Faker), specs in random order with the seed printed so a failure can be replayed (`--seed`), and frozen time (`travel_to`) wherever dates matter.
 - **Insights tests use small hand-built datasets,** so the expected numbers can be checked by hand.
 - **Test behaviour, not implementation.** One reason to fail per test, with a name that reads like a sentence.
 - **Never delete or weaken a failing test to make it pass.** Fix the code, or ask.

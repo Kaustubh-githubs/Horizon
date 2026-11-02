@@ -1,7 +1,7 @@
 module Budgets
   # This year's budgets (ADR 0020): each department's yearly payroll of active staff, converted to
-  # INR, against its budget, plus the combined figure for the departments that have one. Three
-  # small queries; the maths is per department, in Ruby.
+  # INR, against its budget, plus the combined figure for the departments that have one. Eight
+  # small queries; the maths over the department rows is in Ruby.
   class OverviewQuery
     # Fixed status bands, in % of the budget used.
     OVER_ABOVE = 100

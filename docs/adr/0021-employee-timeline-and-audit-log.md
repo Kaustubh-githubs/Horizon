@@ -31,3 +31,6 @@ The employee profile showed two lists: the salary history table (ADR 0018) and a
 - Cost: seeded employees' timelines lack department and title moves, and seeded promotions show no title names. The page says nothing misleading: it only shows what's recorded.
 - Cost: anniversaries make long timelines for long-serving people (one per year). Year headings keep it scannable.
 - Cost: the business unit isn't in the API. If units arrive, it becomes real data and the label goes.
+
+## Updates
+- **2026-11-02, what the log leaves out:** a salary revision's `employee_id` (the whole log is about that employee), and a column that is empty both before and after a change. Everything else that was saved is listed.

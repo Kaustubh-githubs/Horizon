@@ -112,7 +112,7 @@ erDiagram
         bigint auditable_id
         string associated_type "Employee, for salary revisions"
         bigint associated_id
-        bigint user_id FK
+        bigint user_id "who; no foreign key"
         string action "create | update | destroy"
         jsonb audited_changes "old and new values"
         integer version
@@ -137,7 +137,7 @@ erDiagram
 | Table | Status | Purpose | Decided in |
 |---|---|---|---|
 | `countries` | ✅ | Lookup list of countries and their currency | ADR 0003 |
-| `exchange_rates` | ✅ | Fixed, dated rates for the org-wide USD view | ADR 0007 |
+| `exchange_rates` | ✅ | Fixed, dated rates (to USD), used to convert figures across countries to INR | ADR 0007, 0019 |
 | `departments` | ✅ | Lookup list of departments | ADR 0003 |
 | `job_titles` | ✅ | Lookup list of titles, including seniority | ADR 0003 |
 | `employees` | ✅ | One row per person, with a copy of their current salary | ADR 0003, 0004, 0008, 0014 |
@@ -154,7 +154,7 @@ Model validations give friendly error messages. The database rules below are the
 
 - **Money:** `decimal(15,2)`, never float (ADR 0006). `salary_revisions.amount > 0`.
 - **Exchange rates:** `decimal(20,10)`, so very small rates stay exact (e.g. IDR to USD is about 0.0000612). `rate_to_usd > 0`.
-- **Foreign keys** on every `*_id` column. No cascading deletes: employees are terminated, never deleted (ADR 0008).
+- **Foreign keys** on every `*_id` column except in `audits`, the gem's own table: its `user_id`, `auditable_id` and `associated_id` have none. No cascading deletes: employees are terminated, never deleted (ADR 0008).
 
 Some rules can't be check constraints, so the models enforce them:
 - **Rules that depend on today's date:** a salary revision's `effective_from` can't be in the future. Postgres expects check constraints to give the same answer forever, and `CURRENT_DATE` doesn't.
@@ -162,13 +162,13 @@ Some rules can't be check constraints, so the models enforce them:
 - **Append-only history:** a saved salary revision can't be edited or deleted. Mistakes are fixed with a new `correction` row. An employee with salary history can't be deleted either.
 - **What a value looked like before Rails cast it:** money with more than two decimal places is refused rather than rounded by the column, and a date that doesn't exist is "not a valid date" (ADR 0006, 0016). The column only ever sees the cast value.
 - **Lengths:** a full name is at most 120 characters and an email at most 254 (model validations; the columns are unlimited `varchar`).
-- **Unique:** `countries.code`, `exchange_rates.currency_code`, `employees.employee_code`, `employees.email`, `department_budgets (department_id, year)`.
+- **Unique:** `countries.code`, `exchange_rates.currency_code`, `employees.employee_code`, `employees.email`, `users.email_address`, `department_budgets (department_id, year)`. These are plain unique indexes: emails behave case-insensitively because the models lowercase them before saving (below), not because of the index.
 - **Budgets:** `amount > 0`, and `year` between 2000 and 2100. Only this year's budget can be set or changed, which depends on today's date, so the model enforces it.
 - **Unique, ignoring case:** `countries.name`, `departments.name` and `job_titles.name` use a unique index on `LOWER(name)`. "Engineering" and "engineering" can't both exist, but the display keeps HR's capitalisation. A plain unique index would let the spreadsheet's spelling problem back in through the lookup tables.
 - **Formats:** `countries.code` is two uppercase letters, and currency codes are three (check constraints, e.g. `code ~ '^[A-Z]{2}$'`).
 - **Status:** `status IN ('active', 'terminated')`. `terminated_on` is set if and only if the status is `terminated`, and is never before `hire_date`.
 - **Reason:** `reason IN ('hire', 'annual_raise', 'promotion', 'market_adjustment', 'correction')`.
-- **NOT NULL** on every column except `employees.terminated_on`.
+- **NOT NULL** on every column except `employees.terminated_on`, `personas.description`, `sessions.ip_address` and `sessions.user_agent`, and the columns of `audits` (the gem's table).
 
 ## Cleaning values before saving (models)
 
@@ -178,9 +178,9 @@ The models tidy input before it's validated, so the rules above see clean values
 |---|---|
 | `countries.name`, `departments.name`, `job_titles.name`, `employees.full_name` | Whitespace squished: trimmed, inner runs collapsed to one space |
 | `countries.code`, `countries.currency_code`, `exchange_rates.currency_code`, `*.currency` | Trimmed and uppercased: `" in "` becomes `"IN"` |
-| `employees.email` | Trimmed and lowercased |
+| `employees.email`, `users.email_address` | Trimmed and lowercased |
 
-Models also validate uniqueness with `case_sensitive: false`, so HR gets a friendly "has already been taken" message instead of a database error.
+Models also validate uniqueness, so HR gets a friendly "has already been taken" message instead of a database error. The lookup names use `case_sensitive: false`, to match their `LOWER(name)` indexes; emails are already lowercased, so a plain check is enough.
 
 ## Indexes beyond the unique ones
 
@@ -192,4 +192,6 @@ Models also validate uniqueness with `case_sensitive: false`, so HR gets a frien
 | `employees (full_name)`, `(email)`, `(employee_code)`, trigram GIN (`pg_trgm`) | The directory's "contains" search (`ILIKE '%term%'`), which a B-tree can't serve (docs/performance.md) |
 | `salary_revisions (employee_id, effective_from)` | An employee's salary history, newest first |
 
-Deliberately left out: a trigram index for name search. At 10,000 rows a plain scan takes milliseconds. We'll add one only if query plans in the performance phase show it's needed.
+The trigram indexes were left out at first, because at 10,000 rows a plain scan took about 3 ms. They were added on 2026-11-01, when the code review counted six queries per search (docs/performance.md).
+
+Not indexed: `employees.current_salary`. Sorting by salary keeps the top 25 of the matching rows, which takes a few milliseconds at this size.

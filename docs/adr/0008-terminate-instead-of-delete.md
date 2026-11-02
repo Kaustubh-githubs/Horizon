@@ -19,3 +19,6 @@ Employees have a `status` (`active` or `terminated`) and a `terminated_on` date.
 - Good: no data is lost, and terminated employees still show up in history and audits.
 - Cost: queries must think about status. Scopes like `Employee.active` keep this in one place.
 - Not covered: rehiring someone (it would need a new employment record, see the "full employment history" option in 0003).
+
+## Updates
+- **2026-11-02, pay changes count leavers:** insights count active employees, except the pay changes of the last 12 months (ADR 0019), which include people who have since left: their raises still happened and were paid that year.

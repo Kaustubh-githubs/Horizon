@@ -1,7 +1,7 @@
 module Employees
   # An employee's audit log (ADR 0012, 0021): every saved change to the employee or one of their
-  # salary revisions, newest first, with each changed column, who, when and why. Nothing is grouped
-  # or hidden: it's the record for checking. The readable story is the timeline (TimelineQuery).
+  # salary revisions, newest first, with each changed column, who, when and why. Nothing is grouped:
+  # it's the record for checking. The readable story is the timeline (TimelineQuery).
   class AuditLogQuery
     # Columns in the order the log lists them; any others follow. A revision's employee id is left
     # out, because the whole log is about that employee.

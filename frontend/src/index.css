@@ -136,7 +136,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  /* The loading bar's own orange, with dark text (6.4:1). */
+  /* The loading bar's own orange, with dark text (6.2:1). */
   --primary: #f97316;
   --primary-foreground: #1c1917;
   --secondary: oklch(0.269 0 0);

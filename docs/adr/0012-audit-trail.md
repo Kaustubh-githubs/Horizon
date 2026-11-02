@@ -36,3 +36,6 @@ Use the [`audited`](https://github.com/collectiveidea/audited) gem for now.
 - **No reason note** on edits or ending employment for now. Salary changes already carry a reason. The gem's `audit_comment` can add one later.
 - **Seeded employees** were bulk-loaded without audits, so their history starts empty and says so ("No changes recorded since this employee was loaded into Horizon"). Their salary history still shows the seeded pay timeline. Writing 10,000 "loaded" entries would say nothing useful about who did what.
 - Later the same day, ADR 0021 replaced the grouped "Change history" card with a timeline and an audit log panel that lists every saved change. What's recorded, the readable values, no reason note and the empty seeded history stand.
+
+## Update 2026-11-02: seeded budgets
+- The seed bulk-inserts employees and salaries, so they have no audits. Department budgets are different: the seed creates them one at a time (there are eight), so each budget's history starts with it being set, with no user.

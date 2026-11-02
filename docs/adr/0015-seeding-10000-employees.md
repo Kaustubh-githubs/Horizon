@@ -49,4 +49,4 @@ The brief asks for a seed script with 10,000 employees. The seeded data is also 
   - **The same people, not the same dates.** `db/seeds.rb` doesn't pass a date, so `today` is the day the seed runs. Names, departments, titles and amounts are the same on every run; hire dates, salary changes and leaving dates are counted back from that day. The specs pass a fixed date.
   - **Running it again** still skips employees, but it also adds this year's department budgets if they're missing (ADR 0020).
   - **`create!` in a loop** measured about 35 s for 10,000, not a minute (docs/performance.md).
-  - **Faker is loaded on every production boot,** not only when the seed runs: production loads all of `lib/` at boot, including the generator, which requires Faker. That's an unused library in memory, not a correctness problem.
+  - **Faker was loaded on every production boot,** not only when the seed ran: production loads all of `lib/` at boot, including the generator, which required Faker at the top of the file. Fixed the same day: the generator now requires Faker when it's created, so it loads only when the seed runs, as decided above.

@@ -1,5 +1,3 @@
-require "faker"
-
 module Seeds
   # Builds employee and salary-history rows as plain hashes, with no database access (ADR 0015).
   # The same seed and `today` always give exactly the same rows.
@@ -26,6 +24,9 @@ module Seeds
     ZERO_DECIMAL_CURRENCIES = %w[JPY].freeze
 
     def initialize(count:, seed:, today:)
+      # Here, not at the top of the file: production loads all of lib/ at boot, and Faker is only
+      # needed when the seed runs (ADR 0015).
+      require "faker"
       @count = count
       @random = Random.new(seed)
       @today = today

@@ -1,10 +1,10 @@
 # How AI was used to build Horizon
 
-Horizon was built from 27 October to 1 November 2026 by one developer working with **Claude Code** (Anthropic's coding agent, in the Claude desktop app). This document says what the AI did, what the developer decided, how its output was checked, and where it was wrong.
+Horizon was built from 27 October to 2 November 2026 by one developer working with **Claude Code** (Anthropic's coding agent, in the Claude desktop app). This document says what the AI did, what the developer decided, how its output was checked, and where it was wrong.
 
 **At a glance:**
-- 41 pull requests and 86 commits, in the history as they happened (merged without squashing).
-- 413 backend specs and 44 frontend tests.
+- 46 pull requests and 102 commits (not counting merges), in the history as they happened (merged without squashing).
+- 413 backend specs and 48 frontend tests.
 - 26 decision records ([docs/adr/](adr/README.md)), two of them superseded when a decision changed.
 - Live at [horizon-0owa.onrender.com](https://horizon-0owa.onrender.com).
 
@@ -44,10 +44,10 @@ Each feature followed the same loop, which the PR history shows:
 Some of the developer's prompts, in substance, and what changed because of them:
 
 - **"Is this feature required, or are we just building it for the sake of it?"** Claude had designed department budgets per country. The developer cut them to one INR budget per department (ADR 0020). That was simpler to build, to explain and to demo.
-- **"Check the insights are calculated correctly when filters change."** Claude wrote SQL independent of the app's own queries and compared 130 figures across 9 filter combinations: no differences.
+- **"Check the insights are calculated correctly when filters change."** Claude wrote SQL independent of the app's own queries and compared 89 segment rows across 9 filter combinations, plus the headline numbers and pay changes: no differences.
 - **"Do an intense test of the whole app."** This found five real bugs (listed below).
 - **"Do a proper code review: SQL attacks, Rails best practices, what an interviewer would point out."** This found 15 issues, all fixed in #34–#36.
-- **Audit trail scope:** audits for employees and salaries first, budgets later. The timeline came from a screenshot the developer liked.
+- **Audit trail scope:** department budgets were audited first, as part of the budgets feature (ADR 0020), then employees and salary changes (ADR 0012). The timeline came from a screenshot the developer liked.
 - **The UI:**
   - the insights filters apply to the whole page
   - an NProgress loading bar in orange
@@ -69,7 +69,7 @@ Some of the developer's prompts, in substance, and what changed because of them:
 ### Caught by tests
 - **Employee codes from a Postgres sequence** (ADR 0013) broke the test database: `schema.rb` doesn't record the sequence. Replaced by a column generated from the row's id (ADR 0014).
 - **The `audited` gem's generator** used integer ids; the migration was rewritten with bigint.
-- **A spec helper named `change`** shadowed RSpec's own matcher; it was renamed.
+- **A spec helper named `change`** shadowed RSpec's own `change` matcher in the budget specs, which used both; it was renamed there (`change_budget`). The salary service's spec still has a `change` helper, which is safe because that file never uses the matcher.
 - **The first light-mode chart colours** failed the palette validator against the white card (1.69:1); they were stepped darker.
 
 ### Caught by the AI's own testing pass
@@ -93,7 +93,7 @@ All were fixed, with specs.
 
 ### Caught in the browser before shipping
 - **Scroll restoration:** the first version brought back an old scroll position when a page was opened from the sidebar. Switched to resetting on new pages and keeping the position only on filter changes.
-- **The cross-site write check** blocked the app's own saves: Vite's dev proxy rewrote the `Host` header, so Rails thought the page came from another site. Found by sending a real save from the browser. The proxy now forwards the original host.
+- **The cross-site write check** blocked the app's own saves: Vite's dev proxy rewrote the `Host` header, so Rails thought the page came from another site. Found by sending a real save from the browser. The proxy now also sends the page's own host as `X-Forwarded-Host` (`xfwd`), which Rails reads as the request's host.
 - **The theme reveal circle** landed at half the intended position on a 2× pixel-density screen, because it used pixel coordinates. Switched to percentages.
 - **A skipped theme animation** left an unhandled promise rejection in the console.
 
@@ -107,6 +107,7 @@ All were fixed, with specs.
 ### Wrong claims in the documentation
 - **The README merged in #29** described features that didn't exist: a "Global USD view", ~5,000 job titles, Vitest tests, a missing setup guide. A status review caught it; every claim was checked against the code, and it was rewritten (#32).
 - **An ADR draft** said every new test had been checked to fail without its fix. Only one had been. The sentence was corrected before it was committed.
+- **A check of the docs against the code before submission** (2 November) found about 30 statements that had drifted as the code changed, or were never true. Examples: ADR 0001 described a reverse proxy, but Rails serves the React app; two ADRs mentioned CI, which isn't set up; ADR 0007 said per-title figures never convert; this document's own counts were stale. Each was checked in the code and corrected, mostly as dated updates on the ADRs.
 
 ### Process mistakes
 - **Stacked pull requests:** four PRs each targeted the previous PR's branch. When they were merged quickly, three of them landed in those branches and never reached master. A catch-up PR (#37) fixed it, and every PR now targets master with the merge order written in its description.

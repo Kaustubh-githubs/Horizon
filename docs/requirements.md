@@ -21,14 +21,14 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 - **Add, edit and view employees,** with country, department and title picked from fixed lists so data stays clean.
 - **End employment instead of deleting.** The record is kept, read-only, with a last working day of today or earlier.
 - **Salary history.** Each change has an amount, currency and reason, and takes effect on the day it's recorded. The latest one is the current salary. A promotion also updates the job title.
-- **Pay insights dashboard.** Group by country, department, job title or tenure, filtered by any combination of them: headcount, lowest/25th/median/75th/average/highest pay and total payroll, plus the salary changes of the last 12 months by reason. The filters apply to the whole page: headline numbers, segments, pay changes and the ★ list. One country is shown in its own currency; figures across countries are converted to INR from a fixed, dated exchange-rate table. People paid more than 40% below or above the median for their role in their country are flagged with a ★, on the dashboard and on their profile.
+- **Pay insights dashboard.** Group by country, department, job title or tenure, filtered by any combination of them: headcount, lowest/25th/median/75th/average/highest pay and total payroll, plus the salary changes of the last 12 months by reason. The filters apply to the whole page: headline numbers, segments, pay changes and the ★ list. One country is shown in its own currency; figures across countries are converted to INR from a fixed, dated exchange-rate table. People paid 40% or more below or above the median for their role in their country, in roles with at least 5 people there, are flagged with a ★, on the dashboard and on their profile. HR can move the dashboard's threshold between 20% and 50%; the profile uses 40%.
 - **Department budgets** (a good-to-have beyond the brief). HR sets this year's budget for each department in INR and sees whether today's payroll is over, near or under it, how many months it lasts, the headcount, the combined budget for the company, and who changed each budget and when.
-- **Seed script** that creates the same 10,000 realistic employees on every run, in seconds.
+- **Seed script** that creates the same 10,000 realistic employees on every run, in seconds. Their dates are counted back from the day it runs.
 
 "Salary" means annual gross base pay in local currency, compared within a country.
 
 ## UI considerations
-- **Three screens:** Employees, Employee details (profile, salary history, change history) and Insights. Built for a laptop first.
+- **Four screens:** Employees, Employee details (profile, timeline and audit log), Insights and Budgets. Built for a laptop first, and usable on a phone.
 - **Directory feels like a better spreadsheet:** filters update the table instantly and live in the URL, so a refresh or shared link keeps the view.
 - **Money always shows its currency.** Local and converted amounts are never mixed.
 - **Forms help:** dropdowns for reference data, errors next to the field, and an old vs new salary preview with the % change and the average pay for the same role in the same country, with a warning on unusually big changes, so an extra zero is easy to spot.
@@ -46,7 +46,7 @@ The HR Manager, who owns pay data for the whole company and is the only user for
 - **Transfers between countries.** An employee's country is set when they're created and can't be changed. A move would change their currency and split their salary history across two currencies.
 - **Future hire dates, and changing a hire date.** Employees are added on or after their start date, so their first salary record is never in the future. The hire date is fixed once saved, because salary history starts there.
 - **Approvals and notifications.** Not needed with one user.
-- **Phone layout and other languages.** Nice extras that don't help the core job yet. (Dark mode was added on 2026-10-31, before the first deploy; ADR 0023.)
+- **Other languages.** A nice extra that doesn't help the core job yet. (Dark mode and the phone layout were first listed here too. Both were added before submission: dark mode on 2026-10-31, ADR 0023, and the phone layout on 2026-11-01, ADR 0022.)
 
 ## Add-on: audit trail
 Every change to an employee or salary records who made it, what changed (old and new values) and when. Records can't be edited or deleted from the app and are saved together with the change. An "Audit log" panel on the employee's profile lists every saved change, column by column, and answers "who changed this salary, and when?". The profile's timeline tells the person's story by date: joining, salary revisions, promotions, department and title moves, work anniversaries and leaving (ADR 0021). Department budgets keep the same kind of history (ADR 0020). Employees loaded by the seed start with an empty audit log.

@@ -47,7 +47,7 @@ In development the browser only talks to Vite, which forwards `/api` to Rails, s
 - **Pay by segment:** group by country, department, job title or tenure. Each group shows the lowest, 25th percentile, median, 75th percentile, average and highest pay, plus the payroll, with a chart of the spread. Click a country to see its job titles.
 - **Currencies:** one country is shown in its own currency. Across countries, figures are converted to INR (the reporting currency) at dated exchange rates (ADR 0007).
 - **Pay changes in the last 12 months:** how many, the average % change, and what they added to yearly pay, by reason.
-- **Outliers (★):** people paid 20–50% (you pick) above or below the median for their role in their country.
+- **Outliers (★):** people paid at least 20–50% (you pick; 40% by default) above or below the median for their role in their country, in roles with 5 or more people there.
 
 ### Department Budgets
 - **One yearly budget per department**, in INR, against today's payroll.
@@ -84,7 +84,7 @@ In development the browser only talks to Vite, which forwards `/api` to Rails, s
 ## Running the Checks
 
 ```bash
-# Backend: RuboCop, bundler-audit, Brakeman and RSpec
+# Backend: prepares the dev database (bin/setup), then RuboCop, bundler-audit, Brakeman and RSpec
 cd backend && bin/ci
 ```
 

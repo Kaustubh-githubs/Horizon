@@ -15,8 +15,7 @@ module Insights
     # `filters` (Insights::Filters, the page's) choose whose stars are listed. Peers are still
     # everyone in the role and country, so a filter never changes who counts as far from the median.
     def initialize(threshold: DEFAULT_THRESHOLD, direction: "all", filters: Filters.new)
-      requested = threshold.to_s.to_i
-      @threshold = THRESHOLDS.cover?(requested) ? requested : DEFAULT_THRESHOLD
+      @threshold = self.class.threshold_from(threshold)
       @direction = DIRECTIONS.include?(direction.to_s) ? direction.to_s : "all"
       @filters = filters
     end
@@ -46,9 +45,17 @@ module Insights
                 "(employees.current_salary - peers.peer_median) / peers.peer_median * 100 AS deviation_percent")
     end
 
-    # How one employee compares with their peers, for the banner on their profile.
+    # A threshold HR can pick (20–50), or the default for anything else.
+    def self.threshold_from(value)
+      requested = value.to_s.to_i
+      THRESHOLDS.cover?(requested) ? requested : DEFAULT_THRESHOLD
+    end
+
+    # How one employee compares with their peers, for the banner on their profile. The threshold is
+    # the ★ list's when the profile was opened from it, so the banner agrees with the list.
     def self.position(employee, threshold: DEFAULT_THRESHOLD)
-      group = Employee.where(country_id: employee.country_id, job_title_id: employee.job_title_id)
+      threshold = threshold_from(threshold)
+      group =Employee.where(country_id: employee.country_id, job_title_id: employee.job_title_id)
       found = with_peers(Employee.active.where(id: employee.id), groups: group).first
       exact = found&.deviation_percent&.to_d
       enough_peers = found.present? && found.peer_count >= MIN_PEERS

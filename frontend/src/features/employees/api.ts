@@ -348,12 +348,20 @@ export type PayPosition = {
   country: string
 }
 
-/** Whether an employee is a ★ outlier, for their profile. Refreshed with the employee. */
-export function usePayPosition(employeeId: number, enabled: boolean) {
+/**
+ * Whether an employee is a ★ outlier, for their profile. Refreshed with the employee.
+ * `threshold` is the ★ list's, when the profile was opened from it; without one the API uses 40%.
+ */
+export function usePayPosition(
+  employeeId: number,
+  enabled: boolean,
+  threshold?: string,
+) {
+  const query = threshold ? `?${new URLSearchParams({ threshold })}` : ""
   return useQuery({
-    queryKey: [...employeeKey(employeeId), "pay_position"],
+    queryKey: [...employeeKey(employeeId), "pay_position", threshold ?? null],
     queryFn: () =>
-      apiRequest<PayPosition>(`/employees/${employeeId}/pay_position`),
+      apiRequest<PayPosition>(`/employees/${employeeId}/pay_position${query}`),
     enabled,
   })
 }

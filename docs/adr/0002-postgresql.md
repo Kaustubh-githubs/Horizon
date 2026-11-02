@@ -17,3 +17,6 @@ Use PostgreSQL.
 - Good: real database-level rules: foreign keys, check constraints (such as salary > 0), case-insensitive unique emails, and JSONB for the audit trail.
 - Good: it's what most production Rails teams run, so the setup is realistic.
 - Cost: Postgres has to run in development, in CI (a service container) and in production.
+
+## Updates
+- **2026-11-02, corrections:** emails aren't unique ignoring case in the database itself. `employees.email` and `users.email_address` have plain unique indexes; they behave case-insensitively because the models lowercase them before saving (`normalizes`). Only the lookup names (countries, departments, job titles) have unique indexes on `LOWER(name)` (docs/schema.md). There's also no CI service yet (ADR 0001).

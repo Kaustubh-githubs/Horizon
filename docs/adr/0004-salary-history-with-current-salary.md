@@ -20,3 +20,8 @@ In Excel a raise overwrites the old number, so pay history is lost. We want to k
 - Good: lists and insights read one indexed column on `employees`.
 - Good: full history with a reason for every change.
 - Cost: the same fact is stored in two places. If anything changes the salary without going through the service, they drift apart. Tests check that both are always updated together.
+
+## Updates
+- **2026-11-02, corrections:**
+  - `SalaryRevisions::Create` handles salary *changes*, and refuses `hire`. Adding an employee writes their `hire` revision in `Employees::Create`, in the same transaction as the employee row. The seed bulk-inserts both tables (ADR 0015). Specs check that the copy matches the latest revision in all three.
+  - `current_salary` isn't indexed. Sorting the directory by salary keeps the top 25 of the matching rows (a top-N sort), which takes a few milliseconds at this size (docs/performance.md).

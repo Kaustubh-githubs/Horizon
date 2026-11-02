@@ -21,3 +21,7 @@ In production both are served from the same domain. A reverse proxy sends `/api`
 - Good: a clear API boundary, each side tested on its own, and TypeScript on the frontend.
 - Good: same domain means no cross-origin (CORS) setup, and login can use normal cookies.
 - Cost: two toolchains (Bundler and npm), two test suites and two CI jobs.
+
+## Updates
+- **2026-11-02, how it's served:** there's no separate reverse proxy. Since the deploy (ADR 0025, 0026), Rails serves the built React app itself, from one Docker image: `SpaController` returns the app's page for any path outside `/api`, and the hashed assets are cached for a year. Same domain and cookie login, as decided above.
+- **2026-11-02, no hosted CI yet:** the checks run on the developer's machine (`bin/ci` for the backend, `pnpm typecheck`, `lint`, `test` and `build` for the frontend), before every PR. A GitHub Actions workflow running both is the next step.

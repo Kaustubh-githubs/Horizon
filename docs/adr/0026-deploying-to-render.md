@@ -23,3 +23,6 @@ ADR 0025 chose Railway, but Railway has paused new sign-ups while it recovers fr
 - Good: the same image and settings deploy here, with one config file, at no cost.
 - Cost: a free web service sleeps after 15 minutes without traffic and takes about a minute to wake. Before a demo, open the app a couple of minutes early, or move the service to a paid instance for that week.
 - Cost: the free Postgres expires after 30 days. That's enough for the interviews; after that it would need a paid plan or a fresh database (the seed rebuilds the data).
+
+## Updates
+- **2026-11-02, later boots:** with `SEED_ON_BOOT=true`, a later boot skips employees but still adds this year's department budgets if they're missing. So the first boot of a new year sets that year's budgets on its own, from that day's payroll.

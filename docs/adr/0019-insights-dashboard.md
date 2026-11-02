@@ -12,7 +12,7 @@ The brief's second job is answering "how does the org pay people?". HR wants pay
   - Figures **across countries** (departments, tenure, job titles or the whole org) are converted to **INR**, the reporting currency, using the fixed exchange-rate table. They're labelled as converted, with the rates' date.
   - INR is a single constant (`Insights::REPORTING_CURRENCY`), so switching to another currency is a one-line change.
   - Employees in a currency that has no exchange rate are left out of converted figures, and the response names the missing currencies, rather than silently dropping them.
-- **Outliers, shown with a ★:** active employees paid more than **40% below or above the median** of their peers, meaning active employees with the same job title in the same country. Only groups of at least 5 count; smaller groups are too small to judge. HR can change the threshold on the page (20–50%). The list is sorted by how far from the median each person is.
+- **Outliers, shown with a ★:** active employees paid at least **40% below or above the median** of their peers, meaning active employees with the same job title in the same country. Only groups of at least 5 count; smaller groups are too small to judge. HR can change the threshold on the page (20–50%). The list is sorted by how far from the median each person is.
 - **Where stars appear:** a list on the dashboard (filter by country and by below or above, click through to the profile), and a banner on the employee's profile.
 - **All maths in SQL** (`PERCENTILE_CONT`, `AVG`, `GROUP BY`), in query objects under `app/queries/insights`, so a 10,000-row company is a handful of fast queries and Ruby never loops over employees.
 - **Endpoints:** `GET /insights/overview`, `GET /insights/segments?by=…&country=…`, `GET /insights/outliers?…` (paged) and `GET /employees/:id/pay_position` (for the profile banner).
@@ -53,3 +53,9 @@ The brief's second job is answering "how does the org pay people?". HR wants pay
   - a country × department headcount heatmap
   - CSV export of any view
   - a gender pay gap, which needs data Horizon deliberately doesn't store
+- **2026-11-02, corrections:**
+  - The rule is **at least** 40% from the median (`>=`), as the page says.
+  - **Switching the reporting currency** is one constant in the backend, but not the whole change: the segment chart and table say "INR" in their labels, and budgets are INR amounts with no currency column (ADR 0020), so they'd need a data migration.
+  - **The threshold choices** (20–50, 40 by default) are repeated in the frontend's URL handling (`use-insights-params.ts`), so the page offers only valid values; the API still checks them. The minimum of 5 also appears in the ★ list's description.
+  - **The headline tiles** say "Converted to INR" without the rates' date; the segment table and pay changes show it.
+  - **The ★ banner on a profile** always uses ±40%, while the tile and the list follow the threshold picked on the page. So someone listed at ±30% has no banner on their profile.

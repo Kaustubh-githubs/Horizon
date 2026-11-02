@@ -28,3 +28,6 @@ The React app is the only client, but every endpoint should still look and behav
 - Good: sorting and paging can't be abused (the allowed list, the cap of 100 per page).
 - Cost: each serializer is hand-written. That's fine at this size.
 - Cost: offset paging slows down on very deep pages of very large tables. Not an issue at this scale, and switchable later.
+
+## Updates
+- **2026-11-02, two lists aren't paged:** the audit logs (`GET /employees/:id/audits`, `GET /budgets/:id/audits`) return a plain array, newest first, without `meta`. One employee's or one budget's history is a handful of rows, and the UI shows it whole. The paged lists (the directory and the ★ list) use `{ data, meta }`.

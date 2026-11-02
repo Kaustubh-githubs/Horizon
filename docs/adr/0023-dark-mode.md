@@ -19,7 +19,7 @@ Dark mode started out of scope (docs/requirements.md), and the UI pass (ADR 0022
   - `status-good`, `status-warning` and `status-critical` (budgets)
   - the chart's `chart-*` colours
   - the loading bar's gradient
-- **Dark values are chosen, not flipped.** On the dark card, the chart's middle-half bar steps back (darker blue) and the median dot is the bright one, so the median still reads first. Both pairs pass the dataviz palette validator (one hue, clear steps, the lighter mark visible against the card). Status colours and the increase green use lighter shades that read on dark.
+- **Dark values are chosen, not flipped.** On the dark card, the chart's middle-half bar steps back (darker blue at first, darker orange since ADR 0024) and the median dot is the bright one, so the median still reads first. Both pairs pass the dataviz palette validator (one hue, clear steps, the lighter mark visible against the card). Status colours and the increase green use lighter shades that read on dark.
 - **Toasts follow the theme** (Sonner takes light or dark).
 - **The timeline's icon colours stay as they are.** They're strong colours with white icons, which read on both backgrounds; checked in the browser.
 

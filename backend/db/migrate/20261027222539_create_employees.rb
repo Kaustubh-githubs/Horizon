@@ -1,7 +1,7 @@
 class CreateEmployees < ActiveRecord::Migration[8.1]
   def change
     create_table :employees do |t|
-      # Computed by Postgres from the row's id (ADR 0013): EMP-000123. Pads to at least six
+      # Computed by Postgres from the row's id (ADR 0014): EMP-000123. Pads to at least six
       # digits but never truncates, so id 1234567 becomes EMP-1234567, not EMP-123456.
       t.virtual :employee_code, type: :string, stored: true,
                 as: "'EMP-' || lpad(id::text, GREATEST(6, length(id::text)), '0')"

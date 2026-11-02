@@ -23,7 +23,11 @@ import {
 import { ChangeSalaryFromList } from "@/features/employees/change-salary-dialog"
 import { useOutliers, type InsightFilters } from "@/features/insights/api"
 import { LoadError } from "@/components/load-error"
-import { NO_FILTERS, THRESHOLDS } from "@/features/insights/use-insights-params"
+import {
+  DEFAULT_THRESHOLD,
+  NO_FILTERS,
+  THRESHOLDS,
+} from "@/features/insights/use-insights-params"
 import { formatCount, formatMoney, formatMoneyWhole } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -46,6 +50,14 @@ const SHOWN_FROM = {
   role: "hidden @min-[43rem]:table-cell",
   pay: "hidden @min-[56rem]:table-cell",
   peers: "hidden @min-[60rem]:table-cell",
+}
+
+// The profile's ★ banner uses the list's threshold when it's not the default, so everyone
+// listed at ±30% also has the banner.
+function profilePath(id: number, threshold: string) {
+  return threshold === DEFAULT_THRESHOLD
+    ? `/employees/${id}`
+    : `/employees/${id}?threshold=${threshold}`
 }
 
 export function OutliersCard({
@@ -169,7 +181,7 @@ export function OutliersCard({
                     <TableRow key={row.employee.id}>
                       <TableCell>
                         <Link
-                          to={`/employees/${row.employee.id}`}
+                          to={profilePath(row.employee.id, threshold)}
                           className="inline-flex items-center gap-1.5 font-medium hover:underline"
                         >
                           <StarIcon

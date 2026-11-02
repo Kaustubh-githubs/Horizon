@@ -140,6 +140,23 @@ RSpec.describe "Insights API", type: :request do
                                               "job_title" => "Software Engineer", "country" => "India")
     end
 
+    # Opened from a ★ list set to ±25%, the profile agrees with the list it came from.
+    it "uses the threshold the ★ list was opened with, and 40% otherwise", :aggregate_failures do
+      somewhat_underpaid = create(:employee, country: india, job_title: engineer, current_salary: "700000")
+
+      get "/api/v1/employees/#{somewhat_underpaid.id}/pay_position", params: { threshold: "25" }
+      expect(response.parsed_body).to include("flagged" => true, "threshold" => 25, "deviation_percent" => -30.0)
+
+      get "/api/v1/employees/#{somewhat_underpaid.id}/pay_position"
+      expect(response.parsed_body).to include("flagged" => false, "threshold" => 40)
+    end
+
+    it "uses 40% for a threshold the list doesn't offer" do
+      get "/api/v1/employees/#{Employee.find_by!(full_name: 'Underpaid').id}/pay_position", params: { threshold: "90" }
+
+      expect(response.parsed_body).to include("flagged" => true, "threshold" => 40)
+    end
+
     it "answers 404 for an unknown employee" do
       get "/api/v1/employees/0/pay_position"
 

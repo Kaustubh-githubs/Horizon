@@ -5,7 +5,7 @@ import { AnimatedNumber } from "@/components/animated-number"
 import { StickyBar } from "@/components/sticky-bar"
 import { StatTileSkeleton } from "@/components/skeletons"
 import { Card, CardContent } from "@/components/ui/card"
-import { useOverview } from "@/features/insights/api"
+import { useOverview, type Overview } from "@/features/insights/api"
 import { InsightsFilters } from "@/features/insights/insights-filters"
 import { LoadError } from "@/components/load-error"
 import { OutliersCard } from "@/features/insights/outliers-card"
@@ -15,8 +15,20 @@ import {
   NO_FILTERS,
   useInsightsParams,
 } from "@/features/insights/use-insights-params"
-import { compactMoney, formatMoney } from "@/lib/format"
+import { compactMoney, formatDate, formatMoney } from "@/lib/format"
 import { cn } from "@/lib/utils"
+
+// Converted figures say which rates they used, and who's left out for want of one, as the
+// segment table and pay changes do.
+function convertedNote(data: Overview) {
+  const asOf = data.rates_as_of
+    ? ` at rates as of ${formatDate(data.rates_as_of)}`
+    : ""
+  const missing = data.excluded_currencies.length
+    ? `; no rate for ${data.excluded_currencies.join(", ")}`
+    : ""
+  return `Converted to ${data.currency}${asOf}${missing}`
+}
 
 function StatTile({
   label,
@@ -115,7 +127,7 @@ export function InsightsPage() {
                   }
                   detail={
                     data.converted
-                      ? `Converted to ${data.currency}`
+                      ? convertedNote(data)
                       : `In ${data.currency}`
                   }
                 />

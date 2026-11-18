@@ -151,9 +151,16 @@ function TimelineItem({
       >
         <Icon className="size-4" aria-hidden="true" />
       </span>
-      <div className="flex min-w-0 flex-col gap-2 pt-0.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 pt-0.5">
         <div>
-          <p className="text-sm font-medium">{title}</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-sm font-medium">{title}</p>
+            {event.changed_by && (
+              <span className="min-w-0 truncate text-xs text-muted-foreground">
+                by {event.changed_by}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             {formatDate(event.date)}
           </p>

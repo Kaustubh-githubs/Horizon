@@ -246,6 +246,8 @@ export type TimelineEvent = {
   change_percent?: number | null
   /** For salary changes and promotions: when the revision was entered. */
   recorded_at?: string
+  /** For salary changes: who recorded it; null for the seed or a change outside the app. */
+  changed_by?: string | null
   /** For anniversaries. */
   years?: number
 }

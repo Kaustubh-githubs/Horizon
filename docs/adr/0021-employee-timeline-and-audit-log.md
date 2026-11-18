@@ -34,3 +34,4 @@ The employee profile showed two lists: the salary history table (ADR 0018) and a
 
 ## Updates
 - **2026-11-02, what the log leaves out:** a salary revision's `employee_id` (the whole log is about that employee), and a column that is empty both before and after a change. Everything else that was saved is listed.
+- **2026-11-13, who made a salary change:** a `salary_change` event carries `changed_by`, the name of the user on the revision's create audit, shown as "by …" on the right of the event's title. Only salary changes carry it; promotions, moves and the rest don't. It's null for the seed and for changes made outside the app, and the page then shows no name.

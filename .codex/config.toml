@@ -1,0 +1,13 @@
+[mcp_servers.horizon-db]
+command = "npx"
+args = [
+    "-y",
+    "@bytebase/dbhub@1.5.0",
+    "--transport",
+    "stdio",
+    "--dsn",
+    "postgresql://claude_readonly@localhost:5432/horizon_development?sslmode=disable",
+]
+
+[mcp_servers.horizon-db.env]
+PATH = "/Users/kaustubhshrivastava/.nvm/versions/node/v24.19.0/bin:/usr/bin:/bin"

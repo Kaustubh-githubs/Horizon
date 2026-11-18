@@ -2,7 +2,7 @@ module Employees
   # An employee's story by date (ADR 0021), newest first: joining, salary revisions (from the
   # salary history, so seeded ones too), department and title moves (from the audit trail, so only
   # those made in the app), work anniversaries and leaving. Every event has a kind, a date and its
-  # changes as { field, from, to }.
+  # changes as { field, from, to }. A salary change also names who recorded it.
   class TimelineQuery
     # Events on the same day: joining before anything else, leaving after. Changes in between are
     # ordered by when they were recorded, so the story reads in the order things happened.
@@ -15,7 +15,7 @@ module Employees
     end
 
     def call
-      @audits = @employee.own_and_associated_audits.to_a
+      @audits = @employee.own_and_associated_audits.includes(:user).to_a
       @values = AuditValues.new(@audits)
       events = [ joined, *salary_events, *moves, *anniversaries, ended ].compact
       # The position the event was built in breaks ties, e.g. a department and a title changed in
@@ -61,13 +61,20 @@ module Employees
         before = revisions[index - 1].amount if index.positive?
         promotion = revision.promotion?
         title = (promotion_title(revision) if promotion)
-        {
+        event = {
           kind: promotion ? "promotion" : "salary_change", date: revision.effective_from, reason: revision.reason,
           change_percent: SalaryRevisionSerializer.change_percent(before, revision.amount),
           changes: [ title, { field: "salary", from: before&.to_s("F"), to: revision.amount.to_s("F") } ].compact,
           recorded_at: revision.created_at, at: revision.created_at
         }
+        promotion ? event : event.merge(changed_by: revision_authors[revision.id])
       end
+    end
+
+    # Who recorded each salary revision (by revision id). None for the seed or the console.
+    def revision_authors
+      @revision_authors ||= @audits.select { |audit| audit.auditable_type == "SalaryRevision" && audit.action == "create" }
+                                   .to_h { |audit| [ audit.auditable_id, audit.user&.name ] }
     end
 
     def promotion_title(revision)

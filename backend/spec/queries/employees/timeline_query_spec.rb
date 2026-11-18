@@ -88,6 +88,16 @@ RSpec.describe Employees::TimelineQuery do
       )
     end
 
+    it "has no name for a salary change the seed loaded" do
+      expect(event(events, "salary_change", Date.new(2024, 4, 1))).to include(changed_by: nil)
+    end
+
+    it "names who made a change only on salary changes", :aggregate_failures do
+      events.reject { |e| e[:kind] == "salary_change" }.each do |e|
+        expect(e).not_to have_key(:changed_by), "#{e[:kind]} on #{e[:date]} has a changed_by"
+      end
+    end
+
     it "starts with joining on the hire date, with the starting salary" do
       expect(event(events, "joined", Date.new(2023, 1, 9))).to include(
         changes: [ { field: "salary", from: nil, to: "1000000.0" } ]
@@ -96,6 +106,43 @@ RSpec.describe Employees::TimelineQuery do
 
     it "counts work anniversaries up to the last working day" do
       expect(events.select { |e| e[:kind] == "anniversary" }.pluck(:years)).to eq([ 3, 2, 1 ])
+    end
+  end
+
+  describe "who made a salary change" do
+    let(:asha) { create(:user, name: "Asha Rao") }
+    let(:employee) { create(:employee, job_title: engineer, hire_date: Date.new(2026, 10, 1), current_salary: "1200000") }
+
+    before { travel_to Date.new(2026, 10, 31) }
+
+    def change_salary_as(user, **params)
+      Audited.audit_class.as_user(user) do
+        in_one_request do
+          SalaryRevisions::Create.new(employee:, lock_version: employee.lock_version, **params).call
+        end
+      end
+    end
+
+    it "names the user who recorded it" do
+      change_salary_as(asha, amount: "1300000", reason: "annual_raise")
+
+      expect(timeline(employee).first).to include(kind: "salary_change", changed_by: "Asha Rao")
+    end
+
+    it "has no name for one made outside the app" do
+      in_one_request do
+        SalaryRevisions::Create.new(employee:, amount: "1300000", reason: "correction",
+                                    lock_version: employee.lock_version).call
+      end
+
+      expect(timeline(employee).first).to include(kind: "salary_change", changed_by: nil)
+    end
+
+    it "leaves the name off a promotion" do
+      change_salary_as(asha, amount: "1500000", reason: "promotion",
+                             job_title_id: create(:job_title, name: "Senior Software Engineer").id)
+
+      expect(timeline(employee).first).to include(kind: "promotion").and(satisfy { |e| !e.key?(:changed_by) })
     end
   end
 
